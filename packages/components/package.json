@@ -1,0 +1,12 @@
+{
+  "name": "components",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "source": "./src/index.ts",
+  "module": "./src/index.ts"
+}

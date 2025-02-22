@@ -1,0 +1,17 @@
+curl https://ark.cn-beijing.volces.com/api/v3/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer 030c2b0f-6526-4461-8684-4d4ce3992ce5" \
+  -d '{
+    "model": "deepseek-r1-250120",
+    "stream": true,
+    "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "Hello!"
+        }
+    ]
+  }'
