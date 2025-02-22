@@ -11,13 +11,15 @@ import {
   IconDelete,
   IconDown,
   IconEdit,
+  IconLoading,
   IconShareExternal,
   IconShareInternal,
   IconSync,
+  IconToRight,
   IconUp,
 } from "@arco-design/web-react/icon";
 import { useScroll } from "../hooks/useScroll";
-import { Dropdown, Menu, Message } from "@arco-design/web-react";
+import { Dropdown, Menu, Message, Tooltip } from "@arco-design/web-react";
 import NiceModal from "@ebay/nice-modal-react";
 import { RenameModal } from "../history/RenameModal";
 import { DeleteModal } from "../history/DeleteModal";
@@ -74,6 +76,7 @@ const HeaderWrapper = styled.div`
 `;
 
 const QueryWrapper = styled.div`
+  position: relative;
   display: inline-flex;
   padding: 16px;
   max-width: 70%;
@@ -84,6 +87,23 @@ const QueryWrapper = styled.div`
   font-family: sans-serif;
   font-size: 18px;
   margin-left: auto;
+`;
+
+const ActionWrapper = styled.div`
+  position: absolute;
+  left: -15px;
+  bottom: -12px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  color: gray;
+  transition: color 0.2s ease;
+  transition: opacity 0.2s ease;
 `;
 
 const AnswerWrapper = styled.div`
@@ -105,8 +125,28 @@ const ThinkWrapper = styled.div`
   flex-direction: column;
   gap: 12px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.1);
+  background: #f1f1f1;
   border-radius: 16px;
+`;
+
+const ThinkHeaderWrapper = styled.div`
+  background: #f1f1f1;
+  border-radius: 16px 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -20px; /* 控制渐变高度 */
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(
+      to bottom,
+      rgba(241, 241, 241, 1) 0%,
+      rgba(244, 242, 236, 0) 100%
+    );
+    pointer-events: none; /* 防止遮挡下方交互 */
+  }
 `;
 
 const SenderWrapper = styled.div`
@@ -179,7 +219,6 @@ const Chat = () => {
     }
 
     setMessages(history.content);
-    scroll?.toBottom();
   }, [chatId]);
 
   useEffect(() => {
@@ -261,11 +300,14 @@ const Chat = () => {
 
         return (
           <AnswerWrapper>
-            {think && think !== "" && (
+            {think && think.trim() !== "" && (
               <ThinkWrapper>
-                <div className=" flex flex-row items-center">
+                <ThinkHeaderWrapper className=" sticky top-[60px] flex flex-row items-center">
                   {content?.isThink ? (
-                    <div className="my-2 text-xl">思考中...</div>
+                    <div className="my-2 text-xl flex flex-row items-center gap-2">
+                      <div>思考中...</div>
+                      <IconLoading />
+                    </div>
                   ) : (
                     <div className="my-2 text-xl">思考过程</div>
                   )}
@@ -275,7 +317,7 @@ const Chat = () => {
                   >
                     {collapsed ? <IconUp /> : <IconDown />}
                   </div>
-                </div>
+                </ThinkHeaderWrapper>
                 {!collapsed && <MDRenderer text={think} />}
               </ThinkWrapper>
             )}
@@ -311,8 +353,27 @@ const Chat = () => {
     [ROLE.user]: {
       render: (content) => {
         const answer = content?.answer;
+        const { setInsertText } = useStore();
 
-        return <QueryWrapper>{answer}</QueryWrapper>;
+        return (
+          <QueryWrapper className="group">
+            <ActionWrapper className=" opacity-0 group-hover:opacity-100">
+              <Tooltip content="复制" mini>
+                <IconCopy className="hover:text-black cursor-pointer" />
+              </Tooltip>
+              <Tooltip content="插入" mini>
+                <IconToRight
+                  className="hover:text-black cursor-pointer"
+                  onClick={() => setInsertText(answer ?? "")}
+                />
+              </Tooltip>
+              <Tooltip content="分享" mini>
+                <IconShareExternal className="hover:text-black cursor-pointer" />
+              </Tooltip>
+            </ActionWrapper>
+            {answer}
+          </QueryWrapper>
+        );
       },
     },
   };

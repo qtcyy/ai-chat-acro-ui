@@ -1,13 +1,20 @@
 import styled from "styled-components";
 import { DeepSeekIcons } from "../../../assets/home/Deepseek";
-import { Avatar, Divider, Tooltip } from "@arco-design/web-react";
-import { IconFolderAdd, IconHome, IconList } from "@arco-design/web-react/icon";
-import { useNavigate } from "react-router-dom";
+import { Avatar, Divider, Modal, Tooltip } from "@arco-design/web-react";
+import {
+  IconClose,
+  IconFolderAdd,
+  IconHome,
+  IconList,
+} from "@arco-design/web-react/icon";
+import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
+import NiceModal from "@ebay/nice-modal-react";
 
 const SiderWrapper = styled.div`
+  position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   left: 0;
@@ -26,8 +33,55 @@ const ContentWrapper = styled.div`
   box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
 `;
 
+const ClearButtonWrapper = styled.div`
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  font-size: 25px;
+  padding: 8px 12px;
+  background: red;
+  color: white;
+  border-radius: 12px;
+  cursor: pointer;
+`;
+
+const RemoveAllModal = NiceModal.create(() => {
+  const modal = NiceModal.useModal();
+
+  const handleClose = () => {
+    modal.hide();
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  };
+
+  const handleConfirm = () => {
+    modal.resolve(true);
+    handleClose();
+  };
+
+  return (
+    <Modal
+      visible={modal.visible}
+      onCancel={handleClose}
+      onConfirm={handleConfirm}
+      title="删除所有对话"
+    >
+      <div>所有对话数据将被永久删除，不可恢复及撤销。确定要删除吗？</div>
+    </Modal>
+  );
+});
+
 const Sider = () => {
   const route = useNavigate();
+  const location = useLocation();
+
+  const handleRemoveAll = async () => {
+    const confirm = await NiceModal.show(RemoveAllModal);
+    if (confirm) {
+      console.log("remove all");
+    }
+  };
 
   const handleNewCon = () => {
     const chatId = uuidv4();
@@ -38,6 +92,11 @@ const Sider = () => {
 
   return (
     <SiderWrapper>
+      {location.pathname.endsWith("/list") && (
+        <ClearButtonWrapper onClick={handleRemoveAll}>
+          <IconClose />
+        </ClearButtonWrapper>
+      )}
       <ContentWrapper>
         <Tooltip position="right" trigger={"hover"} content="回到主页">
           <div

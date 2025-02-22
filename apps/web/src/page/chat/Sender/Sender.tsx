@@ -5,7 +5,7 @@ import {
   IconDown,
   IconLoading,
 } from "@arco-design/web-react/icon";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useScroll } from "../hooks/useScroll";
 import { useRequest } from "ahooks";
@@ -64,7 +64,8 @@ const ModelName: Record<string, string> = {
 const Sender = (props: Props) => {
   const { ask, loading, cancel, showTop, isHome } = props;
   const route = useNavigate();
-  const { selectedModel, setSelectedModel } = useStore();
+  const { selectedModel, setSelectedModel, insertText, setInsertText } =
+    useStore();
 
   const send = async (question: string) => {
     ask(question);
@@ -77,6 +78,15 @@ const Sender = (props: Props) => {
 
   const [text, setText] = useState("");
   const [isComposing, setIsComposing] = useState(false);
+
+  useEffect(() => {
+    if (!insertText.trim()) {
+      return;
+    }
+    console.log("insert text", insertText);
+    setText(insertText);
+    setInsertText("");
+  }, [insertText]);
 
   const handleSend = () => {
     if (text === "" || loading) return;
