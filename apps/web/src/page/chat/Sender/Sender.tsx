@@ -1,10 +1,16 @@
-import { Tooltip } from "@arco-design/web-react";
-import { IconArrowUp, IconLoading } from "@arco-design/web-react/icon";
-import { useState } from "react";
+import { Dropdown, Menu, Tooltip } from "@arco-design/web-react";
+import {
+  IconArrowUp,
+  IconCheck,
+  IconDown,
+  IconLoading,
+} from "@arco-design/web-react/icon";
+import { ReactNode, useState } from "react";
 import styled from "styled-components";
 import { useScroll } from "../hooks/useScroll";
 import { useRequest } from "ahooks";
 import { useNavigate } from "react-router-dom";
+import { useStore } from "../../../store";
 
 const ContentWrapper = styled.div`
   width: 100%;
@@ -49,9 +55,16 @@ type Props = {
   isHome?: boolean;
 };
 
+const ModelName: Record<string, string> = {
+  ["deepseek-r1-250120"]: "DeepSeek-R1",
+  ["doubao-1-5-pro-32k-250115"]: "DouBao-1.5-Pro",
+  ["doubao-1-5-lite-32k-250115"]: "DouBao-1.5-lite",
+};
+
 const Sender = (props: Props) => {
-  const { ask, loading, cancel, showTop } = props;
+  const { ask, loading, cancel, showTop, isHome } = props;
   const route = useNavigate();
+  const { selectedModel, setSelectedModel } = useStore();
 
   const send = async (question: string) => {
     ask(question);
@@ -93,6 +106,43 @@ const Sender = (props: Props) => {
     scroll?.toBottom();
   };
 
+  const DropdownItem = (): ReactNode => {
+    return (
+      <Menu
+        style={{ width: "150px" }}
+        onClickMenuItem={(key) => setSelectedModel(key)}
+      >
+        <Menu.Item key="deepseek-r1-250120">
+          <div className="flex flex-row w-full items-center">
+            <div>DeepSeek-R1</div>
+
+            {selectedModel === "deepseek-r1-250120" && (
+              <IconCheck className="ml-auto" />
+            )}
+          </div>
+        </Menu.Item>
+        <Menu.Item key={"doubao-1-5-pro-32k-250115"}>
+          <div className="flex flex-row w-full items-center">
+            <div>DouBao-1.5-Pro</div>
+
+            {selectedModel === "doubao-1-5-pro-32k-250115" && (
+              <IconCheck className="ml-auto" />
+            )}
+          </div>
+        </Menu.Item>
+        <Menu.Item key={"doubao-1-5-lite-32k-250115"}>
+          <div className="flex flex-row w-full items-center">
+            <div>DouBao-1.5-lite</div>
+
+            {selectedModel === "doubao-1-5-lite-32k-250115" && (
+              <IconCheck className="ml-auto" />
+            )}
+          </div>
+        </Menu.Item>
+      </Menu>
+    );
+  };
+
   return (
     <ContentWrapper>
       <div className="flex flex-row w-[60%] mb-3 ">
@@ -130,6 +180,14 @@ const Sender = (props: Props) => {
           onKeyDown={handleKeyDown}
         />
         <div className="flex-[0.3] w-full inline-flex flex-row items-center">
+          {!isHome && (
+            <Dropdown droplist={DropdownItem()}>
+              <div className="ml-2 px-2 py-1 hover:bg-[#eeebe2] rounded-lg transition-colors cursor-pointer">
+                {ModelName[selectedModel]}
+                <IconDown />
+              </div>
+            </Dropdown>
+          )}
           <div
             className={
               text === ""

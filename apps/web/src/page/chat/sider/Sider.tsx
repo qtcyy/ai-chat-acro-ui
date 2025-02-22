@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { DeepSeekIcons } from "../../../assets/home/Deepseek";
-import { Divider, Tooltip } from "@arco-design/web-react";
+import { Avatar, Divider, Tooltip } from "@arco-design/web-react";
 import { IconFolderAdd, IconList } from "@arco-design/web-react/icon";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
@@ -34,6 +34,8 @@ const Sider = () => {
     route(`/ai/chat/page/${chatId}`);
   };
 
+  const handleLogin = () => {};
+
   return (
     <SiderWrapper>
       <ContentWrapper>
@@ -63,6 +65,9 @@ const Sider = () => {
           </div>
         </Tooltip>
         <Divider className={"my-2"} type="horizontal" />
+        <Avatar className={"cursor-pointer"} onClick={handleLogin}>
+          登录
+        </Avatar>
       </ContentWrapper>
     </SiderWrapper>
   );

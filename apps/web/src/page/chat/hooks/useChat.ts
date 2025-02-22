@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ROLE } from "../layout/Chat";
 import dayjs from "dayjs";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
+import { useStore } from "../../../store";
 
 type Props = {
   initialMessages?: BubbleDataType<MessageType>[];
@@ -33,6 +34,7 @@ const useChat = (props: Props) => {
   );
   const [loading, setLoading] = useState(false);
   const [closeSignal, setCloseSignal] = useState(0);
+  const { selectedModel } = useStore();
 
   useEffect(() => {
     if (closeSignal === 0 || loading) {
@@ -103,7 +105,7 @@ const useChat = (props: Props) => {
         Connection: "keep-alive",
       },
       body: JSON.stringify({
-        model: "deepseek-r1-250120",
+        model: selectedModel,
         messages: sendMessages,
         stream: true,
       }),

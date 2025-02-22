@@ -153,6 +153,17 @@ const Chat = () => {
   let history = store?.chats.find((o) => o.chatId === chatId);
 
   useEffect(() => {
+    console.log("chat start");
+
+    return () => {
+      if (messages.length <= 2) {
+        console.log("chat delete");
+        store?.removeChat(chatId);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     console.log(messages);
     history = store?.chats.find((o) => o.chatId === chatId);
     if (!history) {
@@ -240,7 +251,7 @@ const Chat = () => {
         let think = content?.think;
         const answer = content?.answer;
         if (think) {
-          think = think.replaceAll("undefined", " ");
+          think = think.replaceAll("undefined", "");
         }
 
         const handleCopy = async () => {
@@ -249,7 +260,7 @@ const Chat = () => {
 
         return (
           <AnswerWrapper>
-            {think && (
+            {think && think !== "" && (
               <ThinkWrapper>
                 <div className=" flex flex-row items-center">
                   {content?.isThink ? (
