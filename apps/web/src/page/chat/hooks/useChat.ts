@@ -171,8 +171,10 @@ const useChat = (props: Props) => {
         setLoading(false);
       },
       onclose() {
-        setCloseSignal((c) => c + 1);
         setLoading(false);
+        setTimeout(() => {
+          setCloseSignal((c) => c + 1);
+        }, 50);
       },
     });
   };

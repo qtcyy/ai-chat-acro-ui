@@ -237,8 +237,6 @@ const Chat = () => {
         const [collapsed, setCollapsed] = useState(false);
         const [isCopied, setIsCopied] = useState(false);
 
-        console.log(content);
-
         let think = content?.think;
         const answer = content?.answer;
         if (think) {
@@ -279,13 +277,15 @@ const Chat = () => {
                   <IconCopy />
                   复制
                 </div>
-                <div
-                  className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
-                  onClick={() => retry(content.query)}
-                >
-                  <IconSync />
-                  再试一次
-                </div>
+                {content.id === String(messages.length - 1) && (
+                  <div
+                    className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                    onClick={() => retry(content.query)}
+                  >
+                    <IconSync />
+                    再试一次
+                  </div>
+                )}
                 <div className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors">
                   <IconShareExternal />
                   分享
