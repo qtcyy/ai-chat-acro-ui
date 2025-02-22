@@ -1,29 +1,5 @@
-# Rsbuild project
+# AI 对话和管理应用平台
 
-## Setup
+## 简介
 
-Install the dependencies:
-
-```bash
-pnpm install
-```
-
-## Get started
-
-Start the dev server:
-
-```bash
-pnpm dev
-```
-
-Build the app for production:
-
-```bash
-pnpm build
-```
-
-Preview the production build locally:
-
-```bash
-pnpm preview
-```
+主要使用字节跳动的火山引擎作为 API 进行模型对话。

@@ -99,7 +99,7 @@ const HistoryList = () => {
               onClick={() => handleClick(item.chatId)}
             >
               <div>{item.name}</div>
-              <div className="ml-auto group-hover:hidden">
+              <div className="ml-auto text-sm group-hover:hidden">
                 {timeDisplay(item.updateTime)}
               </div>
               <div className="hidden group-hover:flex ml-auto flex-row gap-2">

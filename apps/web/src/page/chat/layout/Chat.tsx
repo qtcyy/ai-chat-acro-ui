@@ -179,6 +179,7 @@ const Chat = () => {
     }
 
     setMessages(history.content);
+    scroll?.toBottom();
   }, [chatId]);
 
   useEffect(() => {

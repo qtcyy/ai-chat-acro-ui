@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { DeepSeekIcons } from "../../../assets/home/Deepseek";
 import { Avatar, Divider, Tooltip } from "@arco-design/web-react";
-import { IconFolderAdd, IconList } from "@arco-design/web-react/icon";
+import { IconFolderAdd, IconHome, IconList } from "@arco-design/web-react/icon";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
@@ -39,7 +39,7 @@ const Sider = () => {
   return (
     <SiderWrapper>
       <ContentWrapper>
-        <Tooltip position="right" trigger={"hover"} content="返回主页">
+        <Tooltip position="right" trigger={"hover"} content="回到主页">
           <div
             className="h-[40px] w-[40px] cursor-pointer rounded-md transition-colors duration-100 hover:bg-gray-200"
             onClick={() => route("/ai/chat")}
@@ -65,9 +65,17 @@ const Sider = () => {
           </div>
         </Tooltip>
         <Divider className={"my-2"} type="horizontal" />
-        <Avatar className={"cursor-pointer"} onClick={handleLogin}>
+        <Avatar className={"cursor-pointer mt-4"} onClick={handleLogin}>
           登录
         </Avatar>
+        <Tooltip position="right" trigger={"hover"} content="仪表盘">
+          <div
+            className="text-xl mt-6 py-1 px-2 rounded-md transition-colors duration-100 cursor-pointer hover:bg-gray-200"
+            onClick={() => route("/layout")}
+          >
+            <IconHome />
+          </div>
+        </Tooltip>
       </ContentWrapper>
     </SiderWrapper>
   );
