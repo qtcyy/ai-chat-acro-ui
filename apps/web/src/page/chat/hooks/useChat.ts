@@ -39,9 +39,15 @@ const useChat = (props: Props) => {
       return;
     }
     setMessages((old) => {
-      let last = old[old.length - 1].content as MessageType;
-      last.isEnd = true;
-      old[old.length - 1].content = last;
+      // let last = old[old.length - 1].content as MessageType;
+      // last.isEnd = true;
+      // old[old.length - 1].content = last;
+      old = old.map((item) => {
+        if (item.role === ROLE.assistant && item.content?.isEnd) {
+          item.content.isEnd = true;
+        }
+        return item;
+      });
       return [...old];
     });
     console.log(messages);

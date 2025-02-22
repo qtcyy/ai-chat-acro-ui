@@ -7,14 +7,17 @@ import { useChat } from "../hooks/useChat";
 import { useEffect, useState } from "react";
 import { Sender } from "../Sender/Sender";
 import {
+  IconCopy,
   IconDelete,
   IconDown,
   IconEdit,
+  IconShareExternal,
   IconShareInternal,
+  IconSync,
   IconUp,
 } from "@arco-design/web-react/icon";
 import { useScroll } from "../hooks/useScroll";
-import { Dropdown, Menu } from "@arco-design/web-react";
+import { Dropdown, Menu, Message } from "@arco-design/web-react";
 import NiceModal from "@ebay/nice-modal-react";
 import { RenameModal } from "../history/RenameModal";
 import { DeleteModal } from "../history/DeleteModal";
@@ -208,6 +211,16 @@ const Chat = () => {
     },
   });
 
+  const retry = (query: string) => {
+    setMessages((old) => {
+      old.pop();
+      return [...old];
+    });
+    setTimeout(() => {
+      ask(query);
+    }, 100);
+  };
+
   const roles: RolesType<MessageType> = {
     [ROLE.start]: {
       render: () => {
@@ -222,12 +235,19 @@ const Chat = () => {
     [ROLE.assistant]: {
       render: (content) => {
         const [collapsed, setCollapsed] = useState(false);
+        const [isCopied, setIsCopied] = useState(false);
+
+        console.log(content);
 
         let think = content?.think;
         const answer = content?.answer;
         if (think) {
           think = think.replaceAll("undefined", " ");
         }
+
+        const handleCopy = async () => {
+          Message.info("需要https安全环境部署");
+        };
 
         return (
           <AnswerWrapper>
@@ -250,6 +270,28 @@ const Chat = () => {
               </ThinkWrapper>
             )}
             <MDRenderer text={answer ?? " "} />
+            {content?.isEnd && (
+              <div className="flex flex-row gap-2">
+                <div
+                  className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors "
+                  onClick={handleCopy}
+                >
+                  <IconCopy />
+                  复制
+                </div>
+                <div
+                  className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                  onClick={() => retry(content.query)}
+                >
+                  <IconSync />
+                  再试一次
+                </div>
+                <div className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors">
+                  <IconShareExternal />
+                  分享
+                </div>
+              </div>
+            )}
           </AnswerWrapper>
         );
       },

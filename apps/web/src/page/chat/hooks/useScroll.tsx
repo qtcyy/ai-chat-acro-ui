@@ -2,8 +2,8 @@ import { createContext, ReactNode, useContext } from "react";
 
 type ScrollContextType = {
   target: React.RefObject<null>;
-  toTop: () => void;
-  toBottom: () => void;
+  toTop: (smooth?: boolean) => void;
+  toBottom: (smooth?: boolean) => void;
 };
 
 export const ScrollContext = createContext<ScrollContextType | undefined>(
@@ -19,7 +19,7 @@ type Props = { children: ReactNode; ref: React.RefObject<null> };
 const ScrollProvider = (props: Props) => {
   const { children, ref } = props;
 
-  const toTop = () => {
+  const toTop = (smooth?: boolean) => {
     //@ts-ignore
     if (!ref.current.getScrollElement()) {
       return;
@@ -27,14 +27,20 @@ const ScrollProvider = (props: Props) => {
     //@ts-ignore
     const target = ref.current.getScrollElement();
     if (target) {
-      target.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      if (smooth) {
+        target.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      } else {
+        target.scrollTo({
+          top: 0,
+        });
+      }
     }
   };
 
-  const toBottom = () => {
+  const toBottom = (smooth?: boolean) => {
     //@ts-ignore
     if (!ref.current.getScrollElement()) {
       return;
@@ -42,10 +48,16 @@ const ScrollProvider = (props: Props) => {
     //@ts-ignore
     const target = ref.current.getScrollElement();
     if (target) {
-      target.scrollTo({
-        top: target.scrollHeight,
-        behavior: "smooth",
-      });
+      if (smooth) {
+        target.scrollTo({
+          top: target.scrollHeight,
+          behavior: "smooth",
+        });
+      } else {
+        target.scrollTo({
+          top: target.scrollHeight,
+        });
+      }
     }
   };
 

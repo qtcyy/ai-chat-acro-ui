@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
 } from "react";
+import { useRequest } from "ahooks";
 
 export interface BubbleProps<ContentType extends any>
   extends Omit<HTMLAttributes<HTMLDivElement>, "content"> {
@@ -28,10 +29,19 @@ const Bubble = <T,>(props: BubbleProps<T>) => {
 
   const { onUpdate } = useContext(BubbleContext);
 
-  useEffect(() => {
+  const onContentUpdate = async () => {
     if (onUpdate) {
       onUpdate();
     }
+  };
+
+  const { run } = useRequest(onContentUpdate, {
+    debounceWait: 50,
+    manual: true,
+  });
+
+  useEffect(() => {
+    run();
   }, [content]);
 
   return <div className="flex flex-row">{render ? render(content) : null}</div>;
