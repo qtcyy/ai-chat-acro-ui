@@ -22,4 +22,11 @@ export default defineConfig({
     },
     compress: false,
   },
+  output: {
+    assetPrefix: "./",
+    polyfill: "entry",
+  },
+  source: {
+    include: [/[\\/]node_modules[\\/]/],
+  },
 });

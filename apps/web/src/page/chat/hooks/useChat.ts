@@ -95,7 +95,7 @@ const useChat = (props: Props) => {
     let oldThink = "";
     let oldAnswer = "";
 
-    fetchEventSource("/api", {
+    fetchEventSource(ARK_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

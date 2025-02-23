@@ -13,51 +13,50 @@ import { TimerPage } from "./page/ui/test/TimerPage";
 export const routes: RouteObject[] = [
   {
     path: "/",
+    element: <ChatLayout />,
+    children: [
+      {
+        path: "ai/chat",
+        element: <ChatHome />,
+      },
+      {
+        path: "ai/chat/list",
+        element: <HistoryList />,
+      },
+      {
+        path: "ai/chat/page/:chatId",
+        element: <Chat />,
+      },
+    ],
+  },
+  {
+    path: "/test",
     element: <HomePage />,
     children: [
       {
-        path: "/ui/card",
+        path: "ui/card",
         element: <CardPage />,
       },
       {
-        path: "/ui/menu",
+        path: "ui/menu",
         element: <MenuPage />,
       },
       {
-        path: "/test/timer",
+        path: "test/timer",
         element: <TimerPage />,
       },
     ],
   },
   {
-    path: "/ai",
-    element: <ChatLayout />,
-    children: [
-      {
-        path: "/ai/chat",
-        element: <ChatHome />,
-      },
-      {
-        path: "/ai/chat/list",
-        element: <HistoryList />,
-      },
-      {
-        path: "/ai/chat/page/:chatId",
-        element: <Chat />,
-      },
-    ],
-  },
-
-  {
     path: "/layout",
     element: <Layout />,
     children: [
       {
-        path: "/layout/main",
+        path: "layout/main",
         element: <DashBoard />,
       },
       {
-        path: "/layout/manage",
+        path: "layout/manage",
       },
     ],
   },

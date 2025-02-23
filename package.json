@@ -17,6 +17,7 @@
     "ahooks": "^3.8.4",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
+    "gh-pages": "^6.3.0",
     "github-markdown-css": "^5.8.1",
     "katex": "^0.16.21",
     "mermaid": "^11.4.1",
