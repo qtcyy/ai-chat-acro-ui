@@ -35,10 +35,11 @@ export const useAutoRename = (props: Props) => {
     console.log(messages);
     const response = await axios({
       method: "POST",
-      url: "/api",
+      url: "http://120.26.42.17:8080/proxy/chat/completions",
       headers: {
         ...props.headers,
         "Content-Type": "application/json",
+        // Accept: "application/json",
         Authorization: `Bearer ${ARK_API_KEY}`,
       },
       data: JSON.stringify({
