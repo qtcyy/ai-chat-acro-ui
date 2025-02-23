@@ -14,6 +14,7 @@ import NiceModal, { hide } from "@ebay/nice-modal-react";
 import { ReactNode, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CgDarkMode } from "react-icons/cg";
+import { LoginModal } from "../login/LoginModal";
 
 const SiderWrapper = styled.div`
   position: relative;
@@ -155,7 +156,9 @@ const Sider = () => {
     route(`/ai/chat/page/${chatId}`);
   };
 
-  const handleLogin = () => {};
+  const handleLogin = async () => {
+    await NiceModal.show(LoginModal);
+  };
 
   return (
     <SiderWrapper>
