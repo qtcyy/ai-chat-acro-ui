@@ -7,6 +7,7 @@ import { IconDelete, IconEdit } from "@arco-design/web-react/icon";
 import NiceModal from "@ebay/nice-modal-react";
 import { RenameModal } from "./RenameModal";
 import { DeleteModal } from "./DeleteModal";
+import { motion } from "motion/react";
 
 const ContentWrapper = styled.div`
   display: flex;
@@ -14,7 +15,7 @@ const ContentWrapper = styled.div`
   width: 100%;
 `;
 
-const ItemWrapper = styled.div`
+const ItemWrapper = styled(motion.div)`
   padding: 16px 24px;
   background: #fff;
   width: 60%;
@@ -28,7 +29,7 @@ const ItemWrapper = styled.div`
 
   border-radius: 10px;
   /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease;
   &:hover {
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
   }
@@ -97,6 +98,12 @@ const HistoryList = () => {
               className="group"
               key={item.chatId}
               onClick={() => handleClick(item.chatId)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              drag={true}
+              dragConstraints={{ left: 0, right: 300 }}
+              dragElastic={0.2}
+              dragMomentum={true}
             >
               <div>{item.name}</div>
               <div className="ml-auto text-sm group-hover:hidden">

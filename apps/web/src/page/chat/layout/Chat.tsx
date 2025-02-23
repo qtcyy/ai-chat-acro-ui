@@ -131,7 +131,7 @@ const ThinkWrapper = styled.div`
 
 const ThinkHeaderWrapper = styled.div`
   background: #f1f1f1;
-  border-radius: 16px 0;
+  border-radius: 8px 0;
 
   &::after {
     content: "";
@@ -302,7 +302,7 @@ const Chat = () => {
           <AnswerWrapper>
             {think && think.trim() !== "" && (
               <ThinkWrapper>
-                <ThinkHeaderWrapper className=" sticky top-[60px] flex flex-row items-center">
+                <ThinkHeaderWrapper className=" sticky top-[55px] flex flex-row items-center">
                   {content?.isThink ? (
                     <div className="my-2 text-xl flex flex-row items-center gap-2">
                       <div>思考中...</div>
