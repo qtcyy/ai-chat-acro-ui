@@ -25,6 +25,7 @@ import { RenameModal } from "../history/RenameModal";
 import { DeleteModal } from "../history/DeleteModal";
 import { useAutoRename } from "../hooks/useAutoRename";
 import { useStore } from "../../../store";
+import { timer } from "utils";
 
 const ChatWrapper = styled.div`
   position: relative;
@@ -287,12 +288,31 @@ const Chat = () => {
       render: (content) => {
         const [collapsed, setCollapsed] = useState(false);
         const [isCopied, setIsCopied] = useState(false);
+        const { onStart, onEnd, getCurrent, reset } = timer({ init: 0 });
 
         let think = content?.think;
         const answer = content?.answer;
         if (think) {
           think = think.replaceAll("undefined", "");
         }
+        useEffect(() => {
+          if (content?.isEnd) {
+            return;
+          }
+          if (content?.isThink) {
+            onStart();
+          } else {
+            onEnd();
+            setMessages((old) => {
+              const last = old[old.length - 1].content;
+              if (last) {
+                last.thinkTime = getCurrent();
+              }
+              return [...old];
+            });
+            reset();
+          }
+        }, [content?.isThink]);
 
         const handleCopy = async () => {
           Message.info("需要https安全环境部署");
@@ -306,10 +326,19 @@ const Chat = () => {
                   {content?.isThink ? (
                     <div className="my-2 text-xl flex flex-row items-center gap-2">
                       <div>思考中...</div>
+                      <div>{getCurrent()} s</div>
                       <IconLoading />
                     </div>
                   ) : (
-                    <div className="my-2 text-xl">思考过程</div>
+                    <div className="my-2 text-xl flex flex-row items-center gap-2">
+                      <div>思考过程</div>
+                      {content?.thinkTime && content.thinkTime !== 0 && (
+                        <div>
+                          用时
+                          {content.thinkTime} s
+                        </div>
+                      )}
+                    </div>
                   )}
                   <div
                     className="ml-auto scale-125 p-1 cursor-pointer"

@@ -10,6 +10,7 @@ export type MessageType = {
   think?: string;
   isEnd?: boolean;
   isThink?: boolean;
+  thinkTime?: number;
   createTime?: string;
 };
 

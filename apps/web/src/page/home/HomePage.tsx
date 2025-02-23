@@ -85,6 +85,13 @@ const HomePage = () => {
           >
             Layout
           </Button>
+          <Button
+            className={"ml-4"}
+            type="primary"
+            onClick={() => route("/test/timer")}
+          >
+            Timer
+          </Button>
         </Menu>
       </div>
       <OutletWrapper>

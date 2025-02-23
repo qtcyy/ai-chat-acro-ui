@@ -8,6 +8,7 @@ import { ChatLayout } from "./page/chat";
 import { Chat } from "./page/chat/layout/Chat";
 import { ChatHome } from "./page/chat/layout/ChatHome";
 import { HistoryList } from "./page/chat/history/HistoryList";
+import { TimerPage } from "./page/ui/test/TimerPage";
 
 export const routes: RouteObject[] = [
   {
@@ -21,6 +22,10 @@ export const routes: RouteObject[] = [
       {
         path: "/ui/menu",
         element: <MenuPage />,
+      },
+      {
+        path: "/test/timer",
+        element: <TimerPage />,
       },
     ],
   },

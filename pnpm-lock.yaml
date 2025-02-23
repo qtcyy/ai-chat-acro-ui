@@ -114,8 +114,13 @@ importers:
       components:
         specifier: workspace:^
         version: link:../../packages/components
+      utils:
+        specifier: workspace:^
+        version: link:../../packages/utils
 
   packages/components: {}
+
+  packages/utils: {}
 
 packages:
 

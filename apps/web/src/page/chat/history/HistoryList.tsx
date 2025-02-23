@@ -105,7 +105,7 @@ const HistoryList = () => {
               dragElastic={0.2}
               dragMomentum={true}
             >
-              <div>{item.name}</div>
+              <div className="max-w-[80%]">{item.name}</div>
               <div className="ml-auto text-sm group-hover:hidden">
                 {timeDisplay(item.updateTime)}
               </div>
