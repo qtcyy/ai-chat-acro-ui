@@ -13,7 +13,7 @@ type RequestMessageType = {
   content: string;
 };
 
-const ARK_API_KEY = "030c2b0f-6526-4461-8684-4d4ce3992ce5";
+const ARK_API_KEY = "sk-2f7f96daa57447c29397e024650634a9";
 
 export const useAutoRename = (props: Props) => {
   const temp = props.messages;
