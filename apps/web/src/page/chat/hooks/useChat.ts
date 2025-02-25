@@ -97,90 +97,97 @@ const useChat = (props: Props) => {
     let oldThink = "";
     let oldAnswer = "";
 
-    fetchEventSource("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ARK_API_KEY}`,
-        Accept: "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: sendMessages,
-        stream: true,
-      }),
-      onopen(response) {
-        console.log(response);
-        setMessages((old) => {
-          old.push({
-            role: ROLE.assistant,
-            key: String(old.length),
-            content: {
-              id: String(old.length),
-              answer: "",
-              query: question,
-              isEnd: false,
-            },
+    fetchEventSource(
+      "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ARK_API_KEY}`,
+          Accept: "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: sendMessages,
+          stream: true,
+        }),
+        onopen(response) {
+          console.log(response);
+          setMessages((old) => {
+            old.push({
+              role: ROLE.assistant,
+              key: String(old.length),
+              content: {
+                id: String(old.length),
+                answer: "",
+                query: question,
+                isEnd: false,
+              },
+            });
+            return [...old];
           });
-          return [...old];
-        });
-        if (props.onOpen) {
-          props.onOpen();
-        }
-        return Promise.resolve();
-      },
-      onmessage(event) {
-        if (event.data === "[DONE]") {
-          return;
-        }
+          if (props.onOpen) {
+            props.onOpen();
+          }
+          return Promise.resolve();
+        },
+        onmessage(event) {
+          if (event.data === "[DONE]") {
+            return;
+          }
 
-        const data = JSON.parse(event.data);
-        const think = data.choices[0]?.delta?.reasoning_content;
-        const answer = data.choices[0]?.delta?.content;
+          const data = JSON.parse(event.data);
+          const think = data.choices[0]?.delta?.reasoning_content;
+          const answer = data.choices[0]?.delta?.content;
 
-        if (!oldIsThink && think) {
-          oldIsThink = true;
-        }
-        if (answer) {
-          oldIsThink = false;
-        }
-        oldThink += think;
-        oldAnswer += answer;
-        oldThink = oldThink.replace(/\\\((.*?)\\\)/g, "$$$1$$");
-        oldThink = oldThink.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
-        oldThink = oldThink.replaceAll("\\[", "$$");
-        oldThink = oldThink.replaceAll("\\]", "$$");
+          if (!oldIsThink && think) {
+            oldIsThink = true;
+            oldThink += think;
+          } else if (think) {
+            oldThink += think;
+          }
+          if (answer) {
+            oldIsThink = false;
+            oldAnswer += answer;
+          }
+          // oldThink += think;
+          // oldAnswer += answer;
+          oldThink = oldThink.replace(/\\\((.*?)\\\)/g, "$$$1$$");
+          oldThink = oldThink.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+          oldThink = oldThink.replaceAll("\\[", "$$");
+          oldThink = oldThink.replaceAll("\\]", "$$");
 
-        oldAnswer = oldAnswer.replace(/\\\((.*?)\\\)/g, "$$$1$$");
-        oldAnswer = oldAnswer.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
-        oldAnswer = oldAnswer.replaceAll("\\[", "$$");
-        oldAnswer = oldAnswer.replaceAll("\\]", "$$");
+          oldAnswer = oldAnswer.replace(/\\\((.*?)\\\)/g, "$$$1$$");
+          oldAnswer = oldAnswer.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+          oldAnswer = oldAnswer.replaceAll("\\[", "$$");
+          oldAnswer = oldAnswer.replaceAll("\\]", "$$");
 
-        setMessages((old) => {
-          let last = old[old.length - 1].content as MessageType;
-          last = {
-            ...last,
-            answer: oldAnswer,
-            think: oldThink,
-            isThink: oldIsThink,
-          };
-          old[old.length - 1].content = last;
-          return [...old];
-        });
-      },
-      onerror(err) {
-        console.error(err);
-        setLoading(false);
-      },
-      onclose() {
-        setLoading(false);
-        setTimeout(() => {
-          setCloseSignal((c) => c + 1);
-        }, 50);
-      },
-    });
+          setMessages((old) => {
+            let last = old[old.length - 1].content as MessageType;
+            last = {
+              ...last,
+              answer: oldAnswer,
+              think: oldThink,
+              isThink: oldIsThink,
+            };
+            old[old.length - 1].content = last;
+            return [...old];
+          });
+        },
+        onerror(err) {
+          console.error(err);
+          setLoading(false);
+        },
+        onclose() {
+          setLoading(false);
+          setTimeout(() => {
+            setCloseSignal((c) => c + 1);
+          }, 50);
+        },
+      }
+    );
   };
 
   return { messages, setMessages, ask, cancel, loading };
