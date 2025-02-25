@@ -179,6 +179,7 @@ const useChat = (props: Props) => {
         onerror(err) {
           console.error(err);
           setLoading(false);
+          throw err;
         },
         onclose() {
           setLoading(false);

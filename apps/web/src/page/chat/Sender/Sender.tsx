@@ -92,7 +92,7 @@ const Sender = (props: Props) => {
     if (text === "" || loading) return;
     console.log(loading);
     console.log(text);
-    run(text);
+    send(text);
     setText("");
   };
 

@@ -14,7 +14,7 @@ const LayoutWrapper = styled.div`
   background: rgb(244, 242, 236);
 `;
 
-const DELTA = 1206;
+const DELTA = 50;
 
 const ChatLayout = () => {
   const ref = useRef(null);
@@ -24,9 +24,12 @@ const ChatLayout = () => {
     if (ref) {
       //@ts-ignore
       const target = ref.current.getScrollElement();
-      // console.log(target.scrollTop, target.scrollHeight);
+      // console.log(target.scrollTop, target.offsetHeight);
       // console.log(shouldScroll);
-      if (target.scrollHeight - target.scrollTop > DELTA) {
+      if (
+        target.scrollHeight - target.scrollTop >
+        DELTA + target.offsetHeight
+      ) {
         setShouldScroll(false);
       } else {
         setShouldScroll(true);
