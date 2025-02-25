@@ -197,6 +197,7 @@ const Chat = () => {
     console.log("chat start");
 
     return () => {
+      cancel();
       if (messages.length <= 2) {
         console.log("chat delete");
         store?.removeChat(chatId);
@@ -320,7 +321,7 @@ const Chat = () => {
             {think && think.trim() !== "" && (
               <ThinkWrapper>
                 <ThinkHeaderWrapper className=" sticky top-[55px] flex flex-row items-center">
-                  {content?.isThink ? (
+                  {content?.isThink && loading ? (
                     <div className="my-2 text-xl flex flex-row items-center gap-2">
                       <div>思考中...</div>
                       <div>{getCurrent()} s</div>

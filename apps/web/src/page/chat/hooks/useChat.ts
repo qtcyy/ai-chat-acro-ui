@@ -1,6 +1,6 @@
 import { BubbleDataType } from "components";
 import { MessageType } from "./useChatStorage";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ROLE } from "../layout/Chat";
 import dayjs from "dayjs";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
@@ -58,138 +58,149 @@ const useChat = (props: Props) => {
     props.onClose?.();
   }, [closeSignal, loading]);
 
-  const cancel = () => {};
+  const ctrl = useMemo(() => new AbortController(), []);
 
-  const ask = (question: string) => {
-    if (loading) {
-      return;
-    }
-    setLoading(true);
-    console.log(question);
-    let sendMessages: SendMessageType[] = [
-      { role: ROLE.user, content: AIProps },
-    ];
-    sendMessages.push(
-      ...messages.map((message) => {
-        return { role: message.role, content: message.content?.answer ?? "" };
-      })
-    );
-    sendMessages = sendMessages.filter((o) => o.role !== ROLE.start);
-    sendMessages.push({ role: ROLE.user, content: question });
+  const cancel = useCallback(() => {
+    console.log("cancel");
+    ctrl.abort();
+    setLoading(false);
+    setCloseSignal((c) => c + 1);
+  }, [ctrl]);
 
-    setMessages((old) => {
-      old.push({
-        role: ROLE.user,
-        content: {
-          id: String(old.length),
-          answer: question,
-          query: question,
-          isEnd: true,
-          createTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        },
-        key: String(old.length),
-      });
-      return [...old];
-    });
-    console.log(sendMessages);
-
-    let oldIsThink = false;
-    let oldThink = "";
-    let oldAnswer = "";
-
-    fetchEventSource(
-      "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ARK_API_KEY}`,
-          Accept: "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: sendMessages,
-          stream: true,
-        }),
-        onopen(response) {
-          console.log(response);
-          setMessages((old) => {
-            old.push({
-              role: ROLE.assistant,
-              key: String(old.length),
-              content: {
-                id: String(old.length),
-                answer: "",
-                query: question,
-                isEnd: false,
-              },
-            });
-            return [...old];
-          });
-          if (props.onOpen) {
-            props.onOpen();
-          }
-          return Promise.resolve();
-        },
-        onmessage(event) {
-          if (event.data === "[DONE]") {
-            return;
-          }
-
-          const data = JSON.parse(event.data);
-          const think = data.choices[0]?.delta?.reasoning_content;
-          const answer = data.choices[0]?.delta?.content;
-
-          if (!oldIsThink && think) {
-            oldIsThink = true;
-            oldThink += think;
-          } else if (think) {
-            oldThink += think;
-          }
-          if (answer) {
-            oldIsThink = false;
-            oldAnswer += answer;
-          }
-          // oldThink += think;
-          // oldAnswer += answer;
-          oldThink = oldThink.replace(/\\\((.*?)\\\)/g, "$$$1$$");
-          oldThink = oldThink.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
-          oldThink = oldThink.replaceAll("\\[", "$$");
-          oldThink = oldThink.replaceAll("\\]", "$$");
-
-          oldAnswer = oldAnswer.replace(/\\\((.*?)\\\)/g, "$$$1$$");
-          oldAnswer = oldAnswer.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
-          oldAnswer = oldAnswer.replaceAll("\\[", "$$");
-          oldAnswer = oldAnswer.replaceAll("\\]", "$$");
-
-          setMessages((old) => {
-            let last = old[old.length - 1].content as MessageType;
-            last = {
-              ...last,
-              answer: oldAnswer,
-              think: oldThink,
-              isThink: oldIsThink,
-            };
-            old[old.length - 1].content = last;
-            return [...old];
-          });
-        },
-        onerror(err) {
-          console.error(err);
-          setLoading(false);
-          throw err;
-        },
-        onclose() {
-          setLoading(false);
-          setTimeout(() => {
-            setCloseSignal((c) => c + 1);
-          }, 50);
-        },
+  const ask = useCallback(
+    (question: string) => {
+      if (loading) {
+        return;
       }
-    );
-  };
+      setLoading(true);
+      console.log(question);
+      let sendMessages: SendMessageType[] = [
+        { role: ROLE.user, content: AIProps },
+      ];
+      sendMessages.push(
+        ...messages.map((message) => {
+          return { role: message.role, content: message.content?.answer ?? "" };
+        })
+      );
+      sendMessages = sendMessages.filter((o) => o.role !== ROLE.start);
+      sendMessages.push({ role: ROLE.user, content: question });
+
+      setMessages((old) => {
+        old.push({
+          role: ROLE.user,
+          content: {
+            id: String(old.length),
+            answer: question,
+            query: question,
+            isEnd: true,
+            createTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+          },
+          key: String(old.length),
+        });
+        return [...old];
+      });
+      console.log(sendMessages);
+
+      let oldIsThink = false;
+      let oldThink = "";
+      let oldAnswer = "";
+
+      fetchEventSource(
+        "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        {
+          method: "POST",
+          signal: ctrl.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${ARK_API_KEY}`,
+            Accept: "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages: sendMessages,
+            stream: true,
+          }),
+          onopen(response) {
+            console.log(response);
+            setMessages((old) => {
+              old.push({
+                role: ROLE.assistant,
+                key: String(old.length),
+                content: {
+                  id: String(old.length),
+                  answer: "",
+                  query: question,
+                  isEnd: false,
+                },
+              });
+              return [...old];
+            });
+            if (props.onOpen) {
+              props.onOpen();
+            }
+            return Promise.resolve();
+          },
+          onmessage(event) {
+            if (event.data === "[DONE]") {
+              return;
+            }
+
+            const data = JSON.parse(event.data);
+            const think = data.choices[0]?.delta?.reasoning_content;
+            const answer = data.choices[0]?.delta?.content;
+
+            if (!oldIsThink && think) {
+              oldIsThink = true;
+              oldThink += think;
+            } else if (think) {
+              oldThink += think;
+            }
+            if (answer) {
+              oldIsThink = false;
+              oldAnswer += answer;
+            }
+            // oldThink += think;
+            // oldAnswer += answer;
+            oldThink = oldThink.replace(/\\\((.*?)\\\)/g, "$$$1$$");
+            oldThink = oldThink.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+            oldThink = oldThink.replaceAll("\\[", "$$");
+            oldThink = oldThink.replaceAll("\\]", "$$");
+
+            oldAnswer = oldAnswer.replace(/\\\((.*?)\\\)/g, "$$$1$$");
+            oldAnswer = oldAnswer.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+            oldAnswer = oldAnswer.replaceAll("\\[", "$$");
+            oldAnswer = oldAnswer.replaceAll("\\]", "$$");
+
+            setMessages((old) => {
+              let last = old[old.length - 1].content as MessageType;
+              last = {
+                ...last,
+                answer: oldAnswer,
+                think: oldThink,
+                isThink: oldIsThink,
+              };
+              old[old.length - 1].content = last;
+              return [...old];
+            });
+          },
+          onerror(err) {
+            console.error(err);
+            setLoading(false);
+            throw err;
+          },
+          onclose() {
+            setLoading(false);
+            setTimeout(() => {
+              setCloseSignal((c) => c + 1);
+            }, 50);
+          },
+        }
+      );
+    },
+    [loading, ctrl, setMessages, selectedModel, props.onOpen, props.onClose]
+  );
 
   return { messages, setMessages, ask, cancel, loading };
 };

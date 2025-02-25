@@ -8,7 +8,7 @@ const BubbleListWrapper = styled.div`
   flex-direction: column;
   gap: 30px;
   width: 60%;
-  min-height: calc(100vh - 200px);
+  min-height: calc(100vh - 250px);
   min-width: 900px;
   max-width: 1400px;
 `;

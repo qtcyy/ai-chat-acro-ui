@@ -2,8 +2,10 @@ import { Dropdown, Menu, Tooltip } from "@arco-design/web-react";
 import {
   IconArrowUp,
   IconCheck,
+  IconClose,
   IconDown,
   IconLoading,
+  IconRecordStop,
 } from "@arco-design/web-react/icon";
 import { ReactNode, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -198,23 +200,33 @@ const Sender = (props: Props) => {
               </div>
             </Dropdown>
           )}
-          <div
-            className={
-              text === ""
-                ? "ml-auto flex flex-row px-3 py-2 bg-blue-300 text-gray-100 rounded-md transition-colors duration-200"
-                : "ml-auto flex flex-row px-3 py-2 bg-blue-500 text-white rounded-md transition-colors duration-200 cursor-pointer"
-            }
-            onClick={handleSend}
-          >
-            <Tooltip
-              mini
-              position="top"
-              content={text === "" ? "请输入问题" : "点击发送"}
-            >
-              <div className="scale-150">
-                {loading ? <IconLoading /> : <IconArrowUp />}
+          <div className="ml-auto flex flex-row gap-2 justify-center items-center">
+            {loading && (
+              <div
+                className="text-xl text-white px-2 py-2 rounded-[50%] bg-red-500 cursor-pointer flex justify-center items-center"
+                onClick={cancel}
+              >
+                <IconRecordStop />
               </div>
-            </Tooltip>
+            )}
+            <div
+              className={
+                text === ""
+                  ? "flex flex-row px-3 py-2 bg-blue-300 text-gray-100 rounded-md transition-colors duration-200"
+                  : "flex flex-row px-3 py-2 bg-blue-500 text-white rounded-md transition-colors duration-200 cursor-pointer"
+              }
+              onClick={handleSend}
+            >
+              <Tooltip
+                mini
+                position="top"
+                content={text === "" ? "请输入问题" : "点击发送"}
+              >
+                <div className="scale-150">
+                  {loading ? <IconLoading /> : <IconArrowUp />}
+                </div>
+              </Tooltip>
+            </div>
           </div>
         </div>
       </SenderWrapper>
