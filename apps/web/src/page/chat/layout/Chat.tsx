@@ -292,9 +292,6 @@ const Chat = () => {
 
         let think = content?.think;
         const answer = content?.answer;
-        if (think) {
-          think = think.replaceAll("undefined", "");
-        }
         useEffect(() => {
           if (content?.isEnd) {
             return;
