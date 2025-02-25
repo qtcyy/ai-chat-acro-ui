@@ -1,9 +1,10 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 
 type ScrollContextType = {
   target: React.RefObject<null>;
   toTop: (smooth?: boolean) => void;
   toBottom: (smooth?: boolean) => void;
+  shouldScroll: boolean;
 };
 
 export const ScrollContext = createContext<ScrollContextType | undefined>(
@@ -14,10 +15,14 @@ export const useScroll = () => {
   return useContext(ScrollContext);
 };
 
-type Props = { children: ReactNode; ref: React.RefObject<null> };
+type Props = {
+  children: ReactNode;
+  ref: React.RefObject<null>;
+  shouldScroll: boolean;
+};
 
 const ScrollProvider = (props: Props) => {
-  const { children, ref } = props;
+  const { children, ref, shouldScroll } = props;
 
   const toTop = (smooth?: boolean) => {
     //@ts-ignore
@@ -62,7 +67,9 @@ const ScrollProvider = (props: Props) => {
   };
 
   return (
-    <ScrollContext.Provider value={{ target: ref, toTop, toBottom }}>
+    <ScrollContext.Provider
+      value={{ target: ref, toTop, toBottom, shouldScroll }}
+    >
       {children}
     </ScrollContext.Provider>
   );
