@@ -19,7 +19,7 @@ type SendMessageType = {
 };
 
 const AIProps = "你是一个有帮助的智能助理，请帮助我解决问题";
-const ARK_API_KEY = "030c2b0f-6526-4461-8684-4d4ce3992ce5";
+const ARK_API_KEY = "sk-2f7f96daa57447c29397e024650634a9";
 const ARK_API_PRI = "https://ark.cn-beijing.volces.com/";
 const LOBE_API_KEY = "sk-RULGrxWdcfMwLVCgq0l0BEJ52zJsdoPxFOlD45WYWZda9McU";
 
@@ -97,7 +97,7 @@ const useChat = (props: Props) => {
     let oldThink = "";
     let oldAnswer = "";
 
-    fetchEventSource("http://120.26.42.17:8080/proxy/chat/completions/stream", {
+    fetchEventSource("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

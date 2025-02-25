@@ -11,7 +11,7 @@ type StoreType = {
 
 export const useStore = create<StoreType>((set) => ({
   waitSendQuestion: undefined,
-  selectedModel: "deepseek-r1-250120",
+  selectedModel: "deepseek-r1",
   insertText: "",
   setWaitSendQuestion(value: string | undefined) {
     set({ waitSendQuestion: value });
