@@ -15,6 +15,11 @@ type RequestMessageType = {
 
 const ARK_API_KEY = "030c2b0f-6526-4461-8684-4d4ce3992ce5";
 
+const ALI_API = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const ALI_API_KEY = "sk-490fc6a12924409489eea7ee17b8f714";
+
+const CLOUD_API = "http://120.26.42.17:8080/proxy/chat/completions";
+
 export const useAutoRename = (props: Props) => {
   const temp = props.messages;
   let messages: RequestMessageType[] = temp.map((chat) => {
@@ -35,7 +40,7 @@ export const useAutoRename = (props: Props) => {
     console.log(messages);
     const response = await axios({
       method: "POST",
-      url: "http://120.26.42.17:8080/proxy/chat/completions",
+      url: CLOUD_API,
       headers: {
         ...props.headers,
         "Content-Type": "application/json",

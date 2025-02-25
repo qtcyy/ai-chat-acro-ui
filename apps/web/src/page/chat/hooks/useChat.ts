@@ -23,6 +23,11 @@ const ARK_API_KEY = "030c2b0f-6526-4461-8684-4d4ce3992ce5";
 const ARK_API_PRI = "https://ark.cn-beijing.volces.com/";
 const LOBE_API_KEY = "sk-RULGrxWdcfMwLVCgq0l0BEJ52zJsdoPxFOlD45WYWZda9McU";
 
+const ALI_API = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const ALI_API_KEY = "sk-490fc6a12924409489eea7ee17b8f714";
+
+const CLOUD_API = "http://120.26.42.17:8080/proxy/chat/completions/stream";
+
 const ARK_API =
   "https://ark.cn-beijing.volces.com/api/v3/chat/completions/stream";
 const LOBE_API = "https://chat.cloudapi.vip/v1/chat/completions";
@@ -97,7 +102,7 @@ const useChat = (props: Props) => {
     let oldThink = "";
     let oldAnswer = "";
 
-    fetchEventSource("http://120.26.42.17:8080/proxy/chat/completions/stream", {
+    fetchEventSource(CLOUD_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
