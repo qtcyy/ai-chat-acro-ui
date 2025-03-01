@@ -157,7 +157,7 @@ const Sider = () => {
   };
 
   const handleLogin = async () => {
-    await NiceModal.show(LoginModal);
+    await NiceModal.show(LoginModal, { route });
   };
 
   return (

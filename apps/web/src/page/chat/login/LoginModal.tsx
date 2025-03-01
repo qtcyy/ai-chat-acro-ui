@@ -8,6 +8,7 @@ import {
 import NiceModal from "@ebay/nice-modal-react";
 import styled from "styled-components";
 import rqCode from "../../../assets/chat/TestRQCode.png";
+import { NavigateFunction } from "react-router-dom";
 
 const ModalWrapper = styled.div`
   display: flex;
@@ -22,11 +23,21 @@ const LoginWrapper = styled.div`
   padding: 12px 24px;
 `;
 
-const LoginModal = NiceModal.create(() => {
+type Props = {
+  route: NavigateFunction;
+};
+
+const LoginModal = NiceModal.create<Props>((props) => {
   const modal = NiceModal.useModal();
+  const { route } = props;
 
   const handleClose = () => {
     modal.hide();
+    modal.remove();
+  };
+
+  const handleClickRegister = () => {
+    route("/ai/register");
     modal.remove();
   };
 
@@ -62,7 +73,9 @@ const LoginModal = NiceModal.create(() => {
               <Button type="primary" size="large">
                 登录
               </Button>
-              <Button size="large">注册</Button>
+              <Button size="large" onClick={handleClickRegister}>
+                注册
+              </Button>
             </div>
             <Divider type="vertical" className={"h-full"} />
             <div className="flex-[0.35] flex flex-col gap-4">
