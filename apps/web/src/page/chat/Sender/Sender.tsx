@@ -2,7 +2,6 @@ import { Dropdown, Menu, Tooltip } from "@arco-design/web-react";
 import {
   IconArrowUp,
   IconCheck,
-  IconClose,
   IconDown,
   IconLoading,
   IconRecordStop,

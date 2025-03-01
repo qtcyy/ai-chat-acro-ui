@@ -1,7 +1,7 @@
 import { BubbleList, MDRenderer, RolesType } from "components";
 import { MessageType, useChatStorage } from "../hooks/useChatStorage";
 import styled from "styled-components";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { useChat } from "../hooks/useChat";
 import { useEffect, useState } from "react";
@@ -187,6 +187,7 @@ const Chat = () => {
   const chatId = useParams().chatId;
   const { waitSendQuestion, setWaitSendQuestion } = useStore();
   const route = useNavigate();
+  const location = useLocation();
   if (!chatId) {
     return null;
   }
@@ -197,13 +198,15 @@ const Chat = () => {
     console.log("chat start");
 
     return () => {
-      cancel();
+      if (!location.pathname.startsWith("/ai/chat/page")) {
+        cancel();
+      }
       if (messages.length <= 2) {
         console.log("chat delete");
         store?.removeChat(chatId);
       }
     };
-  }, []);
+  }, [location.pathname, chatId]);
 
   useEffect(() => {
     console.log(messages);

@@ -1,6 +1,6 @@
 import { BubbleDataType } from "components";
 import { MessageType } from "./useChatStorage";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ROLE } from "../layout/Chat";
 import dayjs from "dayjs";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
@@ -58,18 +58,31 @@ const useChat = (props: Props) => {
     props.onClose?.();
   }, [closeSignal, loading]);
 
-  const ctrl = useMemo(() => new AbortController(), []);
+  const ctrlRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    ctrlRef.current = new AbortController();
+
+    return () => {
+      if (ctrlRef.current) {
+        ctrlRef.current.abort();
+      }
+    };
+  }, []);
 
   const cancel = useCallback(() => {
     console.log("cancel");
-    ctrl.abort();
+    if (ctrlRef.current) {
+      ctrlRef.current.abort();
+      ctrlRef.current = new AbortController();
+    }
     setLoading(false);
     setCloseSignal((c) => c + 1);
-  }, [ctrl]);
+  }, []);
 
   const ask = useCallback(
     (question: string) => {
-      if (loading) {
+      if (loading || !ctrlRef.current) {
         return;
       }
       setLoading(true);
@@ -109,7 +122,7 @@ const useChat = (props: Props) => {
         "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
         {
           method: "POST",
-          signal: ctrl.signal,
+          signal: ctrlRef.current.signal,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${ARK_API_KEY}`,
@@ -199,7 +212,7 @@ const useChat = (props: Props) => {
         }
       );
     },
-    [loading, ctrl, setMessages, selectedModel, props.onOpen, props.onClose]
+    [loading, setMessages, selectedModel, props.onOpen, props.onClose]
   );
 
   return { messages, setMessages, ask, cancel, loading };
