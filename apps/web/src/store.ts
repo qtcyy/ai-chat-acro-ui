@@ -7,12 +7,14 @@ type StoreType = {
   loginId: string | undefined;
   loginUsername: string | undefined;
   reloadSignal: number;
+  chatLoadSignal: number;
   setWaitSendQuestion: (value: string | undefined) => void;
   setSelectedModel: (value: string) => void;
   setInsertText: (value: string) => void;
   setLoginId: (value: string | undefined) => void;
   setLoginUsername: (value: string | undefined) => void;
   setReloadSignal: (value: number) => void;
+  setChatLoadSignal: (value: number) => void;
 };
 
 export const useStore = create<StoreType>((set) => ({
@@ -22,6 +24,7 @@ export const useStore = create<StoreType>((set) => ({
   loginId: undefined,
   loginUsername: undefined,
   reloadSignal: 0,
+  chatLoadSignal: 0,
   setWaitSendQuestion(value: string | undefined) {
     set({ waitSendQuestion: value });
   },
@@ -39,5 +42,8 @@ export const useStore = create<StoreType>((set) => ({
   },
   setReloadSignal(value: number) {
     set({ reloadSignal: value });
+  },
+  setChatLoadSignal(value: number) {
+    set({ chatLoadSignal: value });
   },
 }));

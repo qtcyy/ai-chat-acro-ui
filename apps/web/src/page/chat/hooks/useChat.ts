@@ -82,6 +82,7 @@ const useChat = (props: Props) => {
 
   const ask = useCallback(
     (question: string) => {
+      console.log(question);
       if (loading || !ctrlRef.current) {
         return;
       }
@@ -212,7 +213,7 @@ const useChat = (props: Props) => {
         }
       );
     },
-    [loading, setMessages, selectedModel, props.onOpen, props.onClose]
+    [loading, selectedModel, props.onOpen, props.onClose]
   );
 
   return { messages, setMessages, ask, cancel, loading };

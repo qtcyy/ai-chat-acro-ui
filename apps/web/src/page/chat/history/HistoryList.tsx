@@ -8,6 +8,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { RenameModal } from "./RenameModal";
 import { DeleteModal } from "./DeleteModal";
 import { motion } from "motion/react";
+import { useStore } from "../../../store";
 
 const ContentWrapper = styled.div`
   display: flex;
@@ -48,8 +49,10 @@ const timeDisplay = (timeStr: string) => {
 const HistoryList = () => {
   const route = useNavigate();
   const store = useChatStorage();
+  const { setChatLoadSignal, chatLoadSignal } = useStore();
 
   useEffect(() => {
+    setChatLoadSignal(chatLoadSignal + 1);
     store?.sortByTime();
   }, []);
 

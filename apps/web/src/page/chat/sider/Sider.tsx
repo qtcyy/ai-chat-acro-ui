@@ -101,7 +101,8 @@ const RemoveAllModal = NiceModal.create(() => {
 });
 
 const DropdownList = (): ReactNode => {
-  const { loginUsername, setReloadSignal, reloadSignal } = useStore();
+  const { loginUsername, setReloadSignal, reloadSignal, setLoginUsername } =
+    useStore();
   const route = useNavigate();
 
   const handleLogout = async () => {
@@ -112,6 +113,7 @@ const DropdownList = (): ReactNode => {
       }
       localStorage.removeItem("token");
       setReloadSignal(reloadSignal + 1);
+      setLoginUsername(undefined);
       route("/ai/chat");
     } catch (error) {
       console.error(error);

@@ -1,6 +1,9 @@
 import { BubbleDataType } from "components";
 import dayjs from "dayjs";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useStore } from "../../../store";
+import { useAsyncEffect } from "ahooks";
+import { deleteHistory, getHistory, writeHistory } from "./updateRequest";
 
 export type MessageType = {
   key?: string;
@@ -33,6 +36,7 @@ type ChatListContextType = {
   updateChat: (chatFn: ChatFn) => void;
   removeChat: (chatId: string) => void;
   removeAllChat: () => void;
+  getChatHistory: () => Promise<void>;
 };
 
 const ChatStorageContext = createContext<ChatListContextType | undefined>(
@@ -44,19 +48,47 @@ export const useChatStorage = () => {
 };
 
 export const ChatProvider = (props: { children: any }) => {
-  let history: ChatItem[] = [];
-  const historyStr = localStorage.getItem("chat-history");
-  if (historyStr) {
-    history = JSON.parse(historyStr) as ChatItem[];
-  } else {
-    localStorage.setItem("chat-history", JSON.stringify(history));
-  }
-  const [chats, setChats] = useState<ChatItem[]>(history);
+  const { chatLoadSignal, loginUsername } = useStore();
+  const [chats, setChats] = useState<ChatItem[]>([]);
+
+  const getChatHistory = async () => {
+    let chatHistory: ChatItem[] = [];
+    if (loginUsername) {
+      console.log(loginUsername);
+      const responseChats = await getHistory();
+      setChats(responseChats ?? []);
+    } else {
+      const historyStr = localStorage.getItem("chat-history");
+      console.log(historyStr);
+
+      if (historyStr) {
+        chatHistory = JSON.parse(historyStr) as ChatItem[];
+      } else {
+        localStorage.setItem("chat-history", JSON.stringify(chatHistory));
+      }
+      setChats(chatHistory);
+    }
+  };
+
+  const writeChat = async (chatItem: ChatItem) => {
+    if (!loginUsername) return;
+    await writeHistory(chatItem);
+  };
+
+  const deleteChat = async (chatId: string) => {
+    if (!loginUsername) return;
+    await deleteHistory(chatId);
+  };
+
+  useAsyncEffect(async () => {
+    await getChatHistory();
+  }, [chatLoadSignal]);
 
   const addChat = (chat: ChatItem) => {
     let newChats = chats;
     newChats.push(chat);
     localStorage.setItem("chat-history", JSON.stringify(newChats));
+    writeChat(chat);
     setChats(newChats);
   };
 
@@ -77,6 +109,7 @@ export const ChatProvider = (props: { children: any }) => {
   const removeChat = (chatId: string) => {
     let newChats = chats.filter((o) => o.chatId !== chatId);
     localStorage.setItem("chat-history", JSON.stringify(newChats));
+    deleteChat(chatId);
     setChats(newChats);
   };
 
@@ -92,6 +125,7 @@ export const ChatProvider = (props: { children: any }) => {
     updateChat,
     removeAllChat,
     removeChat,
+    getChatHistory,
   };
 
   return (

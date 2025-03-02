@@ -26,6 +26,8 @@ import { DeleteModal } from "../history/DeleteModal";
 import { useAutoRename } from "../hooks/useAutoRename";
 import { useStore } from "../../../store";
 import { timer } from "utils";
+import { updateHistory, updateHistoryContent } from "../hooks/updateRequest";
+import { useAsyncEffect } from "ahooks";
 
 const ChatWrapper = styled.div`
   position: relative;
@@ -201,17 +203,18 @@ const Chat = () => {
       if (!location.pathname.startsWith("/ai/chat/page")) {
         cancel();
       }
-      if (messages.length <= 2) {
-        console.log("chat delete");
-        store?.removeChat(chatId);
-      }
+      // if (messages.length <= 2) {
+      //   console.log("chat delete");
+      //   store?.removeChat(chatId);
+      // }
     };
   }, [location.pathname, chatId]);
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     console.log(messages);
     history = store?.chats.find((o) => o.chatId === chatId);
     if (!history) {
+      console.log(store?.chats);
       history = {
         chatId,
         name: "新建对话",
@@ -250,9 +253,9 @@ const Chat = () => {
       console.log("messages: ", messages);
       let nowChat = store?.chats.find((o) => o.chatId === chatId);
       let newName = "";
-      if (!nowChat?.isName) {
-        newName = await getName();
-      }
+      // if (!nowChat?.isName) {
+      //   newName = await getName();
+      // }
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
         let newChat = old[index];
@@ -264,6 +267,7 @@ const Chat = () => {
         return [...old];
       });
       console.log(store?.chats);
+      updateHistoryContent({ id: chatId, content: JSON.stringify(messages) });
     },
   });
 
@@ -417,13 +421,17 @@ const Chat = () => {
 
   const DropAction: Record<string, () => void> = {
     ["1"]: async () => {
-      const name = await NiceModal.show(RenameModal, { chat: history });
+      if (!store?.chats) return;
+      const name = await NiceModal.show(RenameModal, {
+        chat: store.chats.find((o) => o.chatId === chatId),
+      });
       if (typeof name !== "string") {
         return;
       }
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
         old[index].name = name;
+        updateHistory(old[index]);
         return [...old];
       });
     },

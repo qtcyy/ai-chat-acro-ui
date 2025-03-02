@@ -4,6 +4,8 @@ import { ChatItem } from "../hooks/useChatStorage";
 import styled from "styled-components";
 import { useState } from "react";
 import { useAutoRename } from "../hooks/useAutoRename";
+import { request } from "utils";
+import { BaseResponseType } from "../../../env";
 
 type Props = {
   chat: ChatItem;
@@ -20,6 +22,7 @@ const RenameModal = NiceModal.create<Props>((props) => {
   const modal = NiceModal.useModal();
   const [name, setName] = useState(chat.name);
   const [loading, setLoading] = useState(false);
+  const [renameLoading, setRenameLoading] = useState(false);
 
   const { getName } = useAutoRename({
     messages: chat.content,
@@ -35,12 +38,26 @@ const RenameModal = NiceModal.create<Props>((props) => {
     }, 300);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (name === "") {
       return;
     }
-    modal.resolve(name);
-    handleClose();
+    setRenameLoading(true);
+    try {
+      const response = await request.post<BaseResponseType>(
+        "/api/chat/history/update/name",
+        { id: chat.chatId, name: name }
+      );
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg);
+      }
+      modal.resolve(name);
+      handleClose();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setRenameLoading(false);
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
