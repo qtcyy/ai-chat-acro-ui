@@ -3,6 +3,7 @@ import { DeepSeekIcons } from "../../../assets/home/Deepseek";
 import { Avatar, Divider, Menu, Modal, Tooltip } from "@arco-design/web-react";
 import {
   IconClose,
+  IconExport,
   IconFolderAdd,
   IconHome,
   IconList,
@@ -11,10 +12,14 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import NiceModal, { hide } from "@ebay/nice-modal-react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CgDarkMode } from "react-icons/cg";
 import { LoginModal } from "../login/LoginModal";
+import { request } from "utils";
+import { BaseResponseType } from "../../../env";
+import { useStore } from "../../../store";
+import { useAsyncEffect } from "ahooks";
 
 const SiderWrapper = styled.div`
   position: relative;
@@ -96,6 +101,23 @@ const RemoveAllModal = NiceModal.create(() => {
 });
 
 const DropdownList = (): ReactNode => {
+  const { loginUsername, setReloadSignal, reloadSignal } = useStore();
+  const route = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const response = await request.get<BaseResponseType>("/api/user/logout");
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg);
+      }
+      localStorage.removeItem("token");
+      setReloadSignal(reloadSignal + 1);
+      route("/ai/chat");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -133,6 +155,17 @@ const DropdownList = (): ReactNode => {
             Hello
           </motion.div>
         </MotionListWrapper>
+        {loginUsername && (
+          <MotionListWrapper
+            className="hover:bg-gray-200 text-red-400"
+            onClick={handleLogout}
+          >
+            <div className="text-md">
+              <IconExport />
+            </div>
+            退出登录
+          </MotionListWrapper>
+        )}
       </ul>
     </motion.div>
   );
@@ -143,6 +176,42 @@ const Sider = () => {
   const location = useLocation();
 
   const [isHover, setIsHover] = useState(false);
+  const { loginId, setLoginId, loginUsername, setLoginUsername, reloadSignal } =
+    useStore();
+
+  const checkLogin = async () => {
+    try {
+      const response = await request.get<BaseResponseType>("/api/user/isLogin");
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg);
+      }
+      console.log(response.data);
+      setLoginId(response.data.id);
+    } catch (error) {
+      console.error("检查登录错误", error);
+      setLoginId(undefined);
+    }
+  };
+
+  const getUsername = async () => {
+    try {
+      const response = await request.get<BaseResponseType>(
+        "/api/user/getLoginUsername"
+      );
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg);
+      }
+      setLoginUsername(response.data.username);
+    } catch (error) {
+      console.error(error);
+      setLoginUsername(undefined);
+    }
+  };
+
+  useAsyncEffect(async () => {
+    await checkLogin();
+    await getUsername();
+  }, [reloadSignal]);
 
   const handleRemoveAll = async () => {
     const confirm = await NiceModal.show(RemoveAllModal);
@@ -157,7 +226,9 @@ const Sider = () => {
   };
 
   const handleLogin = async () => {
-    await NiceModal.show(LoginModal, { route });
+    if (!loginUsername) {
+      await NiceModal.show(LoginModal, { route });
+    }
   };
 
   return (
@@ -203,7 +274,7 @@ const Sider = () => {
           onMouseLeave={() => setIsHover(false)}
         >
           <Avatar className={"cursor-pointer mt-4"} onClick={handleLogin}>
-            登录
+            {loginUsername?.slice(0, 2).toUpperCase()}
           </Avatar>
           <AnimatePresence>{isHover && <DropdownList />}</AnimatePresence>
         </div>
