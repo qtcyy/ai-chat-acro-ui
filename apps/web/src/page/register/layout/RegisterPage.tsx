@@ -3,7 +3,17 @@ import styled from "styled-components";
 import bg from "../../../assets/register/register-bg.jpg";
 import { TitleBird } from "../svg/BgSvg";
 import { Button, Checkbox, Divider, Form, Input } from "@arco-design/web-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import NiceModal from "@ebay/nice-modal-react";
+import { LoginModal } from "../../chat/login/LoginModal";
+import {
+  checkEmail,
+  checkPhone,
+  checkUsername,
+  register,
+  RegisterInfoType,
+} from "../request/RequestUtils";
+import { useRequest } from "ahooks";
 
 const LayoutWrapper = styled.div`
   height: 100vh;
@@ -42,21 +52,49 @@ const TitleWrapper = styled.div`
   align-items: center;
 `;
 
+type FormType = RegisterInfoType & { confirmPassword: string };
+
 const RegisterPage = () => {
   const route = useNavigate();
   const [form] = Form.useForm();
   const password = Form.useWatch("password", form);
   const [loading, setLoading] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   const handleRegister = async () => {
     try {
+      setLoading(true);
       await form.validate();
+      if (!checked) {
+        throw new Error("未勾选同意");
+      }
+      console.log(form.getFieldsValue());
+      const finalInfo = form.getFieldsValue() as RegisterInfoType;
+      await register(finalInfo);
+      route("/ai/chat");
     } catch (error) {
-      console.error("登录错误", error);
+      console.error("注册错误", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleLogin = () => {
+    NiceModal.show(LoginModal, { route: route });
+  };
+
+  const { runAsync: runCheckUsername } = useRequest(checkUsername, {
+    debounceWait: 1000,
+    manual: true,
+  });
+  const { runAsync: runCheckPhone } = useRequest(checkPhone, {
+    debounceWait: 1000,
+    manual: true,
+  });
+  const { runAsync: runCheckEmail } = useRequest(checkEmail, {
+    debounceWait: 1000,
+    manual: true,
+  });
 
   return (
     <LayoutWrapper>
@@ -80,8 +118,14 @@ const RegisterPage = () => {
                 requiredSymbol={false}
                 rules={[
                   {
-                    required: true,
-                    message: "用户名必填",
+                    validator: async (value, cb) => {
+                      if (!value) {
+                        return cb("用户名必填");
+                      } else if (!(await runCheckUsername(value))) {
+                        return cb("用户名已存在");
+                      }
+                      return cb();
+                    },
                   },
                 ]}
               >
@@ -93,8 +137,17 @@ const RegisterPage = () => {
                 requiredSymbol={false}
                 rules={[
                   {
-                    required: true,
-                    message: "手机号必填",
+                    validator: async (value, cb) => {
+                      const phoneRegex = /^1[3-9]\d{9}$/;
+                      if (!value) {
+                        return cb("手机号必填");
+                      } else if (!phoneRegex.test(value)) {
+                        cb("手机号格式错误");
+                      } else if (!(await runCheckPhone(value))) {
+                        return cb("手机号已存在");
+                      }
+                      return cb();
+                    },
                   },
                 ]}
               >
@@ -104,7 +157,22 @@ const RegisterPage = () => {
                 label="电子邮箱"
                 field={"email"}
                 requiredSymbol={false}
-                rules={[{ required: true, message: "邮箱号必填" }]}
+                rules={[
+                  {
+                    validator: async (value, cb) => {
+                      const emailRegex =
+                        /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                      if (!value) {
+                        return cb("邮箱号必填");
+                      } else if (!emailRegex.test(value)) {
+                        return cb("邮箱格式错误");
+                      } else if (!(await runCheckEmail(value))) {
+                        return cb("邮箱号已存在");
+                      }
+                      return cb();
+                    },
+                  },
+                ]}
               >
                 <Input className={"h-[50px]"} placeholder="请输入邮箱号" />
               </Form.Item>
@@ -112,7 +180,18 @@ const RegisterPage = () => {
                 label="密码"
                 field={"password"}
                 requiredSymbol={false}
-                rules={[{ required: true, message: "密码必填" }]}
+                rules={[
+                  {
+                    validator: async (value, cb) => {
+                      if (!value) {
+                        return cb("密码必填");
+                      } else if ((value as string).length < 8) {
+                        return cb("密码要求至少8位");
+                      }
+                      return cb();
+                    },
+                  },
+                ]}
               >
                 <Input.Password
                   className={"h-[50px]"}
@@ -121,12 +200,12 @@ const RegisterPage = () => {
               </Form.Item>
               <Form.Item
                 label="验证密码"
+                field={"confirmPassword"}
                 requiredSymbol={false}
                 required
                 rules={[
                   {
-                    validator(value, cb) {
-                      console.log(value);
+                    validator: async (value, cb) => {
                       if (value !== password) {
                         return cb("密码不一致");
                       }
@@ -143,7 +222,7 @@ const RegisterPage = () => {
             </Form>
           </div>
           <div className="w-full flex justify-center items-center mt-4">
-            <Checkbox />
+            <Checkbox value={checked} onChange={(e) => setChecked(e)} />
             <div className={"flex flex-row gap-1 ml-2"}>
               <div>已阅读同意</div>
               <a className="text-blue-500 cursor-pointer">《模型服务协议》</a>
@@ -151,11 +230,15 @@ const RegisterPage = () => {
               <a className="text-blue-500 cursor-pointer">《用户隐私协议》</a>
             </div>
           </div>
-          <Button className={"mt-4 h-[50px]"} onClick={handleRegister}>
+          <Button
+            loading={loading}
+            className={"mt-4 h-[50px]"}
+            onClick={handleRegister}
+          >
             注册
           </Button>
           <Divider />
-          <Button className={" h-[50px]"} type="primary">
+          <Button className={" h-[50px]"} type="primary" onClick={handleLogin}>
             登录
           </Button>
         </ContentWrapper>
