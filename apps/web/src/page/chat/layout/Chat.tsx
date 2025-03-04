@@ -1,5 +1,5 @@
 import { BubbleList, MDRenderer, RolesType } from "components";
-import { MessageType, useChatStorage } from "../hooks/useChatStorage";
+import { ChatItem, MessageType, useChatStorage } from "../hooks/useChatStorage";
 import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
@@ -212,6 +212,7 @@ const Chat = () => {
 
   useAsyncEffect(async () => {
     console.log(messages);
+    // await store?.getChatHistory();
     history = store?.chats.find((o) => o.chatId === chatId);
     if (!history) {
       console.log(store?.chats);
@@ -231,8 +232,10 @@ const Chat = () => {
 
   useEffect(() => {
     if (waitSendQuestion) {
-      ask(waitSendQuestion);
-      setWaitSendQuestion(undefined);
+      setTimeout(() => {
+        ask(waitSendQuestion);
+        setWaitSendQuestion(undefined);
+      }, 200);
     }
   }, [waitSendQuestion]);
 
@@ -251,7 +254,7 @@ const Chat = () => {
         return [...old];
       });
       console.log("messages: ", messages);
-      let nowChat = store?.chats.find((o) => o.chatId === chatId);
+      // let nowChat = store?.chats.find((o) => o.chatId === chatId);
       let newName = "";
       // if (!nowChat?.isName) {
       //   newName = await getName();
@@ -328,7 +331,7 @@ const Chat = () => {
             {think && think.trim() !== "" && (
               <ThinkWrapper>
                 <ThinkHeaderWrapper className=" sticky top-[55px] flex flex-row items-center">
-                  {content?.isThink && loading ? (
+                  {content?.isThink && !content.isEnd && loading ? (
                     <div className="my-2 text-xl flex flex-row items-center gap-2">
                       <div>思考中...</div>
                       <div>{getCurrent()} s</div>
@@ -439,7 +442,7 @@ const Chat = () => {
     ["3"]: async () => {
       const confirm = await NiceModal.show(DeleteModal);
       if (confirm) {
-        store?.removeChat(chatId);
+        await store?.removeChat(chatId);
         route("/ai/chat/list");
       }
     },

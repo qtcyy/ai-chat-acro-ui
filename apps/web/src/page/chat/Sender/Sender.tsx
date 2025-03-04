@@ -6,7 +6,7 @@ import {
   IconLoading,
   IconRecordStop,
 } from "@arco-design/web-react/icon";
-import { ReactNode, useEffect, useState } from "react";
+import { memo, ReactNode, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useScroll } from "../hooks/useScroll";
 import { useRequest } from "ahooks";
@@ -62,7 +62,7 @@ const ModelName: Record<string, string> = {
   ["doubao-1-5-lite-32k-250115"]: "DouBao-1.5-lite",
 };
 
-const Sender = (props: Props) => {
+const Sender = memo((props: Props) => {
   const { ask, loading, cancel, showTop, isHome } = props;
   const route = useNavigate();
   const { selectedModel, setSelectedModel, insertText, setInsertText } =
@@ -73,7 +73,7 @@ const Sender = (props: Props) => {
   };
 
   const { run } = useRequest(send, {
-    debounceWait: 500,
+    debounceWait: 200,
     manual: true,
   });
 
@@ -89,13 +89,16 @@ const Sender = (props: Props) => {
     setInsertText("");
   }, [insertText]);
 
-  const handleSend = () => {
-    if (text === "" || loading) return;
-    console.log(loading);
-    console.log(text);
-    send(text);
-    setText("");
-  };
+  const handleSend = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      e?.preventDefault();
+      if (text === "" || loading) return;
+      run(text);
+      setText("");
+    },
+    [loading, text, run]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !isComposing) {
@@ -231,6 +234,6 @@ const Sender = (props: Props) => {
       </SenderWrapper>
     </ContentWrapper>
   );
-};
+});
 
 export { Sender };

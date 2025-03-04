@@ -1,6 +1,6 @@
 import { BubbleDataType } from "components";
 import { MessageType } from "./useChatStorage";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ROLE } from "../layout/Chat";
 import dayjs from "dayjs";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
@@ -213,7 +213,7 @@ const useChat = (props: Props) => {
         }
       );
     },
-    [loading, selectedModel, props.onOpen, props.onClose]
+    [setLoading, selectedModel, props.onOpen, props.onClose]
   );
 
   return { messages, setMessages, ask, cancel, loading };

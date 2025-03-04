@@ -1,6 +1,12 @@
 import { BubbleDataType } from "components";
 import dayjs from "dayjs";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useStore } from "../../../store";
 import { useAsyncEffect } from "ahooks";
 import { deleteHistory, getHistory, writeHistory } from "./updateRequest";
@@ -34,7 +40,7 @@ type ChatListContextType = {
   addChat: (chat: ChatItem) => void;
   sortByTime: () => void;
   updateChat: (chatFn: ChatFn) => void;
-  removeChat: (chatId: string) => void;
+  removeChat: (chatId: string) => Promise<void>;
   removeAllChat: () => void;
   getChatHistory: () => Promise<void>;
 };
@@ -53,11 +59,12 @@ export const ChatProvider = (props: { children: any }) => {
 
   const getChatHistory = async () => {
     let chatHistory: ChatItem[] = [];
-    if (loginUsername) {
+    try {
       console.log(loginUsername);
       const responseChats = await getHistory();
+      localStorage.setItem("chat-history", JSON.stringify(responseChats ?? []));
       setChats(responseChats ?? []);
-    } else {
+    } catch (error) {
       const historyStr = localStorage.getItem("chat-history");
       console.log(historyStr);
 
@@ -100,16 +107,19 @@ export const ChatProvider = (props: { children: any }) => {
     setChats([...newChats]);
   };
 
-  const updateChat = (chatFn: ChatFn) => {
-    let newChats = chatFn(chats);
-    localStorage.setItem("chat-history", JSON.stringify(newChats));
-    setChats(newChats);
-  };
+  const updateChat = useCallback(
+    (chatFn: ChatFn) => {
+      let newChats = chatFn(chats);
+      localStorage.setItem("chat-history", JSON.stringify(newChats));
+      setChats(newChats);
+    },
+    [chats]
+  );
 
-  const removeChat = (chatId: string) => {
+  const removeChat = async (chatId: string) => {
     let newChats = chats.filter((o) => o.chatId !== chatId);
     localStorage.setItem("chat-history", JSON.stringify(newChats));
-    deleteChat(chatId);
+    await deleteChat(chatId);
     setChats(newChats);
   };
 

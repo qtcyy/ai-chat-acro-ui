@@ -65,7 +65,7 @@ const BubbleList = <T,>(props: Props<T>) => {
   useEffect(() => {
     console.log("scroll");
     if (autoScroll && target && scrollStore?.shouldScroll) {
-      scrollStore?.toBottom(true);
+      scrollStore?.toBottom(false);
     }
   }, [count, scrollReactEnd]);
 
