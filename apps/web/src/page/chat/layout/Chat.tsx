@@ -253,12 +253,12 @@ const Chat = () => {
         old[old.length - 1].content = last;
         return [...old];
       });
-      console.log("messages: ", messages);
       // let nowChat = store?.chats.find((o) => o.chatId === chatId);
       let newName = "";
       // if (!nowChat?.isName) {
       //   newName = await getName();
       // }
+      console.log(messages);
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
         let newChat = old[index];
@@ -269,8 +269,9 @@ const Chat = () => {
         old[index] = newChat;
         return [...old];
       });
-      console.log(store?.chats);
-      updateHistoryContent({ id: chatId, content: JSON.stringify(messages) });
+      // console.log(store?.chats);
+      console.log(messages);
+      updateHistoryContent({ id: chatId, content: messages });
     },
   });
 

@@ -11,8 +11,8 @@ import {
 } from "@arco-design/web-react/icon";
 import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import NiceModal, { hide } from "@ebay/nice-modal-react";
-import { ReactNode, useEffect, useState } from "react";
+import NiceModal from "@ebay/nice-modal-react";
+import { ReactNode, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CgDarkMode } from "react-icons/cg";
 import { LoginModal } from "../login/LoginModal";
@@ -178,7 +178,7 @@ const Sider = () => {
   const location = useLocation();
 
   const [isHover, setIsHover] = useState(false);
-  const { loginId, setLoginId, loginUsername, setLoginUsername, reloadSignal } =
+  const { setLoginId, loginUsername, setLoginUsername, reloadSignal } =
     useStore();
 
   const checkLogin = async () => {

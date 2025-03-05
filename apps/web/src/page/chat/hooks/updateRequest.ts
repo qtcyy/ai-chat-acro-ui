@@ -1,6 +1,7 @@
 import { request } from "utils";
-import { ChatItem } from "./useChatStorage";
+import { ChatItem, MessageType } from "./useChatStorage";
 import { BaseResponseType } from "../../../env";
+import { BubbleDataType } from "components";
 
 type HistoryResponseType = { content: string; id: string } & Omit<
   ChatItem,
@@ -81,14 +82,16 @@ export async function updateHistory(chat: ChatItem) {
 
 type UpdateContentType = {
   id: string;
-  content: string;
+  content: BubbleDataType<MessageType>[];
 };
 
 export async function updateHistoryContent(params: UpdateContentType) {
+  console.log(params.content);
+  console.log(JSON.stringify({ ...params.content }));
   try {
     const response = await request.post<BaseResponseType>(
       "/api/chat/history/update/content",
-      params
+      { id: params.id, content: JSON.stringify(params.content) }
     );
     if (response.data.code !== 200) {
       throw new Error(response.data.msg);
