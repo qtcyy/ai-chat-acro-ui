@@ -117,11 +117,16 @@ importers:
       components:
         specifier: workspace:^
         version: link:../../packages/components
+      theme:
+        specifier: workspace:^
+        version: link:../../packages/theme
       utils:
         specifier: workspace:^
         version: link:../../packages/utils
 
   packages/components: {}
+
+  packages/theme: {}
 
   packages/utils: {}
 

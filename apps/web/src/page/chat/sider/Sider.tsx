@@ -1,25 +1,24 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { DeepSeekIcons } from "../../../assets/home/Deepseek";
-import { Avatar, Divider, Menu, Modal, Tooltip } from "@arco-design/web-react";
+import { Avatar, Divider, Modal, Tooltip } from "@arco-design/web-react";
 import {
   IconClose,
-  IconExport,
   IconFolderAdd,
   IconHome,
   IconList,
-  IconMessage,
 } from "@arco-design/web-react/icon";
 import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import NiceModal from "@ebay/nice-modal-react";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CgDarkMode } from "react-icons/cg";
 import { LoginModal } from "../login/LoginModal";
 import { request } from "utils";
 import { BaseResponseType } from "../../../env";
 import { useStore } from "../../../store";
 import { useAsyncEffect } from "ahooks";
+import { DropdownList } from "./components/dropdown";
+import { useTheme } from "theme";
 
 const SiderWrapper = styled.div`
   position: relative;
@@ -39,8 +38,8 @@ const ContentWrapper = styled.div`
   padding: 16px 24px;
   margin-left: 20px;
   border-radius: 16px;
-  background: #fff;
-  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
+  background: ${(props) => (props.theme.mode === "dark" ? "#31313a" : "#fff")};
+  box-shadow: ${(props) => props.theme.colors.boxShadow};
 `;
 
 const ClearButtonWrapper = styled.div`
@@ -52,24 +51,6 @@ const ClearButtonWrapper = styled.div`
   background: red;
   color: white;
   border-radius: 12px;
-  cursor: pointer;
-`;
-
-const ListWrapper = styled.li`
-  padding: 12px 20px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-`;
-
-const MotionListWrapper = styled(motion.li)`
-  padding: 12px 20px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
   cursor: pointer;
 `;
 
@@ -100,82 +81,10 @@ const RemoveAllModal = NiceModal.create(() => {
   );
 });
 
-const DropdownList = (): ReactNode => {
-  const { loginUsername, setReloadSignal, reloadSignal, setLoginUsername } =
-    useStore();
-  const route = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      const response = await request.get<BaseResponseType>("/api/user/logout");
-      if (response.data.code !== 200) {
-        throw new Error(response.data.msg);
-      }
-      localStorage.removeItem("token");
-      setReloadSignal(reloadSignal + 1);
-      setLoginUsername(undefined);
-      route("/ai/chat");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.2, delay: 0.3 }}
-      className="absolute z-10 w-48 mt-2 text-sm text-black bg-white rounded shadow-lg left-[70px] bottom-[-10px] -translate 
-                       x-1/2"
-    >
-      <ul style={{ listStyle: "none" }}>
-        <ListWrapper className="hover:bg-gray-200">
-          <div className="text-md">
-            <IconMessage />
-          </div>
-          用户反馈
-        </ListWrapper>
-        <MotionListWrapper
-          className="hover:bg-gray-200 relative"
-          initial="rest"
-          animate="rest"
-          whileHover={"hover"}
-        >
-          <div className="text-md">
-            <CgDarkMode />
-          </div>
-          界面主题
-          <motion.div
-            className=" absolute z-11 left-[12rem] px-2 py-1"
-            variants={{
-              hover: { opacity: 1, y: 0 },
-              rest: { opacity: 0, y: 10 },
-            }}
-            transition={{ duration: 0.2, delay: 0 }}
-          >
-            Hello
-          </motion.div>
-        </MotionListWrapper>
-        {loginUsername && (
-          <MotionListWrapper
-            className="hover:bg-gray-200 text-red-400"
-            onClick={handleLogout}
-          >
-            <div className="text-md">
-              <IconExport />
-            </div>
-            退出登录
-          </MotionListWrapper>
-        )}
-      </ul>
-    </motion.div>
-  );
-};
-
 const Sider = () => {
   const route = useNavigate();
   const location = useLocation();
+  const { isDarkMode } = useTheme();
 
   const [isHover, setIsHover] = useState(false);
   const { setLoginId, loginUsername, setLoginUsername, reloadSignal } =
@@ -243,7 +152,10 @@ const Sider = () => {
       <ContentWrapper>
         <Tooltip position="right" trigger={"hover"} content="回到主页">
           <motion.div
-            className="h-[40px] w-[40px] cursor-pointer rounded-md transition-colors duration-100 hover:bg-gray-200"
+            className={`h-[40px] w-[40px] cursor-pointer rounded-md 
+              transition-colors duration-100 ${
+                isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+              }`}
             onClick={() => route("/ai/chat")}
             whileTap={{ scale: 0.9 }}
           >
@@ -253,7 +165,10 @@ const Sider = () => {
         <Divider className={"my-2"} type="horizontal" />
         <Tooltip position="right" trigger={"hover"} content="新建对话">
           <motion.div
-            className="p-3 my-2 cursor-pointer rounded-md transition-colors duration-100 hover:bg-gray-200"
+            className={`p-3 my-2 cursor-pointer rounded-md transition-colors 
+              duration-100 hover:bg-gray-200 ${
+                isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+              }`}
             onClick={handleNewCon}
             whileTap={{ scale: 0.9 }}
           >
@@ -262,7 +177,10 @@ const Sider = () => {
         </Tooltip>
         <Tooltip position="right" trigger={"hover"} content="历史记录">
           <motion.div
-            className="p-3 my-2 cursor-pointer rounded-md transition-colors duration-100 hover:bg-gray-200"
+            className={`p-3 my-2 cursor-pointer rounded-md transition-colors
+               duration-100 ${
+                 isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+               }`}
             onClick={() => route("/ai/chat/list")}
             whileTap={{ scale: 0.9 }}
           >
@@ -282,7 +200,10 @@ const Sider = () => {
         </div>
         <Tooltip position="right" trigger={"hover"} content="仪表盘">
           <div
-            className="text-xl mt-6 py-1 px-2 rounded-md transition-colors duration-100 cursor-pointer hover:bg-gray-200"
+            className={`text-xl mt-6 py-1 px-2 rounded-md transition-colors
+               duration-100 cursor-pointer ${
+                 isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+               }`}
             onClick={() => route("/layout")}
           >
             <IconHome />

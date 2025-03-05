@@ -11,7 +11,9 @@ const LayoutWrapper = styled.div`
   flex-direction: row;
   height: 100vh;
   /* background: #f3f3f3; */
-  background: rgb(244, 242, 236);
+  /* background: rgb(244, 242, 236); */
+  background: ${(props) => props.theme.colors.background};
+  color: ${(props) => props.theme.colors.text};
 `;
 
 const DELTA = 50;
