@@ -20,6 +20,9 @@ const LightTheme: DefaultTheme = {
     background: "#F4F2EC",
     text: "#000",
     boxShadow: "2px 4px 12px rgba(0, 0, 0, 0.1);",
+    componentBg: "#fff",
+    bubbleUserBg: "#E2E0D5",
+    bubbleAssistantBg: "#FAF9F6",
   },
 };
 
@@ -32,6 +35,9 @@ const DarkTheme: DefaultTheme = {
     text: "#f5f4ef",
     boxShadow: `0px 0px 2px 0px rgba(0, 0, 0, 0.25),
             0px 0px 1px 1px rgba(255, 255, 255, 0.2) inset;`,
+    componentBg: "#31313a",
+    bubbleUserBg: "#1C1C1C",
+    bubbleAssistantBg: "#313131",
   },
 };
 

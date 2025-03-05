@@ -11,6 +11,8 @@ import {
 import "github-markdown-css/github-markdown-light.css";
 import "katex/dist/katex.min.css";
 import { MermaidRenderer } from "./MermaidRenderer";
+import { useTheme } from "theme";
+import styled from "styled-components";
 
 type MDRendererProps = {
   text: string;
@@ -25,8 +27,10 @@ interface CodeProps {
 }
 
 export const MDRenderer = (props: MDRendererProps) => {
+  const { isDarkMode, theme } = useTheme();
+
   return (
-    <div className="markdown-body bg-transparent w-full">
+    <ContentWrapper className={`markdown-body bg-transparent w-full`}>
       <Markdown
         remarkPlugins={[remarkMath, gfm]}
         rehypePlugins={[rehypeKatex]}
@@ -39,7 +43,7 @@ export const MDRenderer = (props: MDRendererProps) => {
             }
             return !inline && match ? (
               <SyntaxHighlighter
-                style={oneDark}
+                style={isDarkMode ? oneDark : oneLight}
                 language={match[1]}
                 PreTag="div"
                 {...props}
@@ -56,6 +60,10 @@ export const MDRenderer = (props: MDRendererProps) => {
       >
         {props.text}
       </Markdown>
-    </div>
+    </ContentWrapper>
   );
 };
+
+const ContentWrapper = styled.div`
+  color: ${(props) => props.theme.colors.text};
+`;

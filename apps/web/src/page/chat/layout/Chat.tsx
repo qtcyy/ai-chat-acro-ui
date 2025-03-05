@@ -1,6 +1,6 @@
 import { BubbleList, MDRenderer, RolesType } from "components";
 import { ChatItem, MessageType, useChatStorage } from "../hooks/useChatStorage";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { useChat } from "../hooks/useChat";
@@ -28,6 +28,7 @@ import { useStore } from "../../../store";
 import { timer } from "utils";
 import { updateHistory, updateHistoryContent } from "../hooks/updateRequest";
 import { useAsyncEffect } from "ahooks";
+import { useTheme } from "theme";
 
 const ChatWrapper = styled.div`
   position: relative;
@@ -44,7 +45,8 @@ const HeaderWrapper = styled.div`
   min-width: 375px;
   height: 56px;
   padding: 14px 50px;
-  background: rgb(244, 242, 236);
+  /* background: rgb(244, 242, 236); */
+  background: ${(props) => props.theme.colors.background};
   width: 100%;
   z-index: 10;
   top: 0;
@@ -58,7 +60,8 @@ const HeaderWrapper = styled.div`
     cursor: pointer;
     transition: background 0.2s ease;
     &:hover {
-      background: #e5e7ed;
+      background: ${(props) =>
+        props.theme.mode === "dark" ? "#31313a" : "#e5e7ed"};
     }
   }
 
@@ -69,11 +72,23 @@ const HeaderWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 20px;
-    background: linear-gradient(
-      to bottom,
-      rgba(244, 242, 236, 1) 0%,
-      rgba(244, 242, 236, 0) 100%
-    );
+    ${(props) =>
+      props.theme.mode === "dark"
+        ? css`
+            background: linear-gradient(
+              to bottom,
+              rgba(39, 39, 37, 1) 0%,
+              rgba(39, 39, 37, 0) 100%
+            );
+          `
+        : css`
+            background: linear-gradient(
+              to bottom,
+              rgba(244, 242, 236, 1) 0%,
+              rgba(244, 242, 236, 0) 100%
+            );
+          `};
+
     pointer-events: none; /* 防止遮挡下方交互 */
   }
 `;
@@ -83,7 +98,8 @@ const QueryWrapper = styled.div`
   display: inline-flex;
   padding: 16px;
   max-width: 70%;
-  background: rgb(226, 224, 213);
+  /* background: rgb(226, 224, 213); */
+  background: ${(props) => props.theme.colors.bubbleUserBg};
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -116,7 +132,8 @@ const AnswerWrapper = styled.div`
   min-width: 300px;
   max-width: 80%;
   /* background: #fff; */
-  background: rgb(250, 249, 246);
+  /* background: rgb(250, 249, 246); */
+  background: ${(props) => props.theme.colors.bubbleAssistantBg};
   padding: 24px;
   font-family: serif;
   border-radius: 12px;
@@ -128,12 +145,14 @@ const ThinkWrapper = styled.div`
   flex-direction: column;
   gap: 12px;
   padding: 12px;
-  background: #f1f1f1;
+  background: ${(props) =>
+    props.theme.mode === "dark" ? "rgb(36,36,36)" : "#f1f1f1"};
   border-radius: 16px;
 `;
 
 const ThinkHeaderWrapper = styled.div`
-  background: #f1f1f1;
+  background: ${(props) =>
+    props.theme.mode === "dark" ? "rgb(36,36,36)" : "#f1f1f1"};
   border-radius: 8px 0;
 
   &::after {
@@ -143,11 +162,22 @@ const ThinkHeaderWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 20px;
-    background: linear-gradient(
-      to bottom,
-      rgba(241, 241, 241, 1) 0%,
-      rgba(244, 242, 236, 0) 100%
-    );
+    ${(props) =>
+      props.theme.mode === "dark"
+        ? css`
+            background: linear-gradient(
+              to bottom,
+              rgba(36, 36, 36, 1) 0%,
+              rgba(39, 39, 37, 0) 100%
+            );
+          `
+        : css`
+            background: linear-gradient(
+              to bottom,
+              rgba(244, 242, 236, 1) 0%,
+              rgba(244, 242, 236, 0) 100%
+            );
+          `};
     pointer-events: none; /* 防止遮挡下方交互 */
   }
 `;
@@ -190,6 +220,8 @@ const Chat = () => {
   const { waitSendQuestion, setWaitSendQuestion } = useStore();
   const route = useNavigate();
   const location = useLocation();
+  const { isDarkMode, theme } = useTheme();
+
   if (!chatId) {
     return null;
   }
@@ -363,7 +395,10 @@ const Chat = () => {
             {content?.isEnd && (
               <div className="flex flex-row gap-2">
                 <div
-                  className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors "
+                  className={`flex flex-row gap-1 items-center p-1 rounded-lg 
+                    cursor-pointer ${
+                      isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                    } transition-colors `}
                   onClick={handleCopy}
                 >
                   <IconCopy />
@@ -371,14 +406,22 @@ const Chat = () => {
                 </div>
                 {content.id === String(messages.length - 1) && (
                   <div
-                    className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                    className={`flex flex-row gap-1 items-center p-1 rounded-lg 
+                      cursor-pointer ${
+                        isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                      } transition-colors`}
                     onClick={() => retry(content.query)}
                   >
                     <IconSync />
                     再试一次
                   </div>
                 )}
-                <div className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors">
+                <div
+                  className={`flex flex-row gap-1 items-center p-1 rounded-lg 
+                  cursor-pointer ${
+                    isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                  } transition-colors`}
+                >
                   <IconShareExternal />
                   分享
                 </div>
@@ -454,26 +497,57 @@ const Chat = () => {
       DropAction[key]();
     };
 
+    const ItemContainer = styled(Menu.Item)`
+      &:hover {
+        ${(props) =>
+          props.theme.mode === "dark" &&
+          css`
+            background: rgb(40, 40, 40);
+          `}
+      }
+    `;
+
+    const TextContainer = styled.div<{ $useColor?: boolean }>`
+      ${(props) =>
+        props.$useColor &&
+        css`
+          color: ${(props) => props.theme.colors.text};
+        `};
+    `;
+
     return (
-      <Menu onClickMenuItem={(key) => handleClick(key)}>
-        <Menu.Item key="1">
-          <div className=" flex flex-row gap-4 items-center justify-center text-lg pl-2 pr-10">
+      <Menu
+        onClickMenuItem={(key) => handleClick(key)}
+        style={{
+          background: theme.colors.componentBg,
+          boxShadow: theme.colors.boxShadow,
+        }}
+      >
+        <ItemContainer key="1">
+          <TextContainer
+            $useColor
+            className={` flex flex-row gap-4 items-center 
+            justify-center text-lg pl-2 pr-10 `}
+          >
             <IconEdit />
             <div>修改名称</div>
-          </div>
-        </Menu.Item>
-        <Menu.Item key="2">
-          <div className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10">
+          </TextContainer>
+        </ItemContainer>
+        <ItemContainer key="2">
+          <TextContainer
+            $useColor
+            className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10"
+          >
             <IconShareInternal />
             <div>分享</div>
-          </div>
-        </Menu.Item>
-        <Menu.Item key="3">
-          <div className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10 text-red-500">
+          </TextContainer>
+        </ItemContainer>
+        <ItemContainer key="3">
+          <TextContainer className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10 text-red-500">
             <IconDelete />
             <div>删除</div>
-          </div>
-        </Menu.Item>
+          </TextContainer>
+        </ItemContainer>
       </Menu>
     );
   };

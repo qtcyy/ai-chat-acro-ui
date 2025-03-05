@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAutoRename } from "../hooks/useAutoRename";
 import { request } from "utils";
 import { BaseResponseType } from "../../../env";
+import { useTheme } from "theme";
 
 type Props = {
   chat: ChatItem;
@@ -15,6 +16,7 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 12px;
+  color: ${(props) => props.theme.colors.text};
 `;
 
 const RenameModal = NiceModal.create<Props>((props) => {
@@ -23,6 +25,7 @@ const RenameModal = NiceModal.create<Props>((props) => {
   const [name, setName] = useState(chat.name);
   const [loading, setLoading] = useState(false);
   const [renameLoading, setRenameLoading] = useState(false);
+  const { isDarkMode, theme } = useTheme();
 
   const { getName } = useAutoRename({
     messages: chat.content,
@@ -84,6 +87,7 @@ const RenameModal = NiceModal.create<Props>((props) => {
       onCancel={handleClose}
       onConfirm={handleConfirm}
       title="重命名对话"
+      style={{ background: theme.colors.background }}
     >
       <ContentWrapper>
         <Input

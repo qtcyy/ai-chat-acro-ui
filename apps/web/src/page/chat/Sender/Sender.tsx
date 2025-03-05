@@ -12,6 +12,7 @@ import { useScroll } from "../hooks/useScroll";
 import { useRequest } from "ahooks";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../../store";
+import { useTheme } from "theme";
 
 const ContentWrapper = styled.div`
   width: 100%;
@@ -24,6 +25,7 @@ const ContentWrapper = styled.div`
 
 const SenderWrapper = styled.div`
   border: 1px solid rgba(0, 0, 0, 0.3);
+  background: ${(props) => (props.theme.mode === "dark" ? "#45454e" : "#fff")};
 
   transition: box-shadow 0.2s ease;
   &:hover {
@@ -67,6 +69,8 @@ const Sender = memo((props: Props) => {
   const route = useNavigate();
   const { selectedModel, setSelectedModel, insertText, setInsertText } =
     useStore();
+
+  const { isDarkMode } = useTheme();
 
   const send = async (question: string) => {
     ask(question);
@@ -181,9 +185,11 @@ const Sender = memo((props: Props) => {
           )}
         </div>
       </div>
-      <SenderWrapper className="p-3 min-h-[150px] max-h-[250px]  bg-white rounded-xl w-[60%] min-w-[700px] flex flex-col items-center">
+      <SenderWrapper className="p-3 min-h-[150px] max-h-[250px] rounded-xl w-[60%] min-w-[700px] flex flex-col items-center">
         <textarea
-          className="flex-[0.7] w-full text-lg"
+          className={`flex-[0.7] w-full text-lg ${
+            isDarkMode && "bg-[#45454e]"
+          }`}
           placeholder="向我提问吧"
           value={text}
           onChange={(e) => setText(e.target.value)}

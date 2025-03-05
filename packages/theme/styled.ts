@@ -9,6 +9,9 @@ declare module "styled-components" {
       background: string;
       text: string;
       boxShadow: string;
+      componentBg: string;
+      bubbleUserBg: string;
+      bubbleAssistantBg: string;
     };
   }
 }

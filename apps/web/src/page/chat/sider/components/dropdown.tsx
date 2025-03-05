@@ -14,7 +14,7 @@ const DropdownList = (): ReactNode => {
   const { loginUsername, setReloadSignal, reloadSignal, setLoginUsername } =
     useStore();
   const route = useNavigate();
-  const { setTheme } = useTheme();
+  const { setTheme, isDarkMode } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -32,23 +32,29 @@ const DropdownList = (): ReactNode => {
   };
 
   return (
-    <motion.div
+    <ContentWrapper
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2, delay: 0.3 }}
-      className="absolute z-10 w-48 mt-2 text-sm text-black bg-white rounded shadow-lg left-[70px] bottom-[-10px] -translate 
+      className="absolute z-10 w-48 mt-2 text-sm rounded shadow-lg left-[70px] bottom-[-10px] -translate 
                          x-1/2"
     >
       <ul style={{ listStyle: "none" }}>
-        <ListWrapper className="hover:bg-gray-200">
+        <ListWrapper
+          className={`${
+            isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+          }`}
+        >
           <div className="text-md">
             <IconMessage />
           </div>
           用户反馈
         </ListWrapper>
         <MotionListWrapper
-          className="hover:bg-gray-200 relative"
+          className={`${
+            isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+          }`}
           initial="rest"
           animate="rest"
           whileHover={"hover"}
@@ -67,14 +73,18 @@ const DropdownList = (): ReactNode => {
           >
             <ThemeContainer>
               <div
-                className="flex flex-row items-center gap-2 px-[12px] py-[12px] hover:bg-gray-200"
+                className={`flex flex-row items-center gap-2 px-[12px] py-[12px] ${
+                  isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                }`}
                 onClick={() => setTheme("light")}
               >
                 <IoSunnyOutline />
                 浅色
               </div>
               <div
-                className="flex flex-row items-center gap-2 px-[12px] py-[12px] hover:bg-gray-200"
+                className={`flex flex-row items-center gap-2 px-[12px] py-[12px] ${
+                  isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                }`}
                 onClick={() => setTheme("dark")}
               >
                 <IoMoon />
@@ -85,7 +95,9 @@ const DropdownList = (): ReactNode => {
         </MotionListWrapper>
         {loginUsername && (
           <MotionListWrapper
-            className="hover:bg-gray-200 text-red-400"
+            className={`${
+              isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+            } text-red-400`}
             onClick={handleLogout}
           >
             <div className="text-md">
@@ -95,14 +107,18 @@ const DropdownList = (): ReactNode => {
           </MotionListWrapper>
         )}
       </ul>
-    </motion.div>
+    </ContentWrapper>
   );
 };
+
+const ContentWrapper = styled(motion.div)`
+  color: ${(props) => props.theme.colors.text};
+`;
 
 const ThemeContainer = styled.div`
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: ${(props) => props.theme.colors.componentBg};
   width: 100px;
 `;
 
@@ -112,6 +128,7 @@ const ListWrapper = styled.li`
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  background: ${(props) => props.theme.colors.componentBg};
   cursor: pointer;
 `;
 
@@ -121,6 +138,7 @@ const MotionListWrapper = styled(motion.li)`
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  background: ${(props) => props.theme.colors.componentBg};
   cursor: pointer;
 `;
 

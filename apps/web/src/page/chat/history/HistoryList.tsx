@@ -9,6 +9,7 @@ import { RenameModal } from "./RenameModal";
 import { DeleteModal } from "./DeleteModal";
 import { motion } from "motion/react";
 import { useStore } from "../../../store";
+import { useTheme } from "theme";
 
 const ContentWrapper = styled.div`
   display: flex;
@@ -18,7 +19,7 @@ const ContentWrapper = styled.div`
 
 const ItemWrapper = styled(motion.div)`
   padding: 16px 24px;
-  background: #fff;
+  background: ${(props) => props.theme.colors.componentBg};
   width: 60%;
   display: flex;
   flex-direction: row;
@@ -50,6 +51,7 @@ const HistoryList = () => {
   const route = useNavigate();
   const store = useChatStorage();
   const { setChatLoadSignal, chatLoadSignal } = useStore();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     setChatLoadSignal(chatLoadSignal + 1);
@@ -114,7 +116,9 @@ const HistoryList = () => {
               </div>
               <div className="hidden group-hover:flex ml-auto flex-row gap-2">
                 <div
-                  className="px-1 bg-gray-100 rounded-md"
+                  className={`px-1 bg-gray-700 ${
+                    isDarkMode ? "hover:bg-gray-500" : "hover:bg-gray-200"
+                  } rounded-md`}
                   onClick={(e) => handleEdit(e, item)}
                 >
                   <IconEdit />
