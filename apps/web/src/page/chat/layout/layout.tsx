@@ -5,6 +5,7 @@ import { Outlet } from "react-router-dom";
 import { Sider } from "../sider/Sider";
 import { useRef, useState } from "react";
 import { ScrollProvider } from "../hooks/useScroll";
+import { ProjectStorageProvider } from "../hooks/useProjectStorage";
 
 const LayoutWrapper = styled.div`
   display: flex;
@@ -40,22 +41,24 @@ const ChatLayout = () => {
   };
 
   return (
-    <ChatProvider>
-      <LayoutWrapper>
-        <div className="flex flex-row">
-          <Sider />
-          <SimpleBar
-            ref={ref}
-            style={{ width: "calc(100vw - 108px)", height: "100%" }}
-            onScrollCapture={captureScrollState}
-          >
-            <ScrollProvider ref={ref} shouldScroll={shouldScroll}>
-              <Outlet />
-            </ScrollProvider>
-          </SimpleBar>
-        </div>
-      </LayoutWrapper>
-    </ChatProvider>
+    <ProjectStorageProvider>
+      <ChatProvider>
+        <LayoutWrapper>
+          <div className="flex flex-row">
+            <Sider />
+            <SimpleBar
+              ref={ref}
+              style={{ width: "calc(100vw - 108px)", height: "100%" }}
+              onScrollCapture={captureScrollState}
+            >
+              <ScrollProvider ref={ref} shouldScroll={shouldScroll}>
+                <Outlet />
+              </ScrollProvider>
+            </SimpleBar>
+          </div>
+        </LayoutWrapper>
+      </ChatProvider>
+    </ProjectStorageProvider>
   );
 };
 

@@ -195,6 +195,7 @@ const Sider = () => {
                duration-100 ${
                  isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
                }`}
+            onClick={() => route("/ai/chat/projects")}
             whileTap={{ scale: 0.9 }}
           >
             <IconCommon className=" scale-150" />

@@ -8,11 +8,14 @@ import { TimerPage } from "./page/ui/test/TimerPage";
 import { RegisterPage } from "./page/register";
 import { lazy } from "react";
 import NotFoundPage from "./page/BasePage/404Page";
-
+import ProjectPage from "./page/chat/Projects/ProjectPage";
 const LazyChatHome = lazy(() => import("./page/chat/layout/ChatHome"));
 const LazyChatLayout = lazy(() => import("./page/chat/layout/layout"));
 const LazyHistoryList = lazy(() => import("./page/chat/history/HistoryList"));
 const LazyChat = lazy(() => import("./page/chat/layout/Chat"));
+const LazyCreateProject = lazy(
+  () => import("./page/chat/Projects/CreateProjectPage")
+);
 
 export const routes: RouteObject[] = [
   {
@@ -30,6 +33,14 @@ export const routes: RouteObject[] = [
       {
         path: "ai/chat/page/:chatId",
         element: <LazyChat />,
+      },
+      {
+        path: "ai/chat/projects",
+        element: <ProjectPage />,
+      },
+      {
+        path: "ai/chat/projects/create",
+        element: <LazyCreateProject />,
       },
       {
         path: "*",

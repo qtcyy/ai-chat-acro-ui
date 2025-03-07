@@ -16,7 +16,7 @@ const LightTheme: DefaultTheme = {
   mode: "light",
   colors: {
     primary: "#F4F2EC",
-    secondary: "",
+    secondary: "#737163",
     background: "#F4F2EC",
     text: "#000",
     boxShadow: "2px 4px 12px rgba(0, 0, 0, 0.1);",
@@ -30,7 +30,7 @@ const DarkTheme: DefaultTheme = {
   mode: "dark",
   colors: {
     primary: "#272725",
-    secondary: "",
+    secondary: "#A6A39A",
     background: "#272725",
     text: "#f5f4ef",
     boxShadow: `0px 0px 2px 0px rgba(0, 0, 0, 0.25),
