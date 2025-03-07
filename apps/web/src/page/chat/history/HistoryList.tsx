@@ -203,6 +203,7 @@ const SearchBar = styled.input`
   font-size: 18px;
   border-radius: 12px;
   border: 1px solid rgba(0, 0.2, 0.2, 0.4);
+  background: ${({ theme }) => theme.colors.componentBg};
 `;
 
 export { HistoryList };

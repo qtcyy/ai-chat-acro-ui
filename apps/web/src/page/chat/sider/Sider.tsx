@@ -3,6 +3,7 @@ import { DeepSeekIcons } from "../../../assets/home/Deepseek";
 import { Avatar, Divider, Modal, Tooltip } from "@arco-design/web-react";
 import {
   IconClose,
+  IconCommand,
   IconFolderAdd,
   IconHome,
   IconList,
@@ -186,6 +187,16 @@ const Sider = () => {
           >
             <IconList className=" scale-150" />
           </motion.div>
+        </Tooltip>
+        <Tooltip position="right" trigger={"hover"} content="更多应用">
+          <div
+            className={`text-xl my-2 py-1 px-2 rounded-md transition-colors
+               duration-100 cursor-pointer ${
+                 isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+               }`}
+          >
+            <IconCommand />
+          </div>
         </Tooltip>
         <Divider className={"my-2"} type="horizontal" />
         <div
