@@ -6,7 +6,13 @@ import {
   IconLoading,
   IconRecordStop,
 } from "@arco-design/web-react/icon";
-import { memo, ReactNode, useCallback, useEffect, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+  HTMLAttributes,
+} from "react";
 import styled from "styled-components";
 import { useScroll } from "../hooks/useScroll";
 import { useRequest } from "ahooks";
@@ -56,7 +62,7 @@ type Props = {
   cancel: () => void;
   showTop?: boolean;
   isHome?: boolean;
-};
+} & HTMLAttributes<HTMLDivElement>;
 
 const ModelName: Record<string, string> = {
   ["deepseek-r1-250120"]: "DeepSeek-R1",
@@ -64,7 +70,7 @@ const ModelName: Record<string, string> = {
   ["doubao-1-5-lite-32k-250115"]: "DouBao-1.5-lite",
 };
 
-const Sender = memo((props: Props) => {
+const Sender = (props: Props) => {
   const { ask, loading, cancel, showTop, isHome } = props;
   const route = useNavigate();
   const { selectedModel, setSelectedModel, insertText, setInsertText } =
@@ -162,7 +168,7 @@ const Sender = memo((props: Props) => {
   };
 
   return (
-    <ContentWrapper>
+    <ContentWrapper className={props.className} style={props.style}>
       <div className="flex flex-row w-[60%] mb-3 ">
         <div className="ml-auto mr-8 flex flex-row gap-1">
           {showTop && (
@@ -240,6 +246,6 @@ const Sender = memo((props: Props) => {
       </SenderWrapper>
     </ContentWrapper>
   );
-});
+};
 
 export { Sender };

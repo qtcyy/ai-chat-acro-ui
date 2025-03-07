@@ -18,6 +18,7 @@ const LazyCreateProject = lazy(
 const LazyProjectList = lazy(
   () => import("./page/chat/Projects/ProjectListPage")
 );
+const LazyProjectPage = lazy(() => import("./page/chat/Projects/ProjectPage"));
 
 export const routes: RouteObject[] = [
   {
@@ -43,6 +44,10 @@ export const routes: RouteObject[] = [
       {
         path: "ai/chat/projects/create",
         element: <LazyCreateProject />,
+      },
+      {
+        path: "ai/chat/projects/:id",
+        element: <LazyProjectPage />,
       },
       {
         path: "*",

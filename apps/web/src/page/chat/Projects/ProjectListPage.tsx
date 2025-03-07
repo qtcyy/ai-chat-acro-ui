@@ -44,7 +44,9 @@ const ProjectListPage = () => {
       </ContentWrapper>
       <ListWrapper>
         {_projects.map((project) => {
-          const handleClick = () => {};
+          const handleClick = () => {
+            route(`/ai/chat/projects/${project.id}`);
+          };
 
           const formatDescription = () => {
             return project.description?.slice(0, 50);
