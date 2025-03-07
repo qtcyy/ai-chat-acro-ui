@@ -12,13 +12,13 @@ const router = createHashRouter(routes);
 const App = () => {
   return (
     <ThemeProvider>
-      <NiceModal.Provider>
-        <ConfigProvider>
+      <ConfigProvider>
+        <NiceModal.Provider>
           <AxiosProvider baseUrl="http://localhost:8081">
             <RouterProvider router={router} />
           </AxiosProvider>
-        </ConfigProvider>
-      </NiceModal.Provider>
+        </NiceModal.Provider>
+      </ConfigProvider>
     </ThemeProvider>
   );
 };

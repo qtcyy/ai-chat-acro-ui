@@ -1,7 +1,7 @@
-import { Button, Input, Modal } from "@arco-design/web-react";
+import { Button, ConfigProvider, Input, Modal } from "@arco-design/web-react";
 import NiceModal from "@ebay/nice-modal-react";
 import { ChatItem } from "../hooks/useChatStorage";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useState } from "react";
 import { useAutoRename } from "../hooks/useAutoRename";
 import { request } from "utils";
@@ -86,11 +86,11 @@ const RenameModal = NiceModal.create<Props>((props) => {
       visible={modal.visible}
       onCancel={handleClose}
       onConfirm={handleConfirm}
-      title="重命名对话"
+      title={<div style={{ color: theme.colors.text }}>重命名对话</div>}
       style={{ background: theme.colors.background }}
     >
       <ContentWrapper>
-        <Input
+        <CustomInput
           value={name}
           onChange={(e) => setName(e)}
           placeholder="请输入名称..."
@@ -104,5 +104,25 @@ const RenameModal = NiceModal.create<Props>((props) => {
     </Modal>
   );
 });
+
+const CustomInput = styled(Input)`
+  ${({ theme }) =>
+    theme.mode === "dark" &&
+    css`
+      background: #575755;
+    `}
+  .arco-input {
+    color: ${({ theme }) => theme.colors.text};
+  }
+  .arco-input-inner-wrapper {
+    &:focus {
+      background: #666;
+      color: #000;
+    }
+  }
+  &:hover {
+    background: #666666;
+  }
+`;
 
 export { RenameModal };

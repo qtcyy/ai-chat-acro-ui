@@ -116,8 +116,10 @@ const HistoryList = () => {
               </div>
               <div className="hidden group-hover:flex ml-auto flex-row gap-2">
                 <div
-                  className={`px-1 bg-gray-700 ${
-                    isDarkMode ? "hover:bg-gray-500" : "hover:bg-gray-200"
+                  className={`px-1  ${
+                    isDarkMode
+                      ? "bg-gray-700 hover:bg-gray-500"
+                      : "bg-gray-200 hover:bg-gray-200"
                   } rounded-md`}
                   onClick={(e) => handleEdit(e, item)}
                 >

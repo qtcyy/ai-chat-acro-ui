@@ -37,6 +37,7 @@ const useChat = (props: Props) => {
   const [loading, setLoading] = useState(false);
   const [closeSignal, setCloseSignal] = useState(0);
   const { selectedModel } = useStore();
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     if (closeSignal === 0 || loading) {
@@ -136,8 +137,13 @@ const useChat = (props: Props) => {
             messages: sendMessages,
             stream: true,
           }),
+          keepalive: true,
           onopen(response) {
-            console.log(response);
+            if (loadingRef.current) {
+              return Promise.resolve();
+            }
+            loadingRef.current = true;
+            console.log("open state: ", loadingRef.current);
             setMessages((old) => {
               old.push({
                 role: ROLE.assistant,
@@ -202,10 +208,12 @@ const useChat = (props: Props) => {
           onerror(err) {
             console.error(err);
             setLoading(false);
+            loadingRef.current = false;
             throw err;
           },
           onclose() {
             setLoading(false);
+            loadingRef.current = false;
             setTimeout(() => {
               setCloseSignal((c) => c + 1);
             }, 50);
