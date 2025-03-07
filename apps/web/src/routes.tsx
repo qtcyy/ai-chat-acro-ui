@@ -7,6 +7,7 @@ import { DashBoard } from "./page/home/DashBoard";
 import { TimerPage } from "./page/ui/test/TimerPage";
 import { RegisterPage } from "./page/register";
 import { lazy } from "react";
+import NotFoundPage from "./page/BasePage/404Page";
 
 const LazyChatHome = lazy(() => import("./page/chat/layout/ChatHome"));
 const LazyChatLayout = lazy(() => import("./page/chat/layout/layout"));
@@ -30,11 +31,21 @@ export const routes: RouteObject[] = [
         path: "ai/chat/page/:chatId",
         element: <LazyChat />,
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
   },
   {
     path: "/ai/register",
     element: <RegisterPage />,
+    children: [
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
+    ],
   },
   {
     path: "/test",
@@ -52,6 +63,10 @@ export const routes: RouteObject[] = [
         path: "test/timer",
         element: <TimerPage />,
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
   },
   {
@@ -65,6 +80,14 @@ export const routes: RouteObject[] = [
       {
         path: "layout/manage",
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ];
