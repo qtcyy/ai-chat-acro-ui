@@ -6,6 +6,8 @@ import NiceModal from "@ebay/nice-modal-react";
 import { ConfigProvider } from "@arco-design/web-react";
 import { AxiosProvider } from "utils";
 import { ThemeProvider } from "theme";
+import { Suspense } from "react";
+import { LoadingPage } from "./page/BasePage/LoadingPage";
 
 const router = createHashRouter(routes);
 
@@ -15,7 +17,9 @@ const App = () => {
       <ConfigProvider>
         <NiceModal.Provider>
           <AxiosProvider baseUrl="http://localhost:8081">
-            <RouterProvider router={router} />
+            <Suspense fallback={<LoadingPage />}>
+              <RouterProvider router={router} />
+            </Suspense>
           </AxiosProvider>
         </NiceModal.Provider>
       </ConfigProvider>

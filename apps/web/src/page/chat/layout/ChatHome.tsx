@@ -53,4 +53,4 @@ const ChatHome = () => {
   );
 };
 
-export { ChatHome };
+export default ChatHome;

@@ -206,4 +206,4 @@ const SearchBar = styled.input`
   background: ${({ theme }) => theme.colors.componentBg};
 `;
 
-export { HistoryList };
+export default HistoryList;

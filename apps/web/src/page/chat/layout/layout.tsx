@@ -59,4 +59,4 @@ const ChatLayout = () => {
   );
 };
 
-export { ChatLayout };
+export default ChatLayout;

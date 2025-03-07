@@ -4,6 +4,7 @@ import { Avatar, Divider, Modal, Tooltip } from "@arco-design/web-react";
 import {
   IconClose,
   IconCommand,
+  IconCommon,
   IconFolderAdd,
   IconHome,
   IconList,
@@ -186,6 +187,17 @@ const Sider = () => {
             whileTap={{ scale: 0.9 }}
           >
             <IconList className=" scale-150" />
+          </motion.div>
+        </Tooltip>
+        <Tooltip position="right" trigger={"hover"} content="项目">
+          <motion.div
+            className={`p-3 my-2 cursor-pointer rounded-md transition-colors
+               duration-100 ${
+                 isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+               }`}
+            whileTap={{ scale: 0.9 }}
+          >
+            <IconCommon className=" scale-150" />
           </motion.div>
         </Tooltip>
         <Tooltip position="right" trigger={"hover"} content="更多应用">

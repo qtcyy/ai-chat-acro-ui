@@ -1,0 +1,3 @@
+const ProjectPage = () => {};
+
+export { ProjectPage };

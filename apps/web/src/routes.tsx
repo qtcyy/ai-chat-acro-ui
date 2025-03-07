@@ -4,29 +4,31 @@ import { CardPage } from "./page/ui/card/CardPage";
 import { MenuPage } from "./page/ui/Menu/MenuPage";
 import { Layout } from "./page/ui/layout/layout";
 import { DashBoard } from "./page/home/DashBoard";
-import { ChatLayout } from "./page/chat";
-import { Chat } from "./page/chat/layout/Chat";
-import { ChatHome } from "./page/chat/layout/ChatHome";
-import { HistoryList } from "./page/chat/history/HistoryList";
 import { TimerPage } from "./page/ui/test/TimerPage";
 import { RegisterPage } from "./page/register";
+import { lazy } from "react";
+
+const LazyChatHome = lazy(() => import("./page/chat/layout/ChatHome"));
+const LazyChatLayout = lazy(() => import("./page/chat/layout/layout"));
+const LazyHistoryList = lazy(() => import("./page/chat/history/HistoryList"));
+const LazyChat = lazy(() => import("./page/chat/layout/Chat"));
 
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <ChatLayout />,
+    element: <LazyChatLayout />,
     children: [
       {
         path: "ai/chat",
-        element: <ChatHome />,
+        element: <LazyChatHome />,
       },
       {
         path: "ai/chat/list",
-        element: <HistoryList />,
+        element: <LazyHistoryList />,
       },
       {
         path: "ai/chat/page/:chatId",
-        element: <Chat />,
+        element: <LazyChat />,
       },
     ],
   },
