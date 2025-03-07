@@ -7,7 +7,7 @@ import { ProjectItem, useProjectStorage } from "../hooks/useProjectStorage";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-const ProjectPage = () => {
+const ProjectListPage = () => {
   const { isDarkMode } = useTheme();
   const [search, setSearch] = useState("");
   const route = useNavigate();
@@ -145,4 +145,4 @@ const CustomButton = styled(Button)`
   font-size: 16px;
 `;
 
-export default ProjectPage;
+export default ProjectListPage;
