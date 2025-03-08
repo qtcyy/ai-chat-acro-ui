@@ -194,6 +194,24 @@ const SAFE_DIST = styled.div`
   /* height: 50px; */
 `;
 
+const ItemContainer = styled(Menu.Item)`
+  &:hover {
+    ${(props) =>
+      props.theme.mode === "dark" &&
+      css`
+        background: rgb(40, 40, 40);
+      `}
+  }
+`;
+
+const TextContainer = styled.div<{ $useColor?: boolean }>`
+  ${(props) =>
+    props.$useColor &&
+    css`
+      color: ${(props) => props.theme.colors.text};
+    `};
+`;
+
 const getCurrentTime = () => {
   const time = dayjs();
   if (time.hour() < 12) {
@@ -508,24 +526,6 @@ const Chat = () => {
     const handleClick = (key: string) => {
       DropAction[key]();
     };
-
-    const ItemContainer = styled(Menu.Item)`
-      &:hover {
-        ${(props) =>
-          props.theme.mode === "dark" &&
-          css`
-            background: rgb(40, 40, 40);
-          `}
-      }
-    `;
-
-    const TextContainer = styled.div<{ $useColor?: boolean }>`
-      ${(props) =>
-        props.$useColor &&
-        css`
-          color: ${(props) => props.theme.colors.text};
-        `};
-    `;
 
     return (
       <Menu

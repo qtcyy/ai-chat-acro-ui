@@ -30,7 +30,7 @@ type Props<T> = {
   loading?: boolean;
 };
 
-const TOLERANCE = 1;
+const TOLERANCE = 10;
 
 const BubbleList = <T,>(props: Props<T>) => {
   const { items, roles, autoScroll, target, scrollStore } = props;

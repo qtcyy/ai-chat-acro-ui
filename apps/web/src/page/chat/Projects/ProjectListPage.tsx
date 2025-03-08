@@ -37,7 +37,7 @@ const ProjectListPage = () => {
       return;
     }
     _setProjects((old) =>
-      old.filter((o) => o.name.startsWith(search) || o.name.endsWith(search))
+      old.filter((o) => o.name.toLowerCase().includes(search.toLowerCase()))
     );
   };
 

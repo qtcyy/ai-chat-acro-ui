@@ -77,9 +77,8 @@ const HistoryList = () => {
     }
 
     setChatList((old) =>
-      old.filter(
-        (item) =>
-          item.name.startsWith(searchText) || item.name.endsWith(searchText)
+      old.filter((item) =>
+        item.name.toLowerCase().includes(searchText.toLowerCase())
       )
     );
   };
