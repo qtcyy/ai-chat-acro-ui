@@ -3,7 +3,7 @@ import SimpleBar from "simplebar-react";
 import { ChatProvider } from "../hooks/useChatStorage";
 import { Outlet } from "react-router-dom";
 import { Sider } from "../sider/Sider";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollProvider } from "../hooks/useScroll";
 import { ProjectStorageProvider } from "../hooks/useProjectStorage";
 
@@ -17,26 +17,40 @@ const LayoutWrapper = styled.div`
   color: ${(props) => props.theme.colors.text};
 `;
 
-const DELTA = 50;
+const DELTA = 20;
 
 const ChatLayout = () => {
   const ref = useRef(null);
   const [shouldScroll, setShouldScroll] = useState(true);
+  const [clientHeight, setClientHeight] = useState(0);
+
+  // useEffect(() => console.log(clientHeight), [clientHeight]);
 
   const captureScrollState = () => {
-    if (ref) {
+    if (ref.current) {
       //@ts-ignore
       const target = ref.current.getScrollElement();
-      // console.log(target.scrollTop, target.offsetHeight);
-      // console.log(shouldScroll);
+      if (clientHeight !== target.scrollHeight) {
+        setClientHeight(target.scrollHeight);
+      }
+      // console.log(target.scrollHeight, target.scrollTop, target.clientHeight);
+      // console.log(scrollTarget?.scrollTop);
       if (
         target.scrollHeight - target.scrollTop >
-        DELTA + target.offsetHeight
+        DELTA + target.clientHeight
       ) {
         setShouldScroll(false);
       } else {
         setShouldScroll(true);
       }
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
+    console.log("checking");
+    if (e.currentTarget) {
+      //@ts-ignore
+      setClientHeight(e.currentTarget.clientHeight);
     }
   };
 
@@ -50,8 +64,14 @@ const ChatLayout = () => {
               ref={ref}
               style={{ width: "calc(100vw - 108px)", height: "100%" }}
               onScrollCapture={captureScrollState}
+              onScroll={handleScroll}
             >
-              <ScrollProvider ref={ref} shouldScroll={shouldScroll}>
+              <ScrollProvider
+                ref={ref}
+                shouldScroll={shouldScroll}
+                clientHeight={clientHeight}
+                //@ts-ignore
+              >
                 <Outlet />
               </ScrollProvider>
             </SimpleBar>

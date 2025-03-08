@@ -9,6 +9,7 @@ type StoreType = {
   loginUsername: string | undefined;
   reloadSignal: number;
   chatLoadSignal: number;
+  scrollTarget: HTMLElement | undefined;
   setWaitSendQuestion: (value: string | undefined) => void;
   setWaitSendProps: (value: string | undefined) => void;
   setSelectedModel: (value: string) => void;
@@ -17,6 +18,7 @@ type StoreType = {
   setLoginUsername: (value: string | undefined) => void;
   setReloadSignal: (value: number) => void;
   setChatLoadSignal: (value: number) => void;
+  setScrollTarget: (value: HTMLElement | undefined) => void;
 };
 
 export const useStore = create<StoreType>((set) => ({
@@ -28,6 +30,7 @@ export const useStore = create<StoreType>((set) => ({
   loginUsername: undefined,
   reloadSignal: 0,
   chatLoadSignal: 0,
+  scrollTarget: undefined,
   setWaitSendQuestion(value: string | undefined) {
     set({ waitSendQuestion: value });
   },
@@ -51,5 +54,8 @@ export const useStore = create<StoreType>((set) => ({
   },
   setChatLoadSignal(value: number) {
     set({ chatLoadSignal: value });
+  },
+  setScrollTarget(value: HTMLElement | undefined) {
+    set({ scrollTarget: value });
   },
 }));

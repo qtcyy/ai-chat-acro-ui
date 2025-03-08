@@ -36,12 +36,12 @@ const Bubble = <T,>(props: BubbleProps<T>) => {
   };
 
   const { run } = useRequest(onContentUpdate, {
-    debounceWait: 50,
+    debounceWait: 100,
     manual: true,
   });
 
   useEffect(() => {
-    run();
+    onContentUpdate();
   }, [content]);
 
   return <div className="flex flex-row">{render ? render(content) : null}</div>;

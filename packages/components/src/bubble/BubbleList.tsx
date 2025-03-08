@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { Bubble, BubbleContext, BubbleProps } from "./Bubble";
 import { useMergeData } from "./hooks/useMergeData";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const BubbleListWrapper = styled.div`
   display: flex;
@@ -27,9 +27,10 @@ type Props<T> = {
   autoScroll?: boolean;
   target?: HTMLElement;
   scrollStore?: any;
+  loading?: boolean;
 };
 
-const TOLERANCE = 200;
+const TOLERANCE = 1;
 
 const BubbleList = <T,>(props: Props<T>) => {
   const { items, roles, autoScroll, target, scrollStore } = props;
@@ -49,31 +50,31 @@ const BubbleList = <T,>(props: Props<T>) => {
     }
     // const target = e.elements().target;
     setScrollReachEnd(
-      scrollTarget.scrollHeight -
-        Math.abs(scrollTarget.scrollTop) -
-        scrollTarget.clientHeight <=
-        TOLERANCE
+      Math.abs(
+        scrollTarget.scrollHeight -
+          scrollTarget.scrollTop -
+          scrollTarget.clientHeight
+      ) <= TOLERANCE
     );
   };
 
   useEffect(() => {
-    if (target) {
-      onInternalScroll();
-    }
-  }, [target]);
+    // console.log("check");
+    onInternalScroll();
+  }, [scrollStore?.clientHeight, scrollStore?.shouldScroll]);
 
   useEffect(() => {
-    console.log("scroll");
-    if (autoScroll && target && scrollStore?.shouldScroll) {
+    if (autoScroll && target && scrollReactEnd) {
+      console.log("scroll");
       scrollStore?.toBottom(false);
     }
   }, [count, scrollReactEnd]);
 
-  const onBubbleUpdate = () => {
-    if (autoScroll) {
+  const onBubbleUpdate = useCallback(() => {
+    if (scrollStore?.shouldScroll) {
       setCount((c) => c + 1);
     }
-  };
+  }, [autoScroll, scrollStore?.shouldScroll]);
 
   const context = () => {
     return {

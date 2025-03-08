@@ -65,9 +65,9 @@ type Props = {
 } & HTMLAttributes<HTMLDivElement>;
 
 const ModelName: Record<string, string> = {
-  ["deepseek-r1-250120"]: "DeepSeek-R1",
-  ["doubao-1-5-pro-32k-250115"]: "DouBao-1.5-Pro",
-  ["doubao-1-5-lite-32k-250115"]: "DouBao-1.5-lite",
+  ["deepseek-r1"]: "DeepSeek-R1",
+  ["qwen-omni-turbo"]: "Qwen Omni",
+  ["qwq-32b"]: "qwq 32B",
 };
 
 const Sender = (props: Props) => {
@@ -136,31 +136,29 @@ const Sender = (props: Props) => {
         style={{ width: "150px" }}
         onClickMenuItem={(key) => setSelectedModel(key)}
       >
-        <Menu.Item key="deepseek-r1-250120">
+        <Menu.Item key="deepseek-r1">
           <div className="flex flex-row w-full items-center">
             <div>DeepSeek-R1</div>
 
-            {selectedModel === "deepseek-r1-250120" && (
+            {selectedModel === "deepseek-r1" && (
               <IconCheck className="ml-auto" />
             )}
           </div>
         </Menu.Item>
-        <Menu.Item key={"doubao-1-5-pro-32k-250115"}>
+        <Menu.Item key={"qwen-omni-turbo"}>
           <div className="flex flex-row w-full items-center">
-            <div>DouBao-1.5-Pro</div>
+            <div>Qwen Omni</div>
 
-            {selectedModel === "doubao-1-5-pro-32k-250115" && (
+            {selectedModel === "qwen-omni-turbo" && (
               <IconCheck className="ml-auto" />
             )}
           </div>
         </Menu.Item>
-        <Menu.Item key={"doubao-1-5-lite-32k-250115"}>
+        <Menu.Item key={"qwq-32b"}>
           <div className="flex flex-row w-full items-center">
-            <div>DouBao-1.5-lite</div>
+            <div>qwq 32B</div>
 
-            {selectedModel === "doubao-1-5-lite-32k-250115" && (
-              <IconCheck className="ml-auto" />
-            )}
+            {selectedModel === "qwq-32b" && <IconCheck className="ml-auto" />}
           </div>
         </Menu.Item>
       </Menu>

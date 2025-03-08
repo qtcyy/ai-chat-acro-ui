@@ -13,7 +13,10 @@ type RequestMessageType = {
   content: string;
 };
 
+const SELF_API = "http://120.26.42.17:8080/proxy/chat/completions";
 const ARK_API_KEY = "sk-2f7f96daa57447c29397e024650634a9";
+const ALIBABA_API =
+  "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
 export const useAutoRename = (props: Props) => {
   const temp = props.messages;
@@ -33,27 +36,58 @@ export const useAutoRename = (props: Props) => {
 
   const getName = async () => {
     console.log(messages);
-    const response = await axios({
+    const response = await fetch(ALIBABA_API, {
       method: "POST",
-      url: "http://120.26.42.17:8080/proxy/chat/completions",
       headers: {
         ...props.headers,
         "Content-Type": "application/json",
-        // Accept: "application/json",
+        Accept: "application/json",
         Authorization: `Bearer ${ARK_API_KEY}`,
       },
-      data: JSON.stringify({
+      body: JSON.stringify({
         ...props.body,
         messages,
-        stream: false,
+        stream: true,
       }),
     });
-    // const data = JSON.parse(response.data);
-    const data = response.data;
-    const content = data.choices[0]?.message?.content || "";
+
+    if (!response.body) {
+      return Promise.reject("No response body");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let content = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n").filter(Boolean);
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const jsonStr = line.replace("data: ", "").trim();
+          if (jsonStr === "[DONE]") {
+            break;
+          }
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const deltaContent = parsed.choices[0]?.delta?.content;
+            if (deltaContent) {
+              content += deltaContent;
+            }
+          } catch (error) {
+            console.error("Parsing error:", error);
+          }
+        }
+      }
+    }
+
     if (content) {
       return content;
     }
+
     return Promise.reject("type error");
   };
 

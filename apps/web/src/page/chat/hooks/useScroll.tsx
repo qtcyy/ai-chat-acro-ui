@@ -5,6 +5,8 @@ type ScrollContextType = {
   toTop: (smooth?: boolean) => void;
   toBottom: (smooth?: boolean) => void;
   shouldScroll: boolean;
+  scrollTop?: number;
+  clientHeight?: number;
 };
 
 export const ScrollContext = createContext<ScrollContextType | undefined>(
@@ -19,10 +21,19 @@ type Props = {
   children: ReactNode;
   ref: React.RefObject<null>;
   shouldScroll: boolean;
+  scrollTop?: number;
+  clientHeight?: number;
 };
 
 const ScrollProvider = (props: Props) => {
-  const { children, ref, shouldScroll } = props;
+  const { children, ref, shouldScroll, scrollTop, clientHeight } = props;
+
+  useEffect(() => {
+    if (ref.current) {
+      //@ts-ignore
+      console.log(ref.current.getScrollElement().scrollTop);
+    }
+  }, [ref.current]);
 
   const toTop = (smooth?: boolean) => {
     //@ts-ignore
@@ -68,7 +79,14 @@ const ScrollProvider = (props: Props) => {
 
   return (
     <ScrollContext.Provider
-      value={{ target: ref, toTop, toBottom, shouldScroll }}
+      value={{
+        target: ref,
+        toTop,
+        toBottom,
+        shouldScroll,
+        scrollTop,
+        clientHeight,
+      }}
     >
       {children}
     </ScrollContext.Provider>

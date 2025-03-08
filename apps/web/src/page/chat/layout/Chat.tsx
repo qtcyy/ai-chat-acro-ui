@@ -227,7 +227,6 @@ const Chat = () => {
   const route = useNavigate();
   const location = useLocation();
   const fromPath = location.state?.from;
-  console.log(fromPath);
   const { isDarkMode, theme } = useTheme();
 
   if (!chatId) {
@@ -591,6 +590,7 @@ const Chat = () => {
         //@ts-ignore
         target={scroll?.target.current?.getScrollElement()}
         scrollStore={scroll}
+        loading={loading}
       />
       <SAFE_DIST />
       <SenderWrapper>

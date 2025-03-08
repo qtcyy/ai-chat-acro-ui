@@ -86,8 +86,8 @@ type UpdateContentType = {
 };
 
 export async function updateHistoryContent(params: UpdateContentType) {
-  console.log(params.content);
-  console.log(JSON.stringify({ ...params.content }));
+  // console.log(params.content);
+  // console.log(JSON.stringify({ ...params.content }));
   try {
     const response = await request.post<BaseResponseType>(
       "/api/chat/history/update/content",
