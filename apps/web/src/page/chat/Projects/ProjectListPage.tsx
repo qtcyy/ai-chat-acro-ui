@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Button, Skeleton, Spin } from "@arco-design/web-react";
+import { Button, Spin } from "@arco-design/web-react";
 import { useTheme } from "theme";
 import { IconSearch, IconSwap } from "@arco-design/web-react/icon";
 import { useState } from "react";

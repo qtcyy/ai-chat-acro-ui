@@ -294,11 +294,11 @@ const Chat = () => {
         old[old.length - 1].content = last;
         return [...old];
       });
-      // let nowChat = store?.chats.find((o) => o.chatId === chatId);
+      let nowChat = store?.chats.find((o) => o.chatId === chatId);
       let newName = "";
-      // if (!nowChat?.isName) {
-      //   newName = await getName();
-      // }
+      if (!nowChat?.isName) {
+        newName = await getName();
+      }
       console.log(messages);
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
@@ -470,7 +470,7 @@ const Chat = () => {
 
   const { getName } = useAutoRename({
     messages: messages,
-    body: { model: "doubao-1-5-lite-32k-250115" },
+    body: { model: "qwen-omni-turbo" },
   });
 
   const [autoScroll, setAutoScroll] = useState(true);

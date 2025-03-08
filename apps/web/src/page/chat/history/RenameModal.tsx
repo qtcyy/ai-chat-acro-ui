@@ -30,7 +30,7 @@ const RenameModal = NiceModal.create<Props>((props) => {
   const { getName } = useAutoRename({
     messages: chat.content,
     body: {
-      model: "doubao-1-5-lite-32k-250115",
+      model: "qwen-omni-turbo",
     },
   });
 
