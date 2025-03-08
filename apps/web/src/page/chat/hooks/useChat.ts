@@ -82,7 +82,7 @@ const useChat = (props: Props) => {
   }, []);
 
   const ask = useCallback(
-    (question: string) => {
+    (question: string, aiProps?: string) => {
       console.log(question);
       if (loading || !ctrlRef.current) {
         return;
@@ -90,7 +90,7 @@ const useChat = (props: Props) => {
       setLoading(true);
       console.log(question);
       let sendMessages: SendMessageType[] = [
-        { role: ROLE.user, content: AIProps },
+        { role: ROLE.user, content: aiProps ?? AIProps },
       ];
       sendMessages.push(
         ...messages.map((message) => {

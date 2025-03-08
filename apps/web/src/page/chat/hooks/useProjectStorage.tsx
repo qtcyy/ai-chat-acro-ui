@@ -5,6 +5,7 @@ export interface ProjectItem {
   name: string;
   description?: string;
   aiProps?: string;
+  chatIds: string[];
   createTime: string;
   updateTime: string;
 }

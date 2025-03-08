@@ -26,12 +26,13 @@ const CreateProjectPage = (): JSX.Element => {
       id,
       name,
       description,
+      chatIds: [],
       updateTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       createTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     };
     addProject(newProject);
     setLoading(false);
-    route("/ai/chat/projects");
+    route(`/ai/chat/projects/${id}`);
   };
 
   return (

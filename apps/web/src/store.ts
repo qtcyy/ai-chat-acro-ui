@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 type StoreType = {
   waitSendQuestion: string | undefined;
+  waitSendProps: string | undefined;
   selectedModel: string;
   insertText: string;
   loginId: string | undefined;
@@ -9,6 +10,7 @@ type StoreType = {
   reloadSignal: number;
   chatLoadSignal: number;
   setWaitSendQuestion: (value: string | undefined) => void;
+  setWaitSendProps: (value: string | undefined) => void;
   setSelectedModel: (value: string) => void;
   setInsertText: (value: string) => void;
   setLoginId: (value: string | undefined) => void;
@@ -19,6 +21,7 @@ type StoreType = {
 
 export const useStore = create<StoreType>((set) => ({
   waitSendQuestion: undefined,
+  waitSendProps: undefined,
   selectedModel: "deepseek-r1",
   insertText: "",
   loginId: undefined,
@@ -27,6 +30,9 @@ export const useStore = create<StoreType>((set) => ({
   chatLoadSignal: 0,
   setWaitSendQuestion(value: string | undefined) {
     set({ waitSendQuestion: value });
+  },
+  setWaitSendProps(value: string | undefined) {
+    set({ waitSendProps: value });
   },
   setSelectedModel(value: string) {
     set({ selectedModel: value });

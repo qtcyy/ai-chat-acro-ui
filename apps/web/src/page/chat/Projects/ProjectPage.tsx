@@ -3,11 +3,12 @@ import {
   IconArrowLeft,
   IconBook,
   IconCommon,
+  IconDelete,
   IconMoreVertical,
 } from "@arco-design/web-react/icon";
 import NiceModal from "@ebay/nice-modal-react";
 import { JSX, ReactNode, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useTheme } from "theme";
 import { ProjectEditModal } from "./components/ProjectEditModal";
@@ -15,19 +16,68 @@ import { ProjectItem, useProjectStorage } from "../hooks/useProjectStorage";
 import { ProjectRemoveModal } from "./components/ProjectRemoveModal";
 import { Sender } from "../Sender/Sender";
 import { SetInstructionModal } from "./components/SetInstructionModal";
+import { ChatItem, useChatStorage } from "../hooks/useChatStorage";
+import { v4 as uuidv4 } from "uuid";
+import dayjs from "dayjs";
+import { useStore } from "../../../store";
+import { motion } from "motion/react";
+
+const timeDiscrepancy = (timeStr: string): string => {
+  const time = dayjs(timeStr);
+  const secondDiff = dayjs().diff(time, "second");
+  const minuteDiff = dayjs().diff(time, "minute");
+  const hourDiff = dayjs().diff(time, "hour");
+  const dayDiff = dayjs().diff(time, "day");
+  const monthDiff = dayjs().diff(time, "month");
+  const yearDiff = dayjs().diff(time, "year");
+  return yearDiff
+    ? String(yearDiff) + "年"
+    : monthDiff
+    ? String(monthDiff) + "月"
+    : dayDiff
+    ? String(dayDiff) + "天"
+    : hourDiff
+    ? String(hourDiff) + "小时"
+    : minuteDiff
+    ? String(minuteDiff) + "分钟"
+    : String(secondDiff) + "秒";
+};
 
 const ProjectPage = (): JSX.Element => {
   const id = useParams().id;
-  if (!id) {
-    return <div>项目不存在</div>;
-  }
+  const location = useLocation();
+  const route = useNavigate();
   const { isDarkMode } = useTheme();
   const { projects, updateProject, deleteProject } = useProjectStorage();
   const temp = projects.find((o) => o.id === id);
-  if (!temp) {
+
+  const [project, setProject] = useState<ProjectItem>(
+    temp ?? {
+      id: "-1",
+      name: "unknown",
+      chatIds: [],
+      createTime: "-1",
+      updateTime: "-1",
+    }
+  );
+  const store = useChatStorage();
+  const { setWaitSendQuestion, setWaitSendProps } = useStore();
+  const getChatList = () => {
+    const chatIds = new Set(project.chatIds);
+    const chats = store?.chats.filter((o) => chatIds.has(o.chatId));
+    if (!chats) {
+      return [];
+    }
+    console.log(chats);
+    return chats.sort((a, b) =>
+      dayjs(a.updateTime).isAfter(b.updateTime) ? -1 : 1
+    );
+  };
+  const [chats, setChats] = useState<ChatItem[]>(getChatList());
+
+  if (!temp || !id) {
     return <div>项目不存在</div>;
   }
-  const [project, setProject] = useState<ProjectItem>(temp);
 
   const dropdownMenu = (): ReactNode => {
     const handleClick = async (key: string) => {
@@ -37,13 +87,15 @@ const ProjectPage = (): JSX.Element => {
           if (result) {
             updateProject((old) => {
               const index = old.findIndex((o) => o.id === id);
+              const newArray = [...old];
               if (index !== -1) {
-                old[index] = {
-                  ...old[index],
+                newArray[index] = {
+                  ...newArray[index],
                   ...result,
+                  updateTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
                 };
               }
-              return old;
+              return newArray;
             });
             setProject((old) => {
               return { ...old, ...result };
@@ -54,6 +106,7 @@ const ProjectPage = (): JSX.Element => {
           const removeResult = await NiceModal.show(ProjectRemoveModal);
           if (removeResult) {
             deleteProject(id);
+            route("/ai/chat/projects");
           }
           break;
       }
@@ -82,6 +135,38 @@ const ProjectPage = (): JSX.Element => {
 
   const handleAsk = (question: string) => {
     console.log(question);
+    if (!question.trim()) {
+      return;
+    }
+    const chatId = uuidv4();
+    store?.addChat({
+      chatId,
+      name: "新建对话",
+      content: [{ role: "start" }],
+      createTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      updateTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+    });
+    updateProject((old) => {
+      const index = old.findIndex((o) => o.id === id);
+      const newArray = [...old];
+      if (index !== -1) {
+        newArray[index] = {
+          ...newArray[index],
+          chatIds: [...newArray[index].chatIds, chatId],
+          updateTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        };
+      }
+      return newArray;
+    });
+    setProject((old) => {
+      return {
+        ...old,
+        chatIds: [...old.chatIds, chatId],
+      };
+    });
+    setWaitSendProps(project.aiProps);
+    setWaitSendQuestion(question);
+    route(`/ai/chat/page/${chatId}`);
   };
 
   const handleClickInstruction = async () => {
@@ -92,13 +177,15 @@ const ProjectPage = (): JSX.Element => {
     if (instruction) {
       updateProject((old) => {
         const index = old.findIndex((o) => o.id === id);
+        const newArray = [...old];
         if (index !== -1) {
-          old[index] = {
-            ...old[index],
+          newArray[index] = {
+            ...newArray[index],
             aiProps: instruction,
+            updateTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
           };
         }
-        return old;
+        return newArray;
       });
       console.log(projects);
       setProject((old) => {
@@ -143,6 +230,49 @@ const ProjectPage = (): JSX.Element => {
             cancel={() => {}}
             isHome
           />
+          <ListWrapper className="mt-5">
+            {chats.map((chat) => {
+              const handleClick = () => {
+                route(`/ai/chat/page/${chat.chatId}`, {
+                  state: { from: location.pathname },
+                });
+              };
+              const handleDelete = async (
+                e: React.MouseEvent<HTMLDivElement, MouseEvent>
+              ) => {
+                e.stopPropagation();
+                store?.removeChat(chat.chatId);
+                setChats((old) => {
+                  return old.filter((o) => o.chatId !== chat.chatId);
+                });
+              };
+
+              return (
+                <ItemWrapper
+                  className="group"
+                  key={chat.chatId}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleClick}
+                >
+                  <div className="flex flex-row">
+                    <div className="text-lg font-serif">{chat.name}</div>
+                    <IconWrapper
+                      className="ml-auto px-2 py-1 border-gray-500
+                       hidden group-hover:flex justify-center
+                        items-center text-base rounded-md cursor-pointer"
+                      onClick={handleDelete}
+                    >
+                      <IconDelete />
+                    </IconWrapper>
+                  </div>
+
+                  <SecondTextWrapper>
+                    上一次更新：{timeDiscrepancy(chat.updateTime)}前
+                  </SecondTextWrapper>
+                </ItemWrapper>
+              );
+            })}
+          </ListWrapper>
         </MainWrapper>
         <SideWrapper>
           <CardContainer>
@@ -193,6 +323,38 @@ const ProjectPage = (): JSX.Element => {
     </LayoutWrapper>
   );
 };
+
+const IconWrapper = styled.div`
+  transition: background 200ms ease;
+  color: ${({ theme }) => theme.colors.secondary};
+  &:hover {
+    background: ${({ theme }) =>
+      theme.mode === "dark" ? "#374151" : "#e5e7eb"};
+  }
+`;
+
+const ItemWrapper = styled(motion.li)`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+
+  border: 1px solid ${({ theme }) => theme.colors.secondary};
+  transition: background 200ms ease;
+  &:hover {
+    background: ${({ theme }) => theme.colors.componentBg};
+  }
+`;
+
+const ListWrapper = styled.ul`
+  list-style: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
 
 const SpaceText = styled.div`
   white-space: nowrap;

@@ -7,6 +7,7 @@ import { useChat } from "../hooks/useChat";
 import { useEffect, useState } from "react";
 import { Sender } from "../Sender/Sender";
 import {
+  IconArrowLeft,
   IconCopy,
   IconDelete,
   IconDown,
@@ -217,9 +218,16 @@ const Chat = () => {
   const store = useChatStorage();
   const scroll = useScroll();
   const chatId = useParams().chatId;
-  const { waitSendQuestion, setWaitSendQuestion } = useStore();
+  const {
+    waitSendQuestion,
+    setWaitSendQuestion,
+    waitSendProps,
+    setWaitSendProps,
+  } = useStore();
   const route = useNavigate();
   const location = useLocation();
+  const fromPath = location.state?.from;
+  console.log(fromPath);
   const { isDarkMode, theme } = useTheme();
 
   if (!chatId) {
@@ -265,8 +273,9 @@ const Chat = () => {
   useEffect(() => {
     if (waitSendQuestion) {
       setTimeout(() => {
-        ask(waitSendQuestion);
+        ask(waitSendQuestion, waitSendProps);
         setWaitSendQuestion(undefined);
+        setWaitSendProps(undefined);
       }, 200);
     }
   }, [waitSendQuestion]);
@@ -487,7 +496,11 @@ const Chat = () => {
       const confirm = await NiceModal.show(DeleteModal);
       if (confirm) {
         await store?.removeChat(chatId);
-        route("/ai/chat/list");
+        if (fromPath) {
+          route("/#" + fromPath);
+        } else {
+          route("/ai/chat/list");
+        }
       }
     },
   };
@@ -555,6 +568,15 @@ const Chat = () => {
   return (
     <ChatWrapper>
       <HeaderWrapper>
+        {fromPath && (
+          <a
+            className=" absolute left-4 flex flex-row gap-1 justify-center items-center"
+            href={"/#" + fromPath}
+          >
+            <IconArrowLeft />
+            返回项目
+          </a>
+        )}
         <Dropdown droplist={DropList()} trigger={"click"}>
           <div className="title text-lg px-[16px] py-[4px] mt-1 flex flex-row justify-center items-center">
             {history?.name}
