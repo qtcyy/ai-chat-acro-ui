@@ -166,7 +166,7 @@ const ProjectPage = (): JSX.Element => {
     });
     setWaitSendProps(project.aiProps);
     setWaitSendQuestion(question);
-    route(`/ai/chat/page/${chatId}`);
+    route(`/ai/chat/page/${chatId}`, { state: { from: location.pathname } });
   };
 
   const handleClickInstruction = async () => {
