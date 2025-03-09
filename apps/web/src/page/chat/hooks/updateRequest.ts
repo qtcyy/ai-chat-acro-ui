@@ -15,6 +15,7 @@ export async function getHistory() {
     const response = await request.get<ResponseDataType>("/api/chat/history");
     if (response.data.code === 200) {
       const history: HistoryResponseType[] = response.data.data;
+      console.log(history);
       const data: ChatItem[] = [];
       history.map((item) => {
         const contentStr = item.content;
@@ -61,6 +62,7 @@ export async function writeHistory(chat: ChatItem) {
 }
 
 export async function updateHistory(chat: ChatItem) {
+  console.log(chat);
   try {
     const data: WriteHistoryType = {
       ...chat,

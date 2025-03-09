@@ -68,7 +68,6 @@ const ProjectPage = (): JSX.Element => {
     if (!chats) {
       return [];
     }
-    console.log(chats);
     return chats.sort((a, b) =>
       dayjs(a.updateTime).isAfter(b.updateTime) ? -1 : 1
     );

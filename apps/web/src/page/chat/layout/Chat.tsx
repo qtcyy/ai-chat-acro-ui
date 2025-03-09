@@ -4,7 +4,7 @@ import styled, { css } from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { useChat } from "../hooks/useChat";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sender } from "../Sender/Sender";
 import {
   IconArrowLeft,
@@ -268,9 +268,9 @@ const Chat = () => {
   }, [location.pathname, chatId]);
 
   useAsyncEffect(async () => {
-    console.log(messages);
     // await store?.getChatHistory();
     history = store?.chats.find((o) => o.chatId === chatId);
+    console.log(history);
     if (!history) {
       console.log(store?.chats);
       history = {
@@ -313,23 +313,26 @@ const Chat = () => {
       });
       let nowChat = store?.chats.find((o) => o.chatId === chatId);
       let newName = "";
-      if (!nowChat?.isName) {
-        newName = await getName();
-      }
+
       console.log(messages);
+
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
         let newChat = old[index];
         newChat.content = messages;
-        newChat.name = newName || newChat.name;
-        newChat.isName = newChat.isName || newName !== "";
+        // newChat.name = newChat.name || newName;
+        // newChat.isName = true;
         newChat.updateTime = dayjs().format("YYYY-MM-DD HH:mm:ss");
         old[index] = newChat;
         return [...old];
       });
       // console.log(store?.chats);
-      console.log(messages);
+      console.log(store?.chats);
       updateHistoryContent({ id: chatId, content: messages });
+      if (!nowChat?.isName) {
+        newName = await getName();
+        handleRename(newName);
+      }
     },
   });
 
@@ -341,6 +344,19 @@ const Chat = () => {
     setTimeout(() => {
       ask(query);
     }, 100);
+  };
+
+  const handleRename = (name: string) => {
+    store?.updateChat((old) => {
+      const index = old.findIndex((o) => o.chatId === chatId);
+      old[index] = {
+        ...old[index],
+        isName: true,
+        name,
+      };
+      updateHistory(old[index]);
+      return [...old];
+    });
   };
 
   const roles: RolesType<MessageType> = {

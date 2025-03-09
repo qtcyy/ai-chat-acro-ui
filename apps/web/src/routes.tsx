@@ -8,6 +8,7 @@ import { TimerPage } from "./page/ui/test/TimerPage";
 import { RegisterPage } from "./page/register";
 import { lazy } from "react";
 import NotFoundPage from "./page/BasePage/404Page";
+import AppearancePage from "./page/chat/setting/SubPage/AppearancePage";
 const LazyChatHome = lazy(() => import("./page/chat/layout/ChatHome"));
 const LazyChatLayout = lazy(() => import("./page/chat/layout/layout"));
 const LazyHistoryList = lazy(() => import("./page/chat/history/HistoryList"));
@@ -19,6 +20,7 @@ const LazyProjectList = lazy(
   () => import("./page/chat/Projects/ProjectListPage")
 );
 const LazyProjectPage = lazy(() => import("./page/chat/Projects/ProjectPage"));
+const LazySettingPage = lazy(() => import("./page/chat/setting/SettingPage"));
 
 export const routes: RouteObject[] = [
   {
@@ -48,6 +50,22 @@ export const routes: RouteObject[] = [
       {
         path: "ai/chat/projects/:id",
         element: <LazyProjectPage />,
+      },
+      {
+        path: "ai/setting/",
+        element: <LazySettingPage />,
+        children: [
+          {
+            path: "appearance",
+            element: <AppearancePage />,
+          },
+          {
+            path: "account",
+          },
+          {
+            path: "info",
+          },
+        ],
       },
       {
         path: "*",

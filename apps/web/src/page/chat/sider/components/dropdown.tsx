@@ -1,16 +1,20 @@
-import { ReactNode } from "react";
+import { JSX } from "react";
 import { useStore } from "../../../../store";
 import { useNavigate } from "react-router-dom";
 import { request } from "utils";
 import { BaseResponseType } from "../../../../env";
-import { IconMessage, IconExport } from "@arco-design/web-react/icon";
+import {
+  IconMessage,
+  IconExport,
+  IconSettings,
+} from "@arco-design/web-react/icon";
 import { motion } from "motion/react";
 import { CgDarkMode } from "react-icons/cg";
 import styled from "styled-components";
 import { IoMoon, IoSunnyOutline } from "react-icons/io5";
 import { useTheme } from "theme";
 
-const DropdownList = (): ReactNode => {
+const DropdownList = (): JSX.Element => {
   const { loginUsername, setReloadSignal, reloadSignal, setLoginUsername } =
     useStore();
   const route = useNavigate();
@@ -92,6 +96,15 @@ const DropdownList = (): ReactNode => {
               </div>
             </ThemeContainer>
           </motion.div>
+        </MotionListWrapper>
+        <MotionListWrapper
+          className={`${
+            isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+          }`}
+          onClick={() => route("/ai/setting")}
+        >
+          <IconSettings />
+          应用设置
         </MotionListWrapper>
         {loginUsername && (
           <MotionListWrapper
