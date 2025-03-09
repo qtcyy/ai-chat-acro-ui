@@ -19,6 +19,7 @@ import { useRequest } from "ahooks";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../../store";
 import { useTheme } from "theme";
+import { useSetting } from "../hooks/useSetting";
 
 const ContentWrapper = styled.div`
   width: 100%;
@@ -75,6 +76,11 @@ const Sender = (props: Props) => {
   const route = useNavigate();
   const { selectedModel, setSelectedModel, insertText, setInsertText } =
     useStore();
+  const { defaultModel } = useSetting();
+
+  useEffect(() => {
+    setSelectedModel(defaultModel);
+  }, []);
 
   const { isDarkMode } = useTheme();
 

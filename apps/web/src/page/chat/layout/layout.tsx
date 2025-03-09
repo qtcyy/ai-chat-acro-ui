@@ -6,6 +6,7 @@ import { Sider } from "../sider/Sider";
 import { useEffect, useRef, useState } from "react";
 import { ScrollProvider } from "../hooks/useScroll";
 import { ProjectStorageProvider } from "../hooks/useProjectStorage";
+import { SettingProvider } from "../hooks/useSetting";
 
 const LayoutWrapper = styled.div`
   display: flex;
@@ -55,30 +56,32 @@ const ChatLayout = () => {
   };
 
   return (
-    <ProjectStorageProvider>
-      <ChatProvider>
-        <LayoutWrapper>
-          <div className="flex flex-row">
-            <Sider />
-            <SimpleBar
-              ref={ref}
-              style={{ width: "calc(100vw - 108px)", height: "100%" }}
-              onScrollCapture={captureScrollState}
-              onScroll={handleScroll}
-            >
-              <ScrollProvider
+    <SettingProvider>
+      <ProjectStorageProvider>
+        <ChatProvider>
+          <LayoutWrapper>
+            <div className="flex flex-row">
+              <Sider />
+              <SimpleBar
                 ref={ref}
-                shouldScroll={shouldScroll}
-                clientHeight={clientHeight}
-                //@ts-ignore
+                style={{ width: "calc(100vw - 108px)", height: "100%" }}
+                onScrollCapture={captureScrollState}
+                onScroll={handleScroll}
               >
-                <Outlet />
-              </ScrollProvider>
-            </SimpleBar>
-          </div>
-        </LayoutWrapper>
-      </ChatProvider>
-    </ProjectStorageProvider>
+                <ScrollProvider
+                  ref={ref}
+                  shouldScroll={shouldScroll}
+                  clientHeight={clientHeight}
+                  //@ts-ignore
+                >
+                  <Outlet />
+                </ScrollProvider>
+              </SimpleBar>
+            </div>
+          </LayoutWrapper>
+        </ChatProvider>
+      </ProjectStorageProvider>
+    </SettingProvider>
   );
 };
 
