@@ -149,6 +149,10 @@ const ListWrapper = styled.ul`
   list-style: none;
   flex-wrap: wrap;
   width: 100%;
+
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
   justify-content: space-between;
 `;
 
@@ -207,7 +211,11 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 80%;
+  width: 100%;
+
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 const CustomButton = styled(Button)`
