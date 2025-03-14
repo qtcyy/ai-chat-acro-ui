@@ -16,7 +16,7 @@ const App = () => {
     <ThemeProvider>
       <ConfigProvider>
         <NiceModal.Provider>
-          <AxiosProvider baseUrl="http://localhost:8081">
+          <AxiosProvider baseUrl="http://1.94.184.204:8081">
             <Suspense fallback={<LoadingPage />}>
               <RouterProvider router={router} />
             </Suspense>
