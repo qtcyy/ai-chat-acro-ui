@@ -1,4 +1,4 @@
-import { RouteObject } from "react-router-dom";
+import {Navigate, RouteObject} from "react-router-dom";
 import { HomePage } from "./page/home/HomePage";
 import { CardPage } from "./page/ui/card/CardPage";
 import { MenuPage } from "./page/ui/Menu/MenuPage";
@@ -25,9 +25,14 @@ const LazySettingPage = lazy(() => import("./page/chat/setting/SettingPage"));
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <LazyChatLayout />,
+    element: <Navigate replace to="/ai/chat" />,
+  },
+  {
+    path: "/",
+    element: <LazyChatLayout/>,
     children: [
       {
+        index: true,
         path: "ai/chat",
         element: <LazyChatHome />,
       },
