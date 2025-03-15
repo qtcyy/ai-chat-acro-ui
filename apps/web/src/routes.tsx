@@ -32,7 +32,7 @@ export const routes: RouteObject[] = [
     element: <LazyChatLayout/>,
     children: [
       {
-        index: true,
+        // index: true,
         path: "ai/chat",
         element: <LazyChatHome />,
       },

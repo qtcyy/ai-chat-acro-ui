@@ -133,10 +133,10 @@ const Sider = () => {
     }
   };
 
-  const handleNewCon = () => {
-    const chatId = uuidv4();
-    route(`/ai/chat/page/${chatId}`);
-  };
+  // const handleNewCon = () => {
+  //   const chatId = uuidv4();
+  //   route(`/ai/chat/page/${chatId}`);
+  // };
 
   const handleLogin = async () => {
     if (!loginUsername) {
@@ -171,7 +171,8 @@ const Sider = () => {
               duration-100 hover:bg-gray-200 ${
                 isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
               }`}
-            onClick={handleNewCon}
+            // onClick={handleNewCon}
+            onClick={()=>route ("/ai/chat")}
             whileTap={{ scale: 0.9 }}
           >
             <IconFolderAdd className=" scale-150" />
