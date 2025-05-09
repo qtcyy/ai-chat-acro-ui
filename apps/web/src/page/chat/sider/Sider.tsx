@@ -207,6 +207,7 @@ const Sider = () => {
                duration-100 cursor-pointer ${
                  isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
                }`}
+            onClick={() => route("/ai/more")}
           >
             <IconCommand />
           </div>
