@@ -198,11 +198,17 @@ const CustomInput = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.background};
   background-color: ${({ theme }) => theme.colors.componentBg};
   color: ${({ theme }) => theme.colors.text};
+  transition: box-shadow 0.2s;
+  transition-delay: 0.1s;
+
+  &:focus {
+    box-shadow: 2px 6px 6px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const IconWrapper = styled.div`
   position: absolute;
-  left: 2%;
+  left: 4%;
   top: 13px;
   scale: 1.2;
 `;

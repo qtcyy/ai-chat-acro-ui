@@ -30,6 +30,8 @@ import { timer } from "utils";
 import { updateHistory, updateHistoryContent } from "../hooks/updateRequest";
 import { useAsyncEffect } from "ahooks";
 import { useTheme } from "theme";
+import { motion } from "motion/react";
+import SimpleBar from "simplebar-react";
 
 const ChatWrapper = styled.div`
   position: relative;
@@ -144,7 +146,7 @@ const AnswerWrapper = styled.div`
 const ThinkWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 3px;
   padding: 12px;
   background: ${(props) =>
     props.theme.mode === "dark" ? "rgb(36,36,36)" : "#f1f1f1"};
@@ -372,7 +374,7 @@ const Chat = () => {
     },
     [ROLE.assistant]: {
       render: (content) => {
-        const [collapsed, setCollapsed] = useState(false);
+        const [collapsed, setCollapsed] = useState(true);
         const [isCopied, setIsCopied] = useState(false);
         const { onStart, onEnd, getCurrent, reset } = timer({ init: 0 });
 
@@ -430,7 +432,28 @@ const Chat = () => {
                     {collapsed ? <IconUp /> : <IconDown />}
                   </div>
                 </ThinkHeaderWrapper>
-                {!collapsed && <MDRenderer text={think} />}
+                <motion.div
+                  layoutScroll
+                  style={{
+                    overflow: "hidden",
+                    width: "100%",
+                  }}
+                  animate={{
+                    height: collapsed ? "0px" : "auto",
+                    maxHeight: "250px",
+                  }}
+                >
+                  <SimpleBar
+                    style={{
+                      maxHeight: "250px",
+                      width: "100%",
+                      padding: "8px",
+                    }}
+                    autoHide={false}
+                  >
+                    <MDRenderer text={think} />
+                  </SimpleBar>
+                </motion.div>
               </ThinkWrapper>
             )}
             <MDRenderer text={answer ?? " "} />
