@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 type Props = {
   top?: number | string;
@@ -17,6 +17,18 @@ const SelectedLine = ({ top, height, width, color }: Props): JSX.Element => {
     </LineBody>
   );
 };
+
+const LineShow = keyframes`
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  100%{
+    opacity: 1;
+    transform: scaleX(1);
+  }
+`;
 
 const LineBody = styled.div<{
   $top?: number | string;
@@ -38,6 +50,7 @@ const LineBody = styled.div<{
     }
   }}
   background-color: ${({ theme }) => theme.colors.text};
+  animation: ${LineShow} 0.2s ease-in-out forwards;
 `;
 
 export { SelectedLine };

@@ -51,6 +51,11 @@ const appItems: AppsType[] = [
   },
 ];
 
+const position: Record<string, number> = {
+  ["1"]: 0,
+  ["2"]: 270,
+};
+
 const MoreAppsPage = (): JSX.Element => {
   const [itemSelected, setItemSelected] = useState<string>("1");
   const [scrollTop, setScrollTop] = useState<number | undefined>(undefined);
@@ -64,8 +69,21 @@ const MoreAppsPage = (): JSX.Element => {
     console.log(scrollTop);
   };
 
+  const handleScroll = (height: number) => {
+    target?.scrollTo({
+      top: height,
+      behavior: "smooth",
+    });
+  };
+
   useEffect(() => {
-    console.log(scrollTop);
+    if (scrollTop) {
+      if (scrollTop >= position["1"] && scrollTop < position["2"]) {
+        setItemSelected("1");
+      } else if (scrollTop >= position["2"]) {
+        setItemSelected("2");
+      }
+    }
   }, [scrollTop]);
 
   return (
@@ -82,6 +100,7 @@ const MoreAppsPage = (): JSX.Element => {
         <ListWrapper>
           {classItems.map((item) => {
             const handleClick = () => {
+              handleScroll(position[item.id]);
               setItemSelected(item.id);
             };
             const isSelected = itemSelected == item.id;
@@ -143,6 +162,7 @@ const MoreAppsPage = (): JSX.Element => {
             );
           })}
         </EnumWrapper>
+        <TestBlock />
       </ContentWrapper>
     </SimpleBar>
   );
@@ -200,12 +220,13 @@ const ListWrapper = styled.ul`
   display: flex;
   position: sticky;
   flex-direction: row;
-  top: 20px;
+  top: 0;
   gap: 30px;
   z-index: 10;
+  background: ${({ theme }) => theme.colors.background};
   list-style: none;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  padding-top: 20px;
+  padding-bottom: 20px;
 `;
 
 const ContentWrapper = styled.div`
