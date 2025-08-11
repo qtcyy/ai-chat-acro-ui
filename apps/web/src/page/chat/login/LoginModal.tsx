@@ -8,6 +8,10 @@ import {
 import NiceModal from "@ebay/nice-modal-react";
 import styled from "styled-components";
 import rqCode from "../../../assets/chat/TestRQCode.png";
+import { NavigateFunction } from "react-router-dom";
+import { useState } from "react";
+import { login, LoginRequestType } from "./request/LoginRequest";
+import { useStore } from "../../../store";
 
 const ModalWrapper = styled.div`
   display: flex;
@@ -22,12 +26,49 @@ const LoginWrapper = styled.div`
   padding: 12px 24px;
 `;
 
-const LoginModal = NiceModal.create(() => {
+type Props = {
+  route: NavigateFunction;
+};
+
+const LoginModal = NiceModal.create<Props>((props) => {
   const modal = NiceModal.useModal();
+  const { route } = props;
+
+  const { reloadSignal, setReloadSignal } = useStore();
+  const [checked, setChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [mergedName, setMergedName] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleClose = () => {
     modal.hide();
     modal.remove();
+  };
+
+  const handleClickRegister = () => {
+    route("/ai/register");
+    modal.remove();
+  };
+
+  const handleClickLogin = async () => {
+    setLoading(true);
+    try {
+      if (!mergedName || !password || !checked) {
+        throw new Error("信息错误");
+      }
+      const params: LoginRequestType = { mergedName, password };
+      await login(params);
+      setReloadSignal(reloadSignal + 1);
+      route("/ai/chat");
+      modal.hide();
+      setTimeout(() => {
+        modal.remove();
+      }, 200);
+    } catch (error) {
+      console.error("登录错误", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,10 +89,17 @@ const LoginModal = NiceModal.create(() => {
           <div className="text-lg font-bold">密码登录</div>
           <div className="flex flex-row mt-4">
             <div className="flex-[0.65] flex flex-col gap-4">
-              <Input className={"h-[50px]"} placeholder="请输入账号" />
+              <Input
+                className={"h-[50px]"}
+                placeholder="请输入用户名/手机号/邮箱"
+                value={mergedName}
+                onChange={setMergedName}
+              />
               <Input.Password
                 className={"h-[50px] text-lg"}
                 placeholder="请输入密码"
+                value={password}
+                onChange={setPassword}
               />
               <div className="flex flex-row">
                 <Checkbox>记住密码</Checkbox>
@@ -59,10 +107,17 @@ const LoginModal = NiceModal.create(() => {
                   忘记密码?
                 </a>
               </div>
-              <Button type="primary" size="large">
+              <Button
+                loading={loading}
+                type="primary"
+                size="large"
+                onClick={handleClickLogin}
+              >
                 登录
               </Button>
-              <Button size="large">注册</Button>
+              <Button size="large" onClick={handleClickRegister}>
+                注册
+              </Button>
             </div>
             <Divider type="vertical" className={"h-full"} />
             <div className="flex-[0.35] flex flex-col gap-4">
@@ -74,7 +129,7 @@ const LoginModal = NiceModal.create(() => {
           </div>
         </LoginWrapper>
         <div className="w-full flex justify-center items-center mt-4">
-          <Checkbox />
+          <Checkbox value={checked} onChange={(e) => setChecked(e)} />
           <div className={"flex flex-row gap-1 ml-2"}>
             <div>已阅读同意</div>
             <a className="text-blue-500 cursor-pointer">《模型服务协议》</a>

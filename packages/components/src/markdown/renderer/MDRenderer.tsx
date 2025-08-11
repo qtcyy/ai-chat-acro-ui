@@ -11,6 +11,8 @@ import {
 import "github-markdown-css/github-markdown-light.css";
 import "katex/dist/katex.min.css";
 import { MermaidRenderer } from "./MermaidRenderer";
+import { useTheme } from "theme";
+import styled, { createGlobalStyle } from "styled-components";
 
 type MDRendererProps = {
   text: string;
@@ -25,8 +27,11 @@ interface CodeProps {
 }
 
 export const MDRenderer = (props: MDRendererProps) => {
+  const { isDarkMode, theme } = useTheme();
+
   return (
-    <div className="markdown-body bg-transparent w-full">
+    <ContentWrapper className={`markdown-body bg-transparent w-full`}>
+      <MarkdownPreStyles />
       <Markdown
         remarkPlugins={[remarkMath, gfm]}
         rehypePlugins={[rehypeKatex]}
@@ -38,24 +43,61 @@ export const MDRenderer = (props: MDRendererProps) => {
               return <MermaidRenderer chart={String(children).trim()} />;
             }
             return !inline && match ? (
-              <SyntaxHighlighter
-                style={oneDark}
+              <StyledSyntaxHighlighter
+                style={isDarkMode ? oneDark : oneLight}
                 language={match[1]}
                 PreTag="div"
                 {...props}
               >
                 {String(children).replace(/\n$/, "")}
-              </SyntaxHighlighter>
+              </StyledSyntaxHighlighter>
             ) : (
-              <code className={className} {...props}>
+              <InlineCode className={className} {...props}>
                 {children}
-              </code>
+              </InlineCode>
             );
           },
         }}
       >
         {props.text}
       </Markdown>
-    </div>
+    </ContentWrapper>
   );
 };
+
+const InlineCode = styled.code`
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-family: monospace;
+`;
+
+const StyledSyntaxHighlighter = styled(SyntaxHighlighter)`
+  border-radius: 8px !important;
+  margin: 1em 0 !important;
+  padding: 1em !important;
+
+  /* 你可以添加更多自定义样式，如阴影效果 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+`;
+
+const ContentWrapper = styled.div`
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const MarkdownPreStyles = createGlobalStyle`
+  .markdown-body .highlight pre, 
+  .markdown-body pre {
+    border-radius: 8px;
+    background-color:  ${({ theme }) => theme.colors.primary};
+    padding: 16px;
+    overflow: auto;
+    margin-bottom: 16px;
+    
+    /* 添加阴影效果 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    
+    /* 可以在这里添加更多样式 */
+  }
+`;

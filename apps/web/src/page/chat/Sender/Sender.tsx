@@ -4,13 +4,22 @@ import {
   IconCheck,
   IconDown,
   IconLoading,
+  IconRecordStop,
 } from "@arco-design/web-react/icon";
-import { ReactNode, useEffect, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+  HTMLAttributes,
+} from "react";
 import styled from "styled-components";
 import { useScroll } from "../hooks/useScroll";
 import { useRequest } from "ahooks";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../../store";
+import { useTheme } from "theme";
+import { useSetting } from "../hooks/useSetting";
 
 const ContentWrapper = styled.div`
   width: 100%;
@@ -23,6 +32,7 @@ const ContentWrapper = styled.div`
 
 const SenderWrapper = styled.div`
   border: 1px solid rgba(0, 0, 0, 0.3);
+  background: ${(props) => (props.theme.mode === "dark" ? "#45454e" : "#fff")};
 
   transition: box-shadow 0.2s ease;
   &:hover {
@@ -53,12 +63,12 @@ type Props = {
   cancel: () => void;
   showTop?: boolean;
   isHome?: boolean;
-};
+} & HTMLAttributes<HTMLDivElement>;
 
 const ModelName: Record<string, string> = {
-  ["deepseek-r1-250120"]: "DeepSeek-R1",
-  ["doubao-1-5-pro-32k-250115"]: "DouBao-1.5-Pro",
-  ["doubao-1-5-lite-32k-250115"]: "DouBao-1.5-lite",
+  ["deepseek-r1"]: "DeepSeek-R1",
+  ["qwen-omni-turbo"]: "Qwen Omni",
+  ["qwq-32b"]: "qwq 32B",
 };
 
 const Sender = (props: Props) => {
@@ -66,13 +76,20 @@ const Sender = (props: Props) => {
   const route = useNavigate();
   const { selectedModel, setSelectedModel, insertText, setInsertText } =
     useStore();
+  const { defaultModel } = useSetting();
+
+  useEffect(() => {
+    setSelectedModel(defaultModel);
+  }, []);
+
+  const { isDarkMode } = useTheme();
 
   const send = async (question: string) => {
     ask(question);
   };
 
   const { run } = useRequest(send, {
-    debounceWait: 500,
+    debounceWait: 200,
     manual: true,
   });
 
@@ -88,13 +105,16 @@ const Sender = (props: Props) => {
     setInsertText("");
   }, [insertText]);
 
-  const handleSend = () => {
-    if (text === "" || loading) return;
-    console.log(loading);
-    console.log(text);
-    run(text);
-    setText("");
-  };
+  const handleSend = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      e?.preventDefault();
+      if (text === "" || loading) return;
+      run(text);
+      setText("");
+    },
+    [loading, text, run]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !isComposing) {
@@ -122,31 +142,29 @@ const Sender = (props: Props) => {
         style={{ width: "150px" }}
         onClickMenuItem={(key) => setSelectedModel(key)}
       >
-        <Menu.Item key="deepseek-r1-250120">
+        <Menu.Item key="deepseek-r1">
           <div className="flex flex-row w-full items-center">
             <div>DeepSeek-R1</div>
 
-            {selectedModel === "deepseek-r1-250120" && (
+            {selectedModel === "deepseek-r1" && (
               <IconCheck className="ml-auto" />
             )}
           </div>
         </Menu.Item>
-        <Menu.Item key={"doubao-1-5-pro-32k-250115"}>
+        <Menu.Item key={"qwen-omni-turbo"}>
           <div className="flex flex-row w-full items-center">
-            <div>DouBao-1.5-Pro</div>
+            <div>Qwen Omni</div>
 
-            {selectedModel === "doubao-1-5-pro-32k-250115" && (
+            {selectedModel === "qwen-omni-turbo" && (
               <IconCheck className="ml-auto" />
             )}
           </div>
         </Menu.Item>
-        <Menu.Item key={"doubao-1-5-lite-32k-250115"}>
+        <Menu.Item key={"qwq-32b"}>
           <div className="flex flex-row w-full items-center">
-            <div>DouBao-1.5-lite</div>
+            <div>qwq 32B</div>
 
-            {selectedModel === "doubao-1-5-lite-32k-250115" && (
-              <IconCheck className="ml-auto" />
-            )}
+            {selectedModel === "qwq-32b" && <IconCheck className="ml-auto" />}
           </div>
         </Menu.Item>
       </Menu>
@@ -154,7 +172,7 @@ const Sender = (props: Props) => {
   };
 
   return (
-    <ContentWrapper>
+    <ContentWrapper className={props.className} style={props.style}>
       <div className="flex flex-row w-[60%] mb-3 ">
         <div className="ml-auto mr-8 flex flex-row gap-1">
           {showTop && (
@@ -177,9 +195,11 @@ const Sender = (props: Props) => {
           )}
         </div>
       </div>
-      <SenderWrapper className="p-3 min-h-[150px] max-h-[250px]  bg-white rounded-xl w-[60%] min-w-[700px] flex flex-col items-center">
+      <SenderWrapper className="p-3 min-h-[150px] max-h-[250px] rounded-xl w-[60%] min-w-[700px] flex flex-col items-center">
         <textarea
-          className="flex-[0.7] w-full text-lg"
+          className={`flex-[0.7] w-full text-lg ${
+            isDarkMode && "bg-[#45454e]"
+          }`}
           placeholder="向我提问吧"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -198,23 +218,33 @@ const Sender = (props: Props) => {
               </div>
             </Dropdown>
           )}
-          <div
-            className={
-              text === ""
-                ? "ml-auto flex flex-row px-3 py-2 bg-blue-300 text-gray-100 rounded-md transition-colors duration-200"
-                : "ml-auto flex flex-row px-3 py-2 bg-blue-500 text-white rounded-md transition-colors duration-200 cursor-pointer"
-            }
-            onClick={handleSend}
-          >
-            <Tooltip
-              mini
-              position="top"
-              content={text === "" ? "请输入问题" : "点击发送"}
-            >
-              <div className="scale-150">
-                {loading ? <IconLoading /> : <IconArrowUp />}
+          <div className="ml-auto flex flex-row gap-2 justify-center items-center">
+            {loading && (
+              <div
+                className="text-xl text-white px-2 py-2 rounded-[50%] bg-red-500 cursor-pointer flex justify-center items-center"
+                onClick={cancel}
+              >
+                <IconRecordStop />
               </div>
-            </Tooltip>
+            )}
+            <div
+              className={
+                text === ""
+                  ? "flex flex-row px-3 py-2 bg-blue-300 text-gray-100 rounded-md transition-colors duration-200"
+                  : "flex flex-row px-3 py-2 bg-blue-500 text-white rounded-md transition-colors duration-200 cursor-pointer"
+              }
+              onClick={handleSend}
+            >
+              <Tooltip
+                mini
+                position="top"
+                content={text === "" ? "请输入问题" : "点击发送"}
+              >
+                <div className="scale-150">
+                  {loading ? <IconLoading /> : <IconArrowUp />}
+                </div>
+              </Tooltip>
+            </div>
           </div>
         </div>
       </SenderWrapper>

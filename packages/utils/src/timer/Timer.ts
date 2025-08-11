@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   init?: number;
@@ -28,20 +28,20 @@ export const timer = (props: Props) => {
     };
   }, [running]);
 
-  const onStart = () => {
+  const onStart = useCallback(() => {
     if (!running) {
       setRunning(true);
     }
-  };
+  }, [setRunning]);
 
-  const onEnd = () => {
+  const onEnd = useCallback(() => {
     setRunning(false);
-  };
+  }, [setRunning]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setRunning(false);
     setTime(init);
-  };
+  }, [setRunning, setTime]);
 
   const getCurrentFormatted = () => {
     const hours = Math.floor(time / 3600);

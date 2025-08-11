@@ -1,12 +1,13 @@
 import { BubbleList, MDRenderer, RolesType } from "components";
-import { MessageType, useChatStorage } from "../hooks/useChatStorage";
-import styled from "styled-components";
-import { useNavigate, useParams } from "react-router-dom";
+import { ChatItem, MessageType, useChatStorage } from "../hooks/useChatStorage";
+import styled, { css } from "styled-components";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { useChat } from "../hooks/useChat";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sender } from "../Sender/Sender";
 import {
+  IconArrowLeft,
   IconCopy,
   IconDelete,
   IconDown,
@@ -26,6 +27,11 @@ import { DeleteModal } from "../history/DeleteModal";
 import { useAutoRename } from "../hooks/useAutoRename";
 import { useStore } from "../../../store";
 import { timer } from "utils";
+import { updateHistory, updateHistoryContent } from "../hooks/updateRequest";
+import { useAsyncEffect } from "ahooks";
+import { useTheme } from "theme";
+import { motion } from "motion/react";
+import SimpleBar from "simplebar-react";
 
 const ChatWrapper = styled.div`
   position: relative;
@@ -42,7 +48,8 @@ const HeaderWrapper = styled.div`
   min-width: 375px;
   height: 56px;
   padding: 14px 50px;
-  background: rgb(244, 242, 236);
+  /* background: rgb(244, 242, 236); */
+  background: ${(props) => props.theme.colors.background};
   width: 100%;
   z-index: 10;
   top: 0;
@@ -56,7 +63,8 @@ const HeaderWrapper = styled.div`
     cursor: pointer;
     transition: background 0.2s ease;
     &:hover {
-      background: #e5e7ed;
+      background: ${(props) =>
+        props.theme.mode === "dark" ? "#31313a" : "#e5e7ed"};
     }
   }
 
@@ -67,11 +75,23 @@ const HeaderWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 20px;
-    background: linear-gradient(
-      to bottom,
-      rgba(244, 242, 236, 1) 0%,
-      rgba(244, 242, 236, 0) 100%
-    );
+    ${(props) =>
+      props.theme.mode === "dark"
+        ? css`
+            background: linear-gradient(
+              to bottom,
+              rgba(39, 39, 37, 1) 0%,
+              rgba(39, 39, 37, 0) 100%
+            );
+          `
+        : css`
+            background: linear-gradient(
+              to bottom,
+              rgba(244, 242, 236, 1) 0%,
+              rgba(244, 242, 236, 0) 100%
+            );
+          `};
+
     pointer-events: none; /* 防止遮挡下方交互 */
   }
 `;
@@ -81,7 +101,8 @@ const QueryWrapper = styled.div`
   display: inline-flex;
   padding: 16px;
   max-width: 70%;
-  background: rgb(226, 224, 213);
+  /* background: rgb(226, 224, 213); */
+  background: ${(props) => props.theme.colors.bubbleUserBg};
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -114,7 +135,8 @@ const AnswerWrapper = styled.div`
   min-width: 300px;
   max-width: 80%;
   /* background: #fff; */
-  background: rgb(250, 249, 246);
+  /* background: rgb(250, 249, 246); */
+  background: ${(props) => props.theme.colors.bubbleAssistantBg};
   padding: 24px;
   font-family: serif;
   border-radius: 12px;
@@ -124,14 +146,16 @@ const AnswerWrapper = styled.div`
 const ThinkWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 3px;
   padding: 12px;
-  background: #f1f1f1;
+  background: ${(props) =>
+    props.theme.mode === "dark" ? "rgb(36,36,36)" : "#f1f1f1"};
   border-radius: 16px;
 `;
 
 const ThinkHeaderWrapper = styled.div`
-  background: #f1f1f1;
+  background: ${(props) =>
+    props.theme.mode === "dark" ? "rgb(36,36,36)" : "#f1f1f1"};
   border-radius: 8px 0;
 
   &::after {
@@ -141,11 +165,22 @@ const ThinkHeaderWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 20px;
-    background: linear-gradient(
-      to bottom,
-      rgba(241, 241, 241, 1) 0%,
-      rgba(244, 242, 236, 0) 100%
-    );
+    ${(props) =>
+      props.theme.mode === "dark"
+        ? css`
+            background: linear-gradient(
+              to bottom,
+              rgba(36, 36, 36, 1) 0%,
+              rgba(39, 39, 37, 0) 100%
+            );
+          `
+        : css`
+            background: linear-gradient(
+              to bottom,
+              rgba(244, 242, 236, 1) 0%,
+              rgba(244, 242, 236, 0) 100%
+            );
+          `};
     pointer-events: none; /* 防止遮挡下方交互 */
   }
 `;
@@ -159,6 +194,24 @@ const SenderWrapper = styled.div`
 
 const SAFE_DIST = styled.div`
   /* height: 50px; */
+`;
+
+const ItemContainer = styled(Menu.Item)`
+  &:hover {
+    ${(props) =>
+      props.theme.mode === "dark" &&
+      css`
+        background: rgb(40, 40, 40);
+      `}
+  }
+`;
+
+const TextContainer = styled.div<{ $useColor?: boolean }>`
+  ${(props) =>
+    props.$useColor &&
+    css`
+      color: ${(props) => props.theme.colors.text};
+    `};
 `;
 
 const getCurrentTime = () => {
@@ -185,8 +238,17 @@ const Chat = () => {
   const store = useChatStorage();
   const scroll = useScroll();
   const chatId = useParams().chatId;
-  const { waitSendQuestion, setWaitSendQuestion } = useStore();
+  const {
+    waitSendQuestion,
+    setWaitSendQuestion,
+    waitSendProps,
+    setWaitSendProps,
+  } = useStore();
   const route = useNavigate();
+  const location = useLocation();
+  const fromPath = location.state?.from;
+  const { isDarkMode, theme } = useTheme();
+
   if (!chatId) {
     return null;
   }
@@ -197,17 +259,22 @@ const Chat = () => {
     console.log("chat start");
 
     return () => {
-      if (messages.length <= 2) {
-        console.log("chat delete");
-        store?.removeChat(chatId);
+      if (!location.pathname.startsWith("/ai/chat/page")) {
+        cancel();
       }
+      // if (messages.length <= 2) {
+      //   console.log("chat delete");
+      //   store?.removeChat(chatId);
+      // }
     };
-  }, []);
+  }, [location.pathname, chatId]);
 
-  useEffect(() => {
-    console.log(messages);
+  useAsyncEffect(async () => {
+    // await store?.getChatHistory();
     history = store?.chats.find((o) => o.chatId === chatId);
+    console.log(history);
     if (!history) {
+      console.log(store?.chats);
       history = {
         chatId,
         name: "新建对话",
@@ -224,8 +291,11 @@ const Chat = () => {
 
   useEffect(() => {
     if (waitSendQuestion) {
-      ask(waitSendQuestion);
-      setWaitSendQuestion(undefined);
+      setTimeout(() => {
+        ask(waitSendQuestion, waitSendProps);
+        setWaitSendQuestion(undefined);
+        setWaitSendProps(undefined);
+      }, 200);
     }
   }, [waitSendQuestion]);
 
@@ -243,23 +313,28 @@ const Chat = () => {
         old[old.length - 1].content = last;
         return [...old];
       });
-      console.log("messages: ", messages);
       let nowChat = store?.chats.find((o) => o.chatId === chatId);
       let newName = "";
-      if (!nowChat?.isName) {
-        newName = await getName();
-      }
+
+      console.log(messages);
+
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
         let newChat = old[index];
         newChat.content = messages;
-        newChat.name = newName || newChat.name;
-        newChat.isName = newChat.isName || newName !== "";
+        // newChat.name = newChat.name || newName;
+        // newChat.isName = true;
         newChat.updateTime = dayjs().format("YYYY-MM-DD HH:mm:ss");
         old[index] = newChat;
         return [...old];
       });
+      // console.log(store?.chats);
       console.log(store?.chats);
+      updateHistoryContent({ id: chatId, content: messages });
+      if (!nowChat?.isName) {
+        newName = await getName();
+        handleRename(newName);
+      }
     },
   });
 
@@ -271,6 +346,19 @@ const Chat = () => {
     setTimeout(() => {
       ask(query);
     }, 100);
+  };
+
+  const handleRename = (name: string) => {
+    store?.updateChat((old) => {
+      const index = old.findIndex((o) => o.chatId === chatId);
+      old[index] = {
+        ...old[index],
+        isName: true,
+        name,
+      };
+      updateHistory(old[index]);
+      return [...old];
+    });
   };
 
   const roles: RolesType<MessageType> = {
@@ -286,15 +374,12 @@ const Chat = () => {
     },
     [ROLE.assistant]: {
       render: (content) => {
-        const [collapsed, setCollapsed] = useState(false);
+        const [collapsed, setCollapsed] = useState(true);
         const [isCopied, setIsCopied] = useState(false);
         const { onStart, onEnd, getCurrent, reset } = timer({ init: 0 });
 
         let think = content?.think;
         const answer = content?.answer;
-        if (think) {
-          think = think.replaceAll("undefined", "");
-        }
         useEffect(() => {
           if (content?.isEnd) {
             return;
@@ -323,7 +408,7 @@ const Chat = () => {
             {think && think.trim() !== "" && (
               <ThinkWrapper>
                 <ThinkHeaderWrapper className=" sticky top-[55px] flex flex-row items-center">
-                  {content?.isThink ? (
+                  {content?.isThink && !content.isEnd && loading ? (
                     <div className="my-2 text-xl flex flex-row items-center gap-2">
                       <div>思考中...</div>
                       <div>{getCurrent()} s</div>
@@ -347,14 +432,38 @@ const Chat = () => {
                     {collapsed ? <IconUp /> : <IconDown />}
                   </div>
                 </ThinkHeaderWrapper>
-                {!collapsed && <MDRenderer text={think} />}
+                <motion.div
+                  layoutScroll
+                  style={{
+                    overflow: "hidden",
+                    width: "100%",
+                  }}
+                  animate={{
+                    height: collapsed ? "0px" : "auto",
+                    maxHeight: "250px",
+                  }}
+                >
+                  <SimpleBar
+                    style={{
+                      maxHeight: "250px",
+                      width: "100%",
+                      padding: "8px",
+                    }}
+                    autoHide={false}
+                  >
+                    <MDRenderer text={think} />
+                  </SimpleBar>
+                </motion.div>
               </ThinkWrapper>
             )}
             <MDRenderer text={answer ?? " "} />
             {content?.isEnd && (
               <div className="flex flex-row gap-2">
                 <div
-                  className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors "
+                  className={`flex flex-row gap-1 items-center p-1 rounded-lg 
+                    cursor-pointer ${
+                      isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                    } transition-colors `}
                   onClick={handleCopy}
                 >
                   <IconCopy />
@@ -362,14 +471,22 @@ const Chat = () => {
                 </div>
                 {content.id === String(messages.length - 1) && (
                   <div
-                    className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                    className={`flex flex-row gap-1 items-center p-1 rounded-lg 
+                      cursor-pointer ${
+                        isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                      } transition-colors`}
                     onClick={() => retry(content.query)}
                   >
                     <IconSync />
                     再试一次
                   </div>
                 )}
-                <div className="flex flex-row gap-1 items-center p-1 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors">
+                <div
+                  className={`flex flex-row gap-1 items-center p-1 rounded-lg 
+                  cursor-pointer ${
+                    isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                  } transition-colors`}
+                >
                   <IconShareExternal />
                   分享
                 </div>
@@ -409,20 +526,24 @@ const Chat = () => {
 
   const { getName } = useAutoRename({
     messages: messages,
-    body: { model: "doubao-1-5-lite-32k-250115" },
+    body: { model: "qwen-omni-turbo" },
   });
 
   const [autoScroll, setAutoScroll] = useState(true);
 
   const DropAction: Record<string, () => void> = {
     ["1"]: async () => {
-      const name = await NiceModal.show(RenameModal, { chat: history });
+      if (!store?.chats) return;
+      const name = await NiceModal.show(RenameModal, {
+        chat: store.chats.find((o) => o.chatId === chatId),
+      });
       if (typeof name !== "string") {
         return;
       }
       store?.updateChat((old) => {
         const index = old.findIndex((o) => o.chatId === chatId);
         old[index].name = name;
+        updateHistory(old[index]);
         return [...old];
       });
     },
@@ -430,8 +551,12 @@ const Chat = () => {
     ["3"]: async () => {
       const confirm = await NiceModal.show(DeleteModal);
       if (confirm) {
-        store?.removeChat(chatId);
-        route("/ai/chat/list");
+        await store?.removeChat(chatId);
+        if (fromPath) {
+          route("/#" + fromPath);
+        } else {
+          route("/ai/chat/list");
+        }
       }
     },
   };
@@ -442,25 +567,38 @@ const Chat = () => {
     };
 
     return (
-      <Menu onClickMenuItem={(key) => handleClick(key)}>
-        <Menu.Item key="1">
-          <div className=" flex flex-row gap-4 items-center justify-center text-lg pl-2 pr-10">
+      <Menu
+        onClickMenuItem={(key) => handleClick(key)}
+        style={{
+          background: theme.colors.componentBg,
+          boxShadow: theme.colors.boxShadow,
+        }}
+      >
+        <ItemContainer key="1">
+          <TextContainer
+            $useColor
+            className={` flex flex-row gap-4 items-center 
+            justify-center text-lg pl-2 pr-10 `}
+          >
             <IconEdit />
             <div>修改名称</div>
-          </div>
-        </Menu.Item>
-        <Menu.Item key="2">
-          <div className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10">
+          </TextContainer>
+        </ItemContainer>
+        <ItemContainer key="2">
+          <TextContainer
+            $useColor
+            className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10"
+          >
             <IconShareInternal />
             <div>分享</div>
-          </div>
-        </Menu.Item>
-        <Menu.Item key="3">
-          <div className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10 text-red-500">
+          </TextContainer>
+        </ItemContainer>
+        <ItemContainer key="3">
+          <TextContainer className=" flex flex-row gap-4 items-center justify-left text-lg pl-2 pr-10 text-red-500">
             <IconDelete />
             <div>删除</div>
-          </div>
-        </Menu.Item>
+          </TextContainer>
+        </ItemContainer>
       </Menu>
     );
   };
@@ -468,6 +606,15 @@ const Chat = () => {
   return (
     <ChatWrapper>
       <HeaderWrapper>
+        {fromPath && (
+          <a
+            className=" absolute left-4 flex flex-row gap-1 justify-center items-center"
+            href={"/#" + fromPath}
+          >
+            <IconArrowLeft />
+            返回项目
+          </a>
+        )}
         <Dropdown droplist={DropList()} trigger={"click"}>
           <div className="title text-lg px-[16px] py-[4px] mt-1 flex flex-row justify-center items-center">
             {history?.name}
@@ -482,6 +629,7 @@ const Chat = () => {
         //@ts-ignore
         target={scroll?.target.current?.getScrollElement()}
         scrollStore={scroll}
+        loading={loading}
       />
       <SAFE_DIST />
       <SenderWrapper>
@@ -491,4 +639,4 @@ const Chat = () => {
   );
 };
 
-export { Chat };
+export default Chat;

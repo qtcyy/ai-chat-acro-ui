@@ -4,28 +4,89 @@ import { CardPage } from "./page/ui/card/CardPage";
 import { MenuPage } from "./page/ui/Menu/MenuPage";
 import { Layout } from "./page/ui/layout/layout";
 import { DashBoard } from "./page/home/DashBoard";
-import { ChatLayout } from "./page/chat";
-import { Chat } from "./page/chat/layout/Chat";
-import { ChatHome } from "./page/chat/layout/ChatHome";
-import { HistoryList } from "./page/chat/history/HistoryList";
 import { TimerPage } from "./page/ui/test/TimerPage";
+import { RegisterPage } from "./page/register";
+import { lazy } from "react";
+import NotFoundPage from "./page/BasePage/404Page";
+import AppearancePage from "./page/chat/setting/SubPage/AppearancePage";
+const LazyChatHome = lazy(() => import("./page/chat/layout/ChatHome"));
+const LazyChatLayout = lazy(() => import("./page/chat/layout/layout"));
+const LazyHistoryList = lazy(() => import("./page/chat/history/HistoryList"));
+const LazyChat = lazy(() => import("./page/chat/layout/Chat"));
+const LazyCreateProject = lazy(
+  () => import("./page/chat/Projects/CreateProjectPage")
+);
+const LazyProjectList = lazy(
+  () => import("./page/chat/Projects/ProjectListPage")
+);
+const LazyProjectPage = lazy(() => import("./page/chat/Projects/ProjectPage"));
+const LazySettingPage = lazy(() => import("./page/chat/setting/SettingPage"));
+const LazyMoreAppsPage = lazy(
+  () => import("./page/chat/MoreApps/MoreAppsPage")
+);
 
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <ChatLayout />,
+    element: <LazyChatLayout />,
     children: [
       {
         path: "ai/chat",
-        element: <ChatHome />,
+        element: <LazyChatHome />,
       },
       {
         path: "ai/chat/list",
-        element: <HistoryList />,
+        element: <LazyHistoryList />,
       },
       {
         path: "ai/chat/page/:chatId",
-        element: <Chat />,
+        element: <LazyChat />,
+      },
+      {
+        path: "ai/chat/projects",
+        element: <LazyProjectList />,
+      },
+      {
+        path: "ai/chat/projects/create",
+        element: <LazyCreateProject />,
+      },
+      {
+        path: "ai/chat/projects/:id",
+        element: <LazyProjectPage />,
+      },
+      {
+        path: "ai/setting/",
+        element: <LazySettingPage />,
+        children: [
+          {
+            path: "appearance",
+            element: <AppearancePage />,
+          },
+          {
+            path: "account",
+          },
+          {
+            path: "info",
+          },
+        ],
+      },
+      {
+        path: "ai/more/",
+        element: <LazyMoreAppsPage />,
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
+    ],
+  },
+  {
+    path: "/ai/register",
+    element: <RegisterPage />,
+    children: [
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
     ],
   },
@@ -45,6 +106,10 @@ export const routes: RouteObject[] = [
         path: "test/timer",
         element: <TimerPage />,
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
   },
   {
@@ -58,6 +123,14 @@ export const routes: RouteObject[] = [
       {
         path: "layout/manage",
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ];

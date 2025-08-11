@@ -1,9 +1,12 @@
-import { Button, Input, Modal } from "@arco-design/web-react";
+import { Button, ConfigProvider, Input, Modal } from "@arco-design/web-react";
 import NiceModal from "@ebay/nice-modal-react";
 import { ChatItem } from "../hooks/useChatStorage";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useState } from "react";
 import { useAutoRename } from "../hooks/useAutoRename";
+import { request } from "utils";
+import { BaseResponseType } from "../../../env";
+import { useTheme } from "theme";
 
 type Props = {
   chat: ChatItem;
@@ -13,6 +16,7 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: 12px;
+  color: ${(props) => props.theme.colors.text};
 `;
 
 const RenameModal = NiceModal.create<Props>((props) => {
@@ -20,11 +24,13 @@ const RenameModal = NiceModal.create<Props>((props) => {
   const modal = NiceModal.useModal();
   const [name, setName] = useState(chat.name);
   const [loading, setLoading] = useState(false);
+  const [renameLoading, setRenameLoading] = useState(false);
+  const { isDarkMode, theme } = useTheme();
 
   const { getName } = useAutoRename({
     messages: chat.content,
     body: {
-      model: "doubao-1-5-lite-32k-250115",
+      model: "qwen-omni-turbo",
     },
   });
 
@@ -35,12 +41,26 @@ const RenameModal = NiceModal.create<Props>((props) => {
     }, 300);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (name === "") {
       return;
     }
-    modal.resolve(name);
-    handleClose();
+    setRenameLoading(true);
+    try {
+      const response = await request.post<BaseResponseType>(
+        "/api/chat/history/update/name",
+        { id: chat.chatId, name: name }
+      );
+      if (response.data.code !== 200) {
+        throw new Error(response.data.msg);
+      }
+      modal.resolve(name);
+      handleClose();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setRenameLoading(false);
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -66,10 +86,11 @@ const RenameModal = NiceModal.create<Props>((props) => {
       visible={modal.visible}
       onCancel={handleClose}
       onConfirm={handleConfirm}
-      title="重命名对话"
+      title={<div style={{ color: theme.colors.text }}>重命名对话</div>}
+      style={{ background: theme.colors.background }}
     >
       <ContentWrapper>
-        <Input
+        <CustomInput
           value={name}
           onChange={(e) => setName(e)}
           placeholder="请输入名称..."
@@ -83,5 +104,25 @@ const RenameModal = NiceModal.create<Props>((props) => {
     </Modal>
   );
 });
+
+const CustomInput = styled(Input)`
+  ${({ theme }) =>
+    theme.mode === "dark" &&
+    css`
+      background: #575755;
+    `}
+  .arco-input {
+    color: ${({ theme }) => theme.colors.text};
+  }
+  .arco-input-inner-wrapper {
+    &:focus {
+      background: #666;
+      color: #000;
+    }
+  }
+  &:hover {
+    background: #666666;
+  }
+`;
 
 export { RenameModal };

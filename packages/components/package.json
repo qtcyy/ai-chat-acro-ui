@@ -8,5 +8,8 @@
     }
   },
   "source": "./src/index.ts",
-  "module": "./src/index.ts"
+  "module": "./src/index.ts",
+  "dependencies": {
+    "theme": "workspace:^"
+  }
 }
