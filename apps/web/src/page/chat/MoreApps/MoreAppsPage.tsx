@@ -5,6 +5,7 @@ import SimpleBarCore from "simplebar-core";
 import styled from "styled-components";
 import { Avatar, Button } from "@arco-design/web-react";
 import { useTheme } from "theme";
+import { GoPin } from "react-icons/go";
 
 type ItemType = {
   id: string;
@@ -31,11 +32,15 @@ const classItems: ItemType[] = [
     id: "2",
     name: "推荐应用",
   },
+  {
+    id: "3",
+    name: "自定义应用",
+  },
 ];
 
 const appItems: AppsType[] = [
   {
-    id: "1",
+    id: "app1",
     classify: "2",
     top: true,
     name: "写作助手",
@@ -43,10 +48,17 @@ const appItems: AppsType[] = [
     from: "cyy",
   },
   {
-    id: "2",
+    id: "app2",
     classify: "2",
     name: "翻译助手",
     description: "你的专属翻译助手",
+    from: "GitHub",
+  },
+  {
+    id: "app3",
+    classify: "2",
+    name: "画图专家",
+    description: " 擅长图片生成",
     from: "GitHub",
   },
 ];
@@ -54,6 +66,7 @@ const appItems: AppsType[] = [
 const position: Record<string, number> = {
   ["1"]: 0,
   ["2"]: 270,
+  ["3"]: 430,
 };
 
 const MoreAppsPage = (): JSX.Element => {
@@ -62,14 +75,16 @@ const MoreAppsPage = (): JSX.Element => {
   const { theme } = useTheme();
 
   const pageRef = useRef<SimpleBarCore>(null);
-  const target = pageRef.current?.getScrollElement();
 
   const getScrollInfo = () => {
+    pageRef.current?.recalculate();
+    const target = pageRef.current?.getScrollElement();
     setScrollTop(target?.scrollTop);
     console.log(scrollTop);
   };
 
   const handleScroll = (height: number) => {
+    const target = pageRef.current?.getScrollElement();
     target?.scrollTo({
       top: height,
       behavior: "smooth",
@@ -80,11 +95,24 @@ const MoreAppsPage = (): JSX.Element => {
     if (scrollTop) {
       if (scrollTop >= position["1"] && scrollTop < position["2"]) {
         setItemSelected("1");
-      } else if (scrollTop >= position["2"]) {
+      } else if (scrollTop >= position["2"] && scrollTop < position["3"]) {
         setItemSelected("2");
+      } else if (scrollTop >= position["3"]) {
+        setItemSelected("3");
       }
     }
   }, [scrollTop]);
+
+  const handleClickPin = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    id: string
+  ) => {
+    e.stopPropagation();
+  };
+
+  const handleClickApp = (id: string) => {
+    console.log("Apps id: ", id);
+  };
 
   return (
     <SimpleBar
@@ -129,14 +157,18 @@ const MoreAppsPage = (): JSX.Element => {
                 <div key={classItem.id} className="mt-4 mb-2 text-md font-bold">
                   {classItem.name}
                 </div>
-                <AppListWrapper>
+                <AppListWrapper key={"List:" + classItem.id}>
                   {appItems.map((appItem) => {
                     if (
                       appItem.classify == classItem.id ||
                       (appItem.top && classItem.id == "1")
                     ) {
                       return (
-                        <AppItemWrapper>
+                        <AppItemWrapper
+                          key={appItem.id}
+                          className=" group"
+                          onClick={() => handleClickApp(appItem.id)}
+                        >
                           <Avatar size={60} shape="circle">
                             <img src={appItem.icon} />
                           </Avatar>
@@ -150,6 +182,15 @@ const MoreAppsPage = (): JSX.Element => {
                             <div className="mt-2">
                               {"来自: " + appItem.from}
                             </div>
+                          </div>
+                          <div
+                            className="hidden w-[32px] h-[32px] justify-center 
+                            items-center ml-auto rounded-full p-1 group-hover:flex
+                            transition-colors"
+                            style={{ background: theme.colors.primary }}
+                            onClick={(e) => handleClickPin(e, appItem.id)}
+                          >
+                            <GoPin size={16} />
                           </div>
                         </AppItemWrapper>
                       );
@@ -192,6 +233,11 @@ const AppItemWrapper = styled.li`
   gap: 12px;
   height: 104px;
   cursor: pointer;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 `;
 
 const EnumWrapper = styled.div`
