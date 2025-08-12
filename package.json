@@ -7,7 +7,8 @@
     "build": "rsbuild build",
     "dev": "rsbuild dev --open",
     "preview": "rsbuild preview",
-    "dev:web": "pnpm -F web run dev"
+    "dev:web": "pnpm -F web run dev",
+    "dev:web2": "pnpm -F web2 run dev"
   },
   "dependencies": {
     "@arco-design/web-react": "^2.65.0",
