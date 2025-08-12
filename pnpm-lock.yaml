@@ -133,6 +133,18 @@ importers:
         specifier: workspace:^
         version: link:../../packages/utils
 
+  apps/web2:
+    dependencies:
+      components:
+        specifier: workspace:^
+        version: link:../../packages/components
+      theme:
+        specifier: workspace:^
+        version: link:../../packages/theme
+      utils:
+        specifier: workspace:^
+        version: link:../../packages/utils
+
   packages/components:
     dependencies:
       theme:
