@@ -1,0 +1,16 @@
+{
+  "name": "web2",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "components": "workspace:^",
+    "utils": "workspace:^",
+    "theme": "workspace:^"
+  }
+}
