@@ -3,6 +3,7 @@ import SimpleBar from "simplebar-react";
 import { AiFillBook, AiFillHome } from "react-icons/ai";
 import { ReactNode } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { HistoryProvider } from "../hooks/useHistory";
 
 type SiderItemType = {
   icon: ReactNode;
@@ -28,32 +29,34 @@ const ChatLayout = () => {
   };
 
   return (
-    <LayoutContainer>
-      <div className="flex flex-row h-screen">
-        <SiderWrapper>
-          {/* blank */}
-          <div className="h-[30px]" />
-          {SiderItem.map((item, i) => (
-            <div
-              key={i}
-              className=" rounded-md p-3 hover:bg-gray-300 cursor-pointer scale-125"
-              onClick={() => moveTo(item.href)}
-            >
-              {item.icon}
-            </div>
-          ))}
-        </SiderWrapper>
-        <SimpleBar
-          style={{
-            overflow: "auto",
-            width: "calc(100vw - 60px)",
-            height: "100%",
-          }}
-        >
-          <Outlet />
-        </SimpleBar>
-      </div>
-    </LayoutContainer>
+    <HistoryProvider>
+      <LayoutContainer>
+        <div className="flex flex-row h-screen">
+          <SiderWrapper>
+            {/* blank */}
+            <div className="h-[30px]" />
+            {SiderItem.map((item, i) => (
+              <div
+                key={i}
+                className=" rounded-md p-3 hover:bg-gray-300 cursor-pointer scale-125"
+                onClick={() => moveTo(item.href)}
+              >
+                {item.icon}
+              </div>
+            ))}
+          </SiderWrapper>
+          <SimpleBar
+            style={{
+              overflow: "auto",
+              width: "calc(100vw - 60px)",
+              height: "100%",
+            }}
+          >
+            <Outlet />
+          </SimpleBar>
+        </div>
+      </LayoutContainer>
+    </HistoryProvider>
   );
 };
 

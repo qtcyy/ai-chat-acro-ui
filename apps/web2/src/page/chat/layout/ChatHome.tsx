@@ -1,11 +1,13 @@
 import { Button } from "antd";
 import styled from "styled-components";
-import { v4 as uuidv4 } from "uuid";
+import { useHistory } from "../hooks/useHistory";
 
 const ChatHome = () => {
+  const { loadChatMessages } = useHistory();
+
   const handleNewChat = () => {
-    const newChatId = uuidv4();
-    console.log(newChatId);
+    // test load
+    loadChatMessages("4");
   };
 
   return (

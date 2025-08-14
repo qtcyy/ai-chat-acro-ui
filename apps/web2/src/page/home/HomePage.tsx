@@ -1,7 +1,11 @@
 import { Button, Card } from "antd";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import { RobotOutlined, MessageOutlined, StarOutlined } from "@ant-design/icons";
+import {
+  RobotOutlined,
+  MessageOutlined,
+  StarOutlined,
+} from "@ant-design/icons";
 
 const HomePage = () => {
   const route = useNavigate();
@@ -31,7 +35,11 @@ const HomePage = () => {
         </FeatureGrid>
 
         <ActionSection>
-          <EnterButton type="primary" size="large" onClick={() => route("/chat")}>
+          <EnterButton
+            type="primary"
+            size="large"
+            onClick={() => route("/chat/home")}
+          >
             开始对话
           </EnterButton>
         </ActionSection>
@@ -85,7 +93,7 @@ const IconWrapper = styled.div`
   color: white;
   margin-bottom: 20px;
   animation: ${float} 3s ease-in-out infinite;
-  
+
   .anticon {
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   }
@@ -144,7 +152,7 @@ const EnterButton = styled(Button)`
   font-size: 1.2rem;
   font-weight: 600;
   border-radius: 30px;
-  background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
   border: none;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
@@ -152,7 +160,7 @@ const EnterButton = styled(Button)`
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-    background: linear-gradient(45deg, #FF5252, #26C6DA);
+    background: linear-gradient(45deg, #ff5252, #26c6da);
   }
 
   &:active {

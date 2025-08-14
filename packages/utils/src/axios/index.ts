@@ -1,9 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { setupInterceptor } from "./interceptor";
 
-const request: AxiosInstance = axios.create({
-  withCredentials: true,
-});
+const request: AxiosInstance = axios.create({});
 
 setupInterceptor(request);
 
