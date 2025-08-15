@@ -9,8 +9,10 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.0.0",
+    "antd": "^5.27.0",
     "components": "workspace:^",
-    "utils": "workspace:^",
-    "theme": "workspace:^"
+    "theme": "workspace:^",
+    "utils": "workspace:^"
   }
 }
