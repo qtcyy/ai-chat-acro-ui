@@ -13,9 +13,10 @@ type Props = {
 };
 
 const AxiosProvider = (props: Props) => {
-  useEffect(() => {
-    updateBaseUrl(props.baseUrl);
-  }, []);
+  updateBaseUrl(props.baseUrl);
+  // useEffect(() => {
+  //   updateBaseUrl(props.baseUrl);
+  // }, []);
 
   return (
     <AxiosContext.Provider value={{ baseUrl: props.baseUrl }}>

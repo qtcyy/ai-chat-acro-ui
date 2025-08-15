@@ -1,4 +1,4 @@
-import { AxiosProvider } from "utils";
+import { AxiosProvider, HttpContextProvider } from "utils";
 import NiceModal from "@ebay/nice-modal-react";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { routes } from "./routes/routes";
@@ -12,9 +12,11 @@ const App = () => {
     <ThemeProvider>
       <ConfigProvider>
         <AxiosProvider baseUrl="http://localhost:8000/">
-          <NiceModal.Provider>
-            <RouterProvider router={router} />
-          </NiceModal.Provider>
+          <HttpContextProvider>
+            <NiceModal.Provider>
+              <RouterProvider router={router} />
+            </NiceModal.Provider>
+          </HttpContextProvider>
         </AxiosProvider>
       </ConfigProvider>
     </ThemeProvider>
