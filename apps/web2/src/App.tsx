@@ -11,7 +11,7 @@ const App = () => {
   return (
     <ThemeProvider>
       <ConfigProvider>
-        <AxiosProvider baseUrl="http://0.0.0.0:8000/">
+        <AxiosProvider baseUrl="http://localhost:8000/">
           <NiceModal.Provider>
             <RouterProvider router={router} />
           </NiceModal.Provider>

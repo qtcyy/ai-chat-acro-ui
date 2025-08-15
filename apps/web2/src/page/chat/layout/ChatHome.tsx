@@ -1,13 +1,16 @@
 import { Button } from "antd";
 import styled from "styled-components";
 import { useHistory } from "../hooks/useHistory";
+import { useNavigate } from "react-router-dom";
 
 const ChatHome = () => {
-  const { loadChatMessages } = useHistory();
+  const { createChat } = useHistory();
+  const route = useNavigate();
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     // test load
-    loadChatMessages("4");
+    const chat = createChat("测试");
+    route(`/chat/${chat.id}`);
   };
 
   return (
