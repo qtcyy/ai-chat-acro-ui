@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { HttpLoading, useHttp } from "utils";
@@ -90,6 +90,24 @@ const Chat = () => {
   );
 };
 
-const ChatContainer = styled.div``;
+const ChatContainer = styled.div`
+  min-width: 320px;
+  max-width: 1200px;
+  width: 100%;
+  height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  
+  /* 响应式最小宽度 */
+  @media (max-width: 768px) {
+    min-width: 280px;
+  }
+  
+  @media (max-width: 480px) {
+    min-width: 240px;
+  }
+`;
 
 export { Chat };
