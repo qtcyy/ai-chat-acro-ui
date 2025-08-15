@@ -65,10 +65,11 @@ const MessageListWrapper = styled.div`
   display: flex;
   flex-direction: column;
   background: linear-gradient(
-    to bottom,
-    #fafafa 0%,
-    #f8f9fa 50%,
-    #f1f3f4 100%
+    135deg,
+    #f8fafc 0%,
+    #f1f5f9 30%,
+    #e2e8f0 70%,
+    #cbd5e1 100%
   );
   position: relative;
   overflow: hidden;
@@ -117,41 +118,26 @@ const MessageContainer = styled.div`
 `;
 
 const MessageItemWrapper = styled.div<{ $isEven: boolean }>`
-  margin-bottom: 16px;
-  animation: slideInUp 0.4s ease-out;
+  margin-bottom: 8px;
+  animation: slideInUp 0.3s ease-out;
   animation-fill-mode: both;
-  animation-delay: ${props => props.$isEven ? '0s' : '0.1s'};
-  
-  /* 交替背景色增强可读性 */
+  animation-delay: ${props => props.$isEven ? '0s' : '0.05s'};
   position: relative;
   
-  &:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -8px;
-    bottom: -8px;
-    background: ${props => props.$isEven ? 'rgba(255, 255, 255, 0.5)' : 'transparent'};
-    border-radius: 12px;
-    z-index: -1;
-    transition: all 0.2s ease;
-  }
-  
-  &:hover:before {
-    background: ${props => props.$isEven ? 'rgba(255, 255, 255, 0.8)' : 'rgba(240, 242, 247, 0.6)'};
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* 移除交替背景，让消息本身的样式更突出 */
+  &:hover {
     transform: translateY(-1px);
+    transition: all 0.2s ease;
   }
   
   @keyframes slideInUp {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(15px) scale(0.98);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
 `;
@@ -163,84 +149,109 @@ const EmptyState = styled.div`
   justify-content: center;
   height: 60vh;
   text-align: center;
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn 0.8s ease-out;
+  padding: 2rem;
   
   @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
+    from { 
+      opacity: 0; 
+      transform: translateY(20px) scale(0.95); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0) scale(1); 
+    }
   }
 `;
 
 const EmptyIcon = styled.div`
-  font-size: 4rem;
-  margin-bottom: 16px;
-  animation: bounce 2s ease-in-out infinite;
+  font-size: 5rem;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gentle-pulse 3s ease-in-out infinite;
   
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-10px); }
-    60% { transform: translateY(-5px); }
+  @keyframes gentle-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
   }
 `;
 
 const EmptyText = styled.h3`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #1e293b, #475569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const EmptySubtext = styled.p`
-  font-size: 1rem;
-  color: #6b7280;
+  font-size: 1.1rem;
+  color: #64748b;
   margin: 0;
-  max-width: 300px;
+  max-width: 400px;
+  line-height: 1.6;
 `;
 
 const MessageStartIndicator = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 20px 0 32px 0;
+  margin: 16px 0 24px 0;
   position: relative;
   
   &:before {
     content: '';
     position: absolute;
-    left: 50px;
-    right: 50px;
-    height: 1px;
+    left: 60px;
+    right: 60px;
+    height: 2px;
     background: linear-gradient(
-      to right,
+      90deg,
       transparent 0%,
-      #e5e7eb 20%,
-      #d1d5db 50%,
-      #e5e7eb 80%,
+      rgba(59, 130, 246, 0.3) 20%,
+      rgba(139, 92, 246, 0.4) 50%,
+      rgba(59, 130, 246, 0.3) 80%,
       transparent 100%
     );
+    border-radius: 1px;
   }
 `;
 
 const StartIcon = styled.span`
-  font-size: 1.2rem;
-  margin-right: 8px;
-  animation: sparkle 2s ease-in-out infinite;
+  font-size: 1.4rem;
+  margin-right: 10px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: sparkle 3s ease-in-out infinite;
   
   @keyframes sparkle {
     0%, 100% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.1); }
+    25% { transform: rotate(-5deg) scale(1.05); }
+    50% { transform: rotate(5deg) scale(1.1); }
+    75% { transform: rotate(-3deg) scale(1.05); }
   }
 `;
 
 const StartText = styled.span`
-  font-size: 0.875rem;
-  color: #9ca3af;
-  font-weight: 500;
-  background: white;
-  padding: 0 12px;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 0.95rem;
+  color: #475569;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
 `;
 
 const ScrollAnchor = styled.div`
