@@ -8,6 +8,7 @@ import {
 import { UUIDTypes } from "uuid";
 import { v4 } from "uuid";
 import dayjs from "dayjs";
+import { HttpLoading, useHttp } from "utils";
 
 const LocalStorageKey = "ai-chat-history";
 
@@ -22,12 +23,14 @@ type HistoryContextType = {
   chats: ChatType[];
   createChat: (title?: string) => ChatType;
   renameChat: (id: UUIDTypes, title: string) => boolean;
+  deleteChat: (id: UUIDTypes) => Promise<boolean>;
 };
 
 const HistoryContext = createContext<HistoryContextType>({
   chats: [],
   createChat: () => ({ id: v4(), title: "", messages: [] }),
   renameChat: () => true,
+  deleteChat: () => Promise.resolve(true),
 });
 
 export const useHistory = () => useContext(HistoryContext);
@@ -40,6 +43,8 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     // 序列化为对象
     JSON.parse(StorageStr ?? "")
   );
+  const http = useHttp();
+  const { loading, loadingOperator } = HttpLoading();
 
   // 如果类型不是列表，说明保存内容错误
   if (!Array.isArray(storageItem)) {
@@ -85,10 +90,34 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     return true;
   };
 
+  const deleteChat = async (id: UUIDTypes) => {
+    let chatsCopy = [...chats];
+    const idx = chatsCopy.findIndex((chat) => chat.id === id);
+    if (idx === -1) {
+      return false;
+    }
+    chatsCopy = chatsCopy.filter((chat) => chat.id !== id);
+    setChats(chatsCopy);
+    localStorage.setItem(LocalStorageKey, JSON.stringify(chatsCopy));
+    http
+      ?.delete(`http://localhost:8000/chat/history/${id}`)
+      .pipe(loadingOperator)
+      .subscribe({
+        next: (data) => console.log(data),
+        error: (error) => {
+          console.error(error);
+          throw error;
+        },
+      });
+
+    return true;
+  };
+
   const ContextValue = {
     chats,
     createChat,
     renameChat,
+    deleteChat,
   };
 
   return (

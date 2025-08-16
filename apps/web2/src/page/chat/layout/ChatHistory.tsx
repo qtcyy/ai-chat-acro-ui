@@ -10,10 +10,12 @@ import {
   AiOutlineClockCircle,
   AiOutlineEdit,
   AiOutlineMore,
+  AiFillDelete,
 } from "react-icons/ai";
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import RenameModal from "../modal/RenameModal";
+import { DeleteChatModal } from "../modal/DeleteChatModal";
 
 const ChatHistory = () => {
   const { chats, createChat } = useHistory();
@@ -27,6 +29,10 @@ const ChatHistory = () => {
     NiceModal.show(RenameModal, { id: id.toString() });
   };
 
+  const handleDelete = (id: UUIDTypes) => {
+    NiceModal.show(DeleteChatModal, { id: id.toString() });
+  };
+
   const getMenuItems = (chatId: UUIDTypes): MenuProps["items"] => [
     {
       key: "rename",
@@ -35,6 +41,16 @@ const ChatHistory = () => {
       onClick: (e) => {
         e.domEvent.stopPropagation();
         handleRename(chatId);
+      },
+    },
+    {
+      key: "delete",
+      label: "删除对话",
+      icon: <AiFillDelete />,
+      danger: true,
+      onClick: (e) => {
+        e.domEvent.stopPropagation();
+        handleDelete(chatId);
       },
     },
   ];
