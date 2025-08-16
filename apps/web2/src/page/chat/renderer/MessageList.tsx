@@ -66,6 +66,7 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
 
 const MessageListWrapper = styled.div`
   flex: 1;
+  min-height: 100vh;
   width: 100%;
   background: linear-gradient(
     135deg,

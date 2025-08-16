@@ -21,11 +21,13 @@ type ChatType = {
 type HistoryContextType = {
   chats: ChatType[];
   createChat: (title?: string) => ChatType;
+  renameChat: (id: UUIDTypes, title: string) => boolean;
 };
 
 const HistoryContext = createContext<HistoryContextType>({
   chats: [],
   createChat: () => ({ id: v4(), title: "", messages: [] }),
+  renameChat: () => true,
 });
 
 export const useHistory = () => useContext(HistoryContext);
@@ -67,9 +69,26 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     return newChat;
   };
 
+  const renameChat = (id: UUIDTypes, title: string) => {
+    const chatsCopy = [...chats];
+    const idx = chatsCopy.findIndex((chat) => chat.id === id);
+    if (idx === -1) {
+      return false;
+    }
+    chatsCopy[idx] = {
+      ...chatsCopy[idx],
+      title: title,
+    };
+    setChats(chatsCopy);
+    localStorage.setItem(LocalStorageKey, JSON.stringify(chatsCopy));
+
+    return true;
+  };
+
   const ContextValue = {
     chats,
     createChat,
+    renameChat,
   };
 
   return (
