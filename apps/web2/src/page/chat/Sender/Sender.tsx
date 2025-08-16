@@ -1,6 +1,6 @@
-import { useState, useRef, KeyboardEvent } from 'react';
-import styled from 'styled-components';
-import { AiOutlineSend, AiOutlineStop } from 'react-icons/ai';
+import { useState, useRef, KeyboardEvent } from "react";
+import styled from "styled-components";
+import { AiOutlineSend, AiOutlineStop } from "react-icons/ai";
 
 type SenderProps = {
   ask: (query: string) => void;
@@ -10,21 +10,21 @@ type SenderProps = {
 
 const Sender = (props: SenderProps) => {
   const { ask, cancel, loading = false } = props;
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     if (message.trim() && !loading) {
       ask(message.trim());
-      setMessage('');
+      setMessage("");
       if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = "auto";
       }
     }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift+Enter 换行
         return;
@@ -38,10 +38,10 @@ const Sender = (props: SenderProps) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
-    
+
     // 自动调整高度
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
@@ -66,7 +66,7 @@ const Sender = (props: SenderProps) => {
         />
         <ButtonGroup>
           {loading ? (
-            <ActionButton 
+            <ActionButton
               onClick={handleCancel}
               $variant="stop"
               title="停止生成"
@@ -74,7 +74,7 @@ const Sender = (props: SenderProps) => {
               <AiOutlineStop size={18} />
             </ActionButton>
           ) : (
-            <ActionButton 
+            <ActionButton
               onClick={handleSend}
               disabled={!message.trim()}
               $variant="send"
@@ -85,7 +85,7 @@ const Sender = (props: SenderProps) => {
           )}
         </ButtonGroup>
       </InputWrapper>
-      
+
       {loading && (
         <LoadingIndicator>
           <LoadingDots>
@@ -96,10 +96,8 @@ const Sender = (props: SenderProps) => {
           <LoadingText>AI 正在思考中...</LoadingText>
         </LoadingIndicator>
       )}
-      
-      <HintText>
-        💡 提示：按 Enter 发送消息，按 Shift+Enter 换行
-      </HintText>
+
+      <HintText>💡 提示：按 Enter 发送消息，按 Shift+Enter 换行</HintText>
     </SenderContainer>
   );
 };
@@ -107,8 +105,7 @@ const Sender = (props: SenderProps) => {
 const SenderContainer = styled.div`
   position: sticky;
   bottom: 0;
-  left: 0;
-  right: 0;
+  /* margin: 0 auto; */
   background: linear-gradient(
     180deg,
     rgba(248, 250, 252, 0.95) 0%,
@@ -118,12 +115,12 @@ const SenderContainer = styled.div`
   backdrop-filter: blur(12px);
   padding: 20px 24px 16px;
   z-index: 100;
-  
+
   /* 响应式padding */
   @media (max-width: 768px) {
     padding: 16px 16px 12px;
   }
-  
+
   @media (max-width: 480px) {
     padding: 12px 12px 8px;
   }
@@ -137,17 +134,21 @@ const InputWrapper = styled.div`
   border: 2px solid rgba(59, 130, 246, 0.2);
   border-radius: 16px;
   padding: 12px 16px;
-  box-shadow: 
-    0 8px 24px rgba(59, 130, 246, 0.12),
-    0 4px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  
+  max-width: 1200px;
+  margin: 0 auto;
+
   &:focus-within {
     border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 
-      0 12px 32px rgba(59, 130, 246, 0.18),
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.18),
       0 6px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
+  }
+
+  /* 响应式最大宽度 */
+  @media (max-width: 1200px) {
+    max-width: 100%;
   }
 `;
 
@@ -164,27 +165,27 @@ const TextArea = styled.textarea`
   min-height: 24px;
   max-height: 200px;
   overflow-y: auto;
-  
+
   &::placeholder {
     color: #94a3b8;
     font-style: italic;
   }
-  
+
   &:disabled {
     color: #94a3b8;
     cursor: not-allowed;
   }
-  
+
   /* 美化滚动条 */
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.05);
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
@@ -197,7 +198,7 @@ const ButtonGroup = styled.div`
   gap: 8px;
 `;
 
-const ActionButton = styled.button<{ $variant: 'send' | 'stop' }>`
+const ActionButton = styled.button<{ $variant: "send" | "stop" }>`
   width: 40px;
   height: 40px;
   border: none;
@@ -209,44 +210,41 @@ const ActionButton = styled.button<{ $variant: 'send' | 'stop' }>`
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
-  
-  background: ${props => 
-    props.$variant === 'send' 
-      ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-      : 'linear-gradient(135deg, #ef4444, #dc2626)'
-  };
-  
+
+  background: ${(props) =>
+    props.$variant === "send"
+      ? "linear-gradient(135deg, #3b82f6, #1d4ed8)"
+      : "linear-gradient(135deg, #ef4444, #dc2626)"};
+
   color: white;
-  box-shadow: 
-    0 4px 12px ${props => 
-      props.$variant === 'send' 
-        ? 'rgba(59, 130, 246, 0.3)'
-        : 'rgba(239, 68, 68, 0.3)'
-    };
-  
+  box-shadow: 0 4px 12px
+    ${(props) =>
+      props.$variant === "send"
+        ? "rgba(59, 130, 246, 0.3)"
+        : "rgba(239, 68, 68, 0.3)"};
+
   &:hover:not(:disabled) {
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 
-      0 8px 20px ${props => 
-        props.$variant === 'send' 
-          ? 'rgba(59, 130, 246, 0.4)'
-          : 'rgba(239, 68, 68, 0.4)'
-      };
+    box-shadow: 0 8px 20px
+      ${(props) =>
+        props.$variant === "send"
+          ? "rgba(59, 130, 246, 0.4)"
+          : "rgba(239, 68, 68, 0.4)"};
   }
-  
+
   &:active {
     transform: translateY(-1px) scale(1.02);
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
   }
-  
+
   /* 发送按钮的波纹效果 */
   &:after {
-    content: '';
+    content: "";
     position: absolute;
     width: 0;
     height: 0;
@@ -254,7 +252,7 @@ const ActionButton = styled.button<{ $variant: 'send' | 'stop' }>`
     background: rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
   }
-  
+
   &:active:after {
     width: 100px;
     height: 100px;
@@ -269,11 +267,25 @@ const LoadingIndicator = styled.div`
   justify-content: center;
   gap: 12px;
   margin-top: 12px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
   animation: fadeIn 0.3s ease-out;
-  
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 响应式最大宽度 */
+  @media (max-width: 1200px) {
+    max-width: 100%;
   }
 `;
 
@@ -288,13 +300,21 @@ const Dot = styled.div`
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   animation: bounce 1.4s ease-in-out infinite both;
-  
-  &:nth-child(1) { animation-delay: -0.32s; }
-  &:nth-child(2) { animation-delay: -0.16s; }
-  &:nth-child(3) { animation-delay: 0s; }
-  
+
+  &:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  &:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  &:nth-child(3) {
+    animation-delay: 0s;
+  }
+
   @keyframes bounce {
-    0%, 80%, 100% {
+    0%,
+    80%,
+    100% {
       transform: scale(0.8);
       opacity: 0.5;
     }
@@ -316,13 +336,27 @@ const HintText = styled.div`
   color: #94a3b8;
   text-align: center;
   margin-top: 8px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
   animation: slideUp 0.5s ease-out;
-  
+
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-  
+
+  /* 响应式最大宽度 */
+  @media (max-width: 1200px) {
+    max-width: 100%;
+  }
+
   @media (max-width: 480px) {
     font-size: 0.75rem;
     margin-top: 6px;

@@ -9,7 +9,7 @@ const ChatHome = () => {
 
   const handleNewChat = async () => {
     // test load
-    const chat = createChat("测试");
+    const chat = createChat();
     route(`/chat/${chat.id}`);
   };
 

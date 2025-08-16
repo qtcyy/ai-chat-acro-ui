@@ -4,6 +4,7 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import { routes } from "./routes/routes";
 import { ThemeProvider } from "theme";
 import { ConfigProvider } from "antd";
+import { HistoryProvider } from "./page/chat/hooks/useHistory";
 
 const router = createHashRouter(routes);
 
@@ -13,9 +14,11 @@ const App = () => {
       <ConfigProvider>
         <AxiosProvider baseUrl="http://localhost:8000/">
           <HttpContextProvider>
-            <NiceModal.Provider>
-              <RouterProvider router={router} />
-            </NiceModal.Provider>
+            <HistoryProvider>
+              <NiceModal.Provider>
+                <RouterProvider router={router} />
+              </NiceModal.Provider>
+            </HistoryProvider>
           </HttpContextProvider>
         </AxiosProvider>
       </ConfigProvider>

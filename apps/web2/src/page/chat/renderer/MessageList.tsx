@@ -38,9 +38,14 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
                 <StartIcon>✨</StartIcon>
                 <StartText>对话开始</StartText>
               </MessageStartIndicator>
-              
+
               {mergedData.map((data, i) => (
-                <MessageItemWrapper key={i} $isEven={i % 2 === 0}>
+                <MessageItemWrapper
+                  key={i}
+                  $isEven={i % 2 === 0}
+                  //@ts-ignore
+                  $messageType={data.message.type}
+                >
                   <MessageRenderer<T>
                     //@ts-ignore
                     id={data.message.id ?? String(i)}
@@ -49,7 +54,7 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
                   />
                 </MessageItemWrapper>
               ))}
-              
+
               <ScrollAnchor id="scroll-anchor" />
             </>
           )}
@@ -60,10 +65,9 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
 };
 
 const MessageListWrapper = styled.div`
-  height: 100%;
+  flex: 1;
+  min-height: 100vh;
   width: 100%;
-  display: flex;
-  flex-direction: column;
   background: linear-gradient(
     135deg,
     #f8fafc 0%,
@@ -72,64 +76,68 @@ const MessageListWrapper = styled.div`
     #cbd5e1 100%
   );
   position: relative;
-  overflow: hidden;
 `;
 
 const MessageContainer = styled.div`
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
   padding: 20px 24px;
-  scroll-behavior: smooth;
-  
-  /* 美化滚动条 */
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    transition: background 0.2s ease;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-  }
-  
+  margin: 0 auto;
+  max-width: 1200px;
+
   /* 响应式padding */
   @media (max-width: 768px) {
     padding: 20px 16px;
   }
-  
+
   @media (max-width: 480px) {
     padding: 16px 12px;
   }
-  
+
   /* 大屏幕下的舒适间距 */
   @media (min-width: 1200px) {
     padding: 24px 48px;
   }
 `;
 
-const MessageItemWrapper = styled.div<{ $isEven: boolean }>`
-  margin-bottom: 8px;
+const MessageItemWrapper = styled.div<{
+  $isEven: boolean;
+  $messageType: "human" | "ai" | "tool" | "start";
+}>`
+  margin-bottom: 12px;
   animation: slideInUp 0.3s ease-out;
   animation-fill-mode: both;
-  animation-delay: ${props => props.$isEven ? '0s' : '0.05s'};
+  animation-delay: ${(props) => (props.$isEven ? "0s" : "0.05s")};
   position: relative;
-  
-  /* 移除交替背景，让消息本身的样式更突出 */
+  display: flex;
+  width: 100%;
+
+  /* 根据消息类型调整对齐方式 */
+  justify-content: ${(props) => {
+    switch (props.$messageType) {
+      case "human":
+        return "flex-end"; // human 消息右对齐
+      case "ai":
+      case "tool":
+        return "flex-start"; // ai 和 tool 消息左对齐
+      case "start":
+        return "center"; // start 消息居中
+      default:
+        return "flex-start";
+    }
+  }};
+
+  /* 消息容器样式 */
+  > * {
+    max-width: 80%;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
   &:hover {
     transform: translateY(-1px);
     transition: all 0.2s ease;
   }
-  
+
   @keyframes slideInUp {
     from {
       opacity: 0;
@@ -151,15 +159,15 @@ const EmptyState = styled.div`
   text-align: center;
   animation: fadeIn 0.8s ease-out;
   padding: 2rem;
-  
+
   @keyframes fadeIn {
-    from { 
-      opacity: 0; 
-      transform: translateY(20px) scale(0.95); 
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
     }
-    to { 
-      opacity: 1; 
-      transform: translateY(0) scale(1); 
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 `;
@@ -172,10 +180,15 @@ const EmptyIcon = styled.div`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: gentle-pulse 3s ease-in-out infinite;
-  
+
   @keyframes gentle-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
   }
 `;
 
@@ -204,9 +217,9 @@ const MessageStartIndicator = styled.div`
   justify-content: center;
   margin: 16px 0 24px 0;
   position: relative;
-  
+
   &:before {
-    content: '';
+    content: "";
     position: absolute;
     left: 60px;
     right: 60px;
@@ -231,12 +244,21 @@ const StartIcon = styled.span`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: sparkle 3s ease-in-out infinite;
-  
+
   @keyframes sparkle {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    25% { transform: rotate(-5deg) scale(1.05); }
-    50% { transform: rotate(5deg) scale(1.1); }
-    75% { transform: rotate(-3deg) scale(1.05); }
+    0%,
+    100% {
+      transform: rotate(0deg) scale(1);
+    }
+    25% {
+      transform: rotate(-5deg) scale(1.05);
+    }
+    50% {
+      transform: rotate(5deg) scale(1.1);
+    }
+    75% {
+      transform: rotate(-3deg) scale(1.05);
+    }
   }
 `;
 
@@ -244,13 +266,15 @@ const StartText = styled.span`
   font-size: 0.95rem;
   color: #475569;
   font-weight: 600;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(248, 250, 252, 0.8)
+  );
   padding: 8px 16px;
   border-radius: 20px;
   border: 2px solid rgba(59, 130, 246, 0.2);
-  box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.15),
-    0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(8px);
 `;
 
