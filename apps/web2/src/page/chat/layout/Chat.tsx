@@ -59,10 +59,9 @@ const Chat = () => {
     [ROLE.query]: {
       render: (content, id) => {
         return (
-          <div className="my-4 flex">
-            <div className="ml-auto bg-blue-50 p-3 rounded-lg max-w-[80%]">
-              <MDRenderer text={content.content} />
-            </div>
+          <div className="bg-blue-50 text-gray-800 p-4 rounded-lg shadow-sm border border-blue-200 relative">
+            <div className="absolute top-0 right-0 w-1 h-full bg-blue-400 rounded-r-lg"></div>
+            <MDRenderer text={content.content} />
           </div>
         );
       },
@@ -74,16 +73,16 @@ const Chat = () => {
 
         if (content.type === "tool") {
           return (
-            <div className="my-4 bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
-              <div className="text-yellow-800 font-medium">🛠️ Tool Calling</div>
+            <div className="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
+              <div className="text-orange-800 font-medium">🛠️ Tool Calling</div>
             </div>
           );
         }
 
         return (
-          <div className="flex flex-col gap-4 my-5">
+          <div className="flex flex-col gap-4">
             {reasoningContent && (
-              <div className="bg-gray-50 rounded-lg border-l-4 border-blue-400 overflow-hidden">
+              <div className="bg-gray-50 rounded-lg border-l-4 border-blue-400 overflow-hidden shadow-sm">
                 <div
                   className="p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between"
                   onClick={() => setFoldThink(!foldThink)}
@@ -117,7 +116,7 @@ const Chat = () => {
             )}
 
             {content.content.trim() && (
-              <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
                 <MDRenderer text={content.content} />
               </div>
             )}
@@ -142,7 +141,9 @@ const Chat = () => {
 
   return (
     <ChatContainer>
-      <MessageList<MessageType> messages={messages} renderer={renderer} />
+      <MessageListContainer>
+        <MessageList<MessageType> messages={messages} renderer={renderer} />
+      </MessageListContainer>
       <Sender ask={ask} cancel={cancel} loading={streamLoading} />
     </ChatContainer>
   );
@@ -150,10 +151,10 @@ const Chat = () => {
 
 const ChatContainer = styled.div`
   min-width: 320px;
-  max-width: 1200px;
+  /* max-width: 1200px; */
   width: 100%;
   height: 100vh;
-  margin: 0 auto;
+  /* margin: 0 auto; */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -166,6 +167,11 @@ const ChatContainer = styled.div`
   @media (max-width: 480px) {
     min-width: 240px;
   }
+`;
+
+const MessageListContainer = styled.div`
+  flex: 1;
+  /* overflow: ; */
 `;
 
 export { Chat };

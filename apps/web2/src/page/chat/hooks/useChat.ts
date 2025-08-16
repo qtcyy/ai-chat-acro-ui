@@ -24,6 +24,7 @@ export const useChat = (props: UseChatProps) => {
     api: "http://localhost:8000/chat/tools",
     onMessage(event, completion) {
       console.log(event.data);
+      // c9394f42-4d16-49c1-8583-b1e7c3d9be01
       return completion;
     },
     onOpen() {
