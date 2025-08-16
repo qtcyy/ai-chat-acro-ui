@@ -29,7 +29,7 @@ const ChatLayout = () => {
 
   return (
     <LayoutContainer>
-      <div className="flex flex-row h-screen">
+      <div className="flex flex-row">
         <SiderWrapper>
           {/* Logo区域 */}
           <LogoSection>
@@ -59,7 +59,7 @@ const ChatLayout = () => {
             style={{
               overflow: "auto",
               width: "100%",
-              height: "100%",
+              height: "100vh",
             }}
           >
             <Outlet />
@@ -243,8 +243,8 @@ const DecorativeLine = styled.div`
 const ContentWrapper = styled.div`
   flex: 1;
   width: calc(100vw - 72px);
-  height: 100vh;
-  overflow: hidden;
+  /* height: 100vh; */
+  /* overflow: hidden; */
 `;
 
 const LayoutContainer = styled.div`

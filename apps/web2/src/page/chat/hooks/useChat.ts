@@ -33,16 +33,28 @@ export const useChat = (props: UseChatProps) => {
   const onMessageChunk = (data: string) => {
     try {
       const messageChunk = JSON.parse(data) as MessageType;
+      if (messageChunk.response_metadata.finish_reason === "stop") {
+        const newResponseMessage: MessageType = {
+          content: "",
+          additional_kwargs: {
+            reasoning_content: "",
+          },
+          response_metadata: {},
+          type: "AIMessageChunk",
+          isProcessing: true,
+          id: v4(),
+        };
+        setMessages((currentMessages) => {
+          const newMessages = [...currentMessages];
+          newMessages[newMessages.length - 1].isProcessing = false;
+          return [...newMessages, newResponseMessage];
+        });
+      }
       messageChunk.isProcessing = true;
       if (
-        !messageChunk.content &&
-        !messageChunk.additional_kwargs.reasoning_content
-      ) {
-        return;
-      }
-      if (
-        messageChunk.type === "AIMessageChunk" &&
-        "tool_calls" in messageChunk.additional_kwargs
+        (messageChunk.type === "AIMessageChunk" &&
+          "tool_calls" in messageChunk.additional_kwargs) ||
+        messageChunk.response_metadata.finish_reason === "tool_calls"
       ) {
         messageChunk.type = "tool";
       }
@@ -72,6 +84,7 @@ export const useChat = (props: UseChatProps) => {
                 reasoning_content: newReason,
               },
               response_metadata: {},
+              isProcessing: newContent ? false : true,
               type: chunkType,
             };
 
@@ -88,7 +101,7 @@ export const useChat = (props: UseChatProps) => {
             return newMessages;
           }
         } else {
-          // console.log(`add a new message with type: ${chunkType}`);
+          console.log(`add a new message with type: ${chunkType}`);
           const newMessages = [...currentMessages];
           newMessages[newMessages.length - 1].isProcessing = false;
           return [...newMessages, messageChunk];
@@ -117,6 +130,7 @@ export const useChat = (props: UseChatProps) => {
         },
         response_metadata: {},
         type: "AIMessageChunk",
+        isProcessing: true,
         id: v4(),
       };
       setMessages((pre) => {
