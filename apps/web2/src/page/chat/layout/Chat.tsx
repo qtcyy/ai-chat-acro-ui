@@ -17,16 +17,19 @@ const ROLE = {
 
 export type RoleType = keyof typeof ROLE;
 
+export type ChunkType = "human" | "ai" | "tool" | "start" | "AIMessageChunk";
+
 export type MessageType = {
   content: string;
   additional_kwargs: {
-    reasoning_content: string;
+    reasoning_content?: string;
+    tool_calls?: [];
   };
   response_metadata: {
     finish_reason?: string;
     model_name?: string;
   };
-  type: "human" | "ai" | "tool" | "start";
+  type: ChunkType;
   name?: string;
   id: string;
 };
@@ -115,24 +118,24 @@ const Chat = () => {
                       className="w-full max-h-52 overflow-auto"
                       forceVisible="y"
                     >
-                        <div className="px-4 pt-2">
-                          <MDRenderer 
-                            text={reasoningContent}
-                            fontSize="13px"
-                            textColor="#6b7280"
-                            lineHeight="1.5"
-                            className="thinking-content"
-                          />
-                        </div>
-                      </SimpleBar>
-                    </div>
+                      <div className="px-4 pt-2">
+                        <MDRenderer
+                          text={reasoningContent}
+                          fontSize="13px"
+                          textColor="#6b7280"
+                          lineHeight="1.5"
+                          className="thinking-content"
+                        />
+                      </div>
+                    </SimpleBar>
                   </div>
+                </div>
               </div>
             )}
 
             {content.content.trim() && (
               <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
-                <MDRenderer 
+                <MDRenderer
                   text={content.content}
                   fontSize="15px"
                   textColor="#374151"

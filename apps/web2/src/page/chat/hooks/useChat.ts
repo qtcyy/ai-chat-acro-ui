@@ -17,16 +17,93 @@ type StreamBodyType = {
   summary_with_llm?: boolean;
 };
 
+// 处理内容转换，确保返回有效字符串
+const contentTransfer = (content: string | undefined) => {
+  if (!content || content === "null" || content === "undefined") {
+    return "";
+  } else {
+    return content;
+  }
+};
+
 export const useChat = (props: UseChatProps) => {
-  const { messages, setMessages, onOpen, onClose, chatId } = props;
+  const { setMessages, onOpen, onClose, chatId } = props;
+
+  // 处理流式消息数据块，更新消息列表
+  const onMessageChunk = (data: string) => {
+    try {
+      const messageChunk = JSON.parse(data) as MessageType;
+      if (
+        !messageChunk.content &&
+        !messageChunk.additional_kwargs.reasoning_content
+      ) {
+        return;
+      }
+      if (
+        messageChunk.type === "AIMessageChunk" &&
+        "tool_calls" in messageChunk.additional_kwargs
+      ) {
+        messageChunk.type = "tool";
+      }
+      const chunkType = messageChunk.type;
+
+      setMessages((currentMessages) => {
+        const lastMessage = currentMessages[currentMessages.length - 1];
+        // console.log("当前最后一条消息:", lastMessage);
+
+        if (lastMessage.type === chunkType) {
+          if (chunkType === "ai" || chunkType === "AIMessageChunk") {
+            const lastReason = lastMessage.additional_kwargs.reasoning_content;
+            const lastContent = lastMessage.content;
+            const chunkReason =
+              messageChunk.additional_kwargs.reasoning_content;
+            const chunkContent = messageChunk.content;
+
+            const newReason =
+              contentTransfer(lastReason) + contentTransfer(chunkReason);
+            const newContent =
+              contentTransfer(lastContent) + contentTransfer(chunkContent);
+
+            const newMessage: MessageType = {
+              id: messageChunk.id,
+              content: newContent,
+              additional_kwargs: {
+                reasoning_content: newReason,
+              },
+              response_metadata: {},
+              type: chunkType,
+            };
+
+            const newMessages = [...currentMessages];
+            newMessages[newMessages.length - 1] = newMessage;
+            return newMessages;
+          } else {
+            const newMessage: MessageType = {
+              ...messageChunk,
+              type: "tool",
+            };
+            const newMessages = [...currentMessages];
+            newMessages[newMessages.length - 1] = newMessage;
+            return newMessages;
+          }
+        } else {
+          // console.log(`add a new message with type: ${chunkType}`);
+          return [...currentMessages, messageChunk];
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const { complete, cancel, completion, loading } = createEventSource({
     api: "http://localhost:8000/chat/tools",
     onMessage(event, completion) {
-      console.log(event.data);
-      // c9394f42-4d16-49c1-8583-b1e7c3d9be01
+      // console.log(event.data);
+      onMessageChunk(event.data);
       return completion;
     },
+    // 连接建立时回调，创建初始AI响应消息
     onOpen() {
       console.log("open");
       onOpen?.();
@@ -36,20 +113,26 @@ export const useChat = (props: UseChatProps) => {
           reasoning_content: "",
         },
         response_metadata: {},
-        type: "ai",
+        type: "AIMessageChunk",
         id: v4(),
       };
-      setMessages((pre) => [...pre, newResponseMessage]);
+      setMessages((pre) => {
+        const newMessages = [...pre, newResponseMessage];
+        return newMessages;
+      });
     },
+    // 连接错误时回调
     onError() {
       console.error("error when transport");
     },
+    // 连接关闭时回调
     onFinal() {
       console.log("close");
       onClose?.();
     },
   });
 
+  // 发送用户查询，创建用户消息并启动流式响应
   const ask = (query: string, model?: string, summary?: boolean) => {
     // 用户消息
     const newQueryMessage: MessageType = {
@@ -65,10 +148,10 @@ export const useChat = (props: UseChatProps) => {
     const body: StreamBodyType = {
       query: query,
       thread_id: chatId,
-      model: model,
+      model: "Qwen/Qwen3-30B-A3B-Thinking-2507",
       summary_with_llm: summary,
     };
-    complete(body).subscribe();
+    complete(body).pipe().subscribe();
   };
 
   const streamLoading = loading;
