@@ -16,6 +16,10 @@ import styled, { createGlobalStyle } from "styled-components";
 
 type MDRendererProps = {
   text: string;
+  fontSize?: string;
+  textColor?: string;
+  lineHeight?: string;
+  className?: string;
 };
 
 // 定义 code 组件的属性类型
@@ -28,9 +32,21 @@ interface CodeProps {
 
 export const MDRenderer = (props: MDRendererProps) => {
   const { isDarkMode, theme } = useTheme();
+  const {
+    text,
+    fontSize = "16px",
+    textColor,
+    lineHeight = "1.6",
+    className = "",
+  } = props;
 
   return (
-    <ContentWrapper className={`markdown-body bg-transparent w-full`}>
+    <ContentWrapper
+      className={`markdown-body bg-transparent w-full ${className}`}
+      $fontSize={fontSize}
+      $textColor={textColor}
+      $lineHeight={lineHeight}
+    >
       <MarkdownPreStyles />
       <Markdown
         remarkPlugins={[remarkMath, gfm]}
@@ -59,7 +75,7 @@ export const MDRenderer = (props: MDRendererProps) => {
           },
         }}
       >
-        {props.text}
+        {text}
       </Markdown>
     </ContentWrapper>
   );
@@ -82,8 +98,52 @@ const StyledSyntaxHighlighter = styled(SyntaxHighlighter)`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
 `;
 
-const ContentWrapper = styled.div`
-  color: ${(props) => props.theme.colors.text};
+const ContentWrapper = styled.div<{
+  $fontSize?: string;
+  $textColor?: string;
+  $lineHeight?: string;
+}>`
+  color: ${(props) => props.$textColor || props.theme.colors.text};
+  font-size: ${(props) => props.$fontSize || "14px"};
+  line-height: ${(props) => props.$lineHeight || "1.6"};
+
+  /* 确保所有子元素继承字体设置 */
+  & * {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  /* 保持标题的相对大小 */
+  & h1 {
+    font-size: 1.8em;
+    font-weight: 700;
+  }
+  & h2 {
+    font-size: 1.6em;
+    font-weight: 600;
+  }
+  & h3 {
+    font-size: 1.4em;
+    font-weight: 600;
+  }
+  & h4 {
+    font-size: 1.2em;
+    font-weight: 600;
+  }
+  & h5 {
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+  & h6 {
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  /* 代码块保持固定字体族 */
+  & pre,
+  & code {
+    font-family: "Fira Code", "Monaco", "Consolas", "Courier New", monospace;
+  }
 `;
 
 const MarkdownPreStyles = createGlobalStyle`

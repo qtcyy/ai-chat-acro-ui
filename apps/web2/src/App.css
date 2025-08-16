@@ -5,3 +5,7 @@
 .simplebar-placeholder {
     display: none;
 }
+
+.simplebar-scrollbar {
+    display: none !important;
+}

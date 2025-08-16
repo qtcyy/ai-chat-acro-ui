@@ -10,9 +10,9 @@ import { v4 } from "uuid";
 import dayjs from "dayjs";
 import { HttpLoading, useHttp } from "utils";
 
-const LocalStorageKey = "ai-chat-history";
+export const LocalStorageKey = "ai-chat-history";
 
-type ChatType = {
+export type ChatType = {
   id: UUIDTypes;
   title: string;
   createTime?: string;
