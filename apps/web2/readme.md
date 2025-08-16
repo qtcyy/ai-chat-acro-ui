@@ -45,6 +45,22 @@ Rsbuild           // 现代化构建工具
 
 ## 🚀 核心创新功能
 
+### 🧠 AI思考过程可视化
+- **Thinking展示**: 实时显示AI的思考过程
+- **智能折叠**: 根据processing状态自动展开/折叠thinking内容
+- **状态感知**: "Thinking" ↔ "Finish Think"动态状态显示
+- **自定义渲染**: thinking内容使用不同的字体大小和颜色显示
+
+### 🛠️ 工具调用状态管理
+- **Tool状态跟踪**: "Tool Calling" ↔ "Tool Called"状态显示
+- **处理状态感知**: 基于isProcessing参数的智能状态管理
+- **视觉反馈**: 不同状态使用不同的图标和颜色
+
+### 💬 对话标题显示
+- **动态标题**: 聊天页面顶部显示当前对话标题
+- **美观设计**: 渐变背景、glassmorphism效果
+- **响应式布局**: 适配不同屏幕尺寸的标题显示
+
 ### 🔄 RxJS响应式编程
 ```typescript
 // HTTP请求的响应式处理
@@ -160,16 +176,20 @@ src/
 ├── page/                    # 页面组件
 │   ├── chat/               # 聊天功能模块
 │   │   ├── layout/         # 聊天布局组件
-│   │   │   ├── Chat.tsx    # 聊天主页面
-│   │   │   ├── ChatHome.tsx # 聊天首页
-│   │   │   └── ChatLayout.tsx # 聊天布局
+│   │   │   ├── Chat.tsx    # 聊天主页面(包含thinking折叠、状态显示)
+│   │   │   ├── ChatHome.tsx # 现代化聊天首页(渐变动画、特性卡片)
+│   │   │   ├── ChatHistory.tsx # 聊天历史管理页面
+│   │   │   └── ChatLayout.tsx # 聊天整体布局(侧边栏导航)
 │   │   ├── renderer/       # 消息渲染系统
 │   │   │   ├── MessageList.tsx     # 消息列表容器
 │   │   │   ├── MessageRenderer.tsx # 消息渲染器
 │   │   │   └── useMergeData.ts     # 数据合并Hook
 │   │   ├── hooks/          # 聊天相关Hooks
-│   │   │   ├── useChat.tsx # 聊天逻辑
-│   │   │   └── useHistory.tsx # 历史管理
+│   │   │   ├── useChat.ts  # 聊天逻辑(流式响应、状态管理)
+│   │   │   └── useHistory.tsx # 历史管理(CRUD操作)
+│   │   ├── modal/          # 对话框组件
+│   │   │   ├── DeleteChatModal.tsx # 删除对话确认弹窗
+│   │   │   └── RenameModal.tsx     # 重命名对话弹窗
 │   │   ├── Sender/         # 消息发送器
 │   │   └── types/          # 类型定义
 │   ├── home/               # 首页模块
@@ -478,6 +498,21 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **类型完整性** - 确保完整的TypeScript类型覆盖
 - **函数式编程** - 避免副作用，使用纯函数
 - **可观测性** - 添加充分的日志和监控
+
+## 🆕 最新更新 (2024)
+
+### ✨ 新增功能
+- **🧠 AI思考过程可视化**: thinking内容智能展开/折叠，支持自定义渲染样式
+- **🛠️ 工具调用状态管理**: 实时显示Tool Calling/Called状态
+- **💬 对话标题显示**: 页面顶部美观的对话标题栏，支持渐变背景
+- **📱 现代化ChatHome**: 重新设计的首页，包含特性介绍和动画效果
+- **🎨 MDRenderer增强**: 支持fontSize、textColor、lineHeight等自定义参数
+
+### 🔧 技术改进
+- **状态管理优化**: 修复React状态闭包问题，使用函数式更新
+- **isProcessing字段**: 新增消息处理状态追踪
+- **智能UI响应**: thinking栏根据处理状态自动展开/折叠
+- **样式系统完善**: 更好的响应式设计和视觉效果
 
 ---
 
