@@ -7,6 +7,7 @@ import { MDRenderer } from "components";
 import { Sender } from "../Sender/Sender";
 import { useChat } from "../hooks/useChat";
 import { v4 } from "uuid";
+import SimpleBar from "simplebar-react";
 
 const ROLE = {
   start: "start",
@@ -108,16 +109,33 @@ const Chat = () => {
                       : "max-h-[800px] opacity-100 pb-4"
                   }`}
                 >
-                  <div className="px-4 text-gray-700">
-                    <MDRenderer text={reasoningContent} />
-                  </div>
+                  <SimpleBar
+                    className="w-full max-h-52 overflow-auto"
+                    forceVisible="y"
+                  >
+                    <div className="px-4">
+                      <MDRenderer 
+                        text={reasoningContent}
+                        fontSize="13px"
+                        textColor="#6b7280"
+                        lineHeight="1.5"
+                        className="thinking-content"
+                      />
+                    </div>
+                  </SimpleBar>
                 </div>
               </div>
             )}
 
             {content.content.trim() && (
               <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
-                <MDRenderer text={content.content} />
+                <MDRenderer 
+                  text={content.content}
+                  fontSize="15px"
+                  textColor="#374151"
+                  lineHeight="1.7"
+                  className="main-content"
+                />
               </div>
             )}
           </div>
