@@ -33,6 +33,7 @@ export const useChat = (props: UseChatProps) => {
   const onMessageChunk = (data: string) => {
     try {
       const messageChunk = JSON.parse(data) as MessageType;
+      messageChunk.isProcessing = true;
       if (
         !messageChunk.content &&
         !messageChunk.additional_kwargs.reasoning_content
@@ -88,7 +89,9 @@ export const useChat = (props: UseChatProps) => {
           }
         } else {
           // console.log(`add a new message with type: ${chunkType}`);
-          return [...currentMessages, messageChunk];
+          const newMessages = [...currentMessages];
+          newMessages[newMessages.length - 1].isProcessing = false;
+          return [...newMessages, messageChunk];
         }
       });
     } catch (error) {
@@ -148,7 +151,7 @@ export const useChat = (props: UseChatProps) => {
     const body: StreamBodyType = {
       query: query,
       thread_id: chatId,
-      model: "Qwen/Qwen3-30B-A3B-Thinking-2507",
+      model: model,
       summary_with_llm: summary,
     };
     complete(body).pipe().subscribe();

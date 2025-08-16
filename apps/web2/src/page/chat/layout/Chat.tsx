@@ -32,6 +32,7 @@ export type MessageType = {
   type: ChunkType;
   name?: string;
   id: string;
+  isProcessing?: boolean;
 };
 
 const Chat = () => {
@@ -73,12 +74,14 @@ const Chat = () => {
     [ROLE.response]: {
       render: (content, id) => {
         const reasoningContent = content.additional_kwargs.reasoning_content;
-        const [foldThink, setFoldThink] = useState(true);
+        const [foldThink, setFoldThink] = useState(false);
 
         if (content.type === "tool") {
           return (
             <div className="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
-              <div className="text-orange-800 font-medium">🛠️ Tool Calling</div>
+              <div className="text-orange-800 font-medium">
+                🛠️ {content.isProcessing ? "Tool Calling" : "Tool Called"}
+              </div>
             </div>
           );
         }
@@ -92,7 +95,7 @@ const Chat = () => {
                   onClick={() => setFoldThink(!foldThink)}
                 >
                   <div className="text-blue-800 font-medium flex items-center gap-2">
-                    💭 Thinking
+                    💭 {content.isProcessing ? "Thinking" : "Finish Think"}
                     <span className="text-xs text-gray-500">
                       {foldThink ? "(点击展开)" : "(点击折叠)"}
                     </span>

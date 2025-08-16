@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { AiOutlineSend, AiOutlineStop } from "react-icons/ai";
 
 type SenderProps = {
-  ask: (query: string) => void;
+  ask: (query: string, model?: string, summary?: boolean) => void;
   cancel: () => void;
   loading?: boolean;
 };
@@ -15,7 +15,7 @@ const Sender = (props: SenderProps) => {
 
   const handleSend = () => {
     if (message.trim() && !loading) {
-      ask(message.trim());
+      ask(message.trim(), "Qwen/Qwen3-30B-A3B-Thinking-2507", true);
       setMessage("");
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
