@@ -109,21 +109,24 @@ const Chat = () => {
                       : "max-h-[800px] opacity-100 pb-4"
                   }`}
                 >
-                  <SimpleBar
-                    className="w-full max-h-52 overflow-auto"
-                    forceVisible="y"
-                  >
-                    <div className="px-4">
-                      <MDRenderer 
-                        text={reasoningContent}
-                        fontSize="13px"
-                        textColor="#6b7280"
-                        lineHeight="1.5"
-                        className="thinking-content"
-                      />
+                  <div className="relative">
+                    <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-gray-50 to-transparent z-10 pointer-events-none"></div>
+                    <SimpleBar
+                      className="w-full max-h-52 overflow-auto"
+                      forceVisible="y"
+                    >
+                        <div className="px-4 pt-2">
+                          <MDRenderer 
+                            text={reasoningContent}
+                            fontSize="13px"
+                            textColor="#6b7280"
+                            lineHeight="1.5"
+                            className="thinking-content"
+                          />
+                        </div>
+                      </SimpleBar>
                     </div>
-                  </SimpleBar>
-                </div>
+                  </div>
               </div>
             )}
 
