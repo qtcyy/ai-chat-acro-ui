@@ -1,9 +1,10 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { Modal, Input, Form, message } from "antd";
+import { Modal, Input, message, Button } from "antd";
 import { UUIDTypes } from "uuid";
 import { useHistory } from "../hooks/useHistory";
 import { useState, useEffect } from "react";
 import { AiOutlineEdit } from "react-icons/ai";
+import { useAutoRename } from "../utils/AutoRename";
 
 interface RenameModalProps {
   id: UUIDTypes;
@@ -12,27 +13,46 @@ interface RenameModalProps {
 const RenameModal = NiceModal.create(({ id }: RenameModalProps) => {
   const modal = useModal();
   const { renameChat, chats } = useHistory();
-  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const { loading: autoRenameLoading, getName } = useAutoRename({ setName });
 
   // 获取当前聊天记录
   const currentChat = chats.find((chat) => chat.id === id);
 
+  // 初始化输入框值
   useEffect(() => {
     if (currentChat) {
-      form.setFieldsValue({
-        title: currentChat.title || "未命名对话",
-      });
+      setInputValue(currentChat.title || "未命名对话");
     }
-  }, [currentChat, form]);
+  }, [currentChat]);
+
+  // 自动重命名后更新输入框
+  useEffect(() => {
+    if (name) {
+      console.log("自动命名结果:", name);
+      setInputValue(name);
+    }
+  }, [name]);
 
   const handleOk = async () => {
     try {
       setLoading(true);
-      const values = await form.validateFields();
-      const newTitle = values.title.trim();
+      const newTitle = inputValue.trim();
 
-      if (newTitle && newTitle !== currentChat?.title) {
+      // 验证输入
+      if (!newTitle) {
+        message.error("请输入对话标题");
+        return;
+      }
+
+      if (newTitle.length > 50) {
+        message.error("标题不能超过50个字符");
+        return;
+      }
+
+      if (newTitle !== currentChat?.title) {
         // 调用重命名方法
         await renameChat(id, newTitle);
         message.success("对话标题已更新");
@@ -50,6 +70,11 @@ const RenameModal = NiceModal.create(({ id }: RenameModalProps) => {
 
   const handleCancel = () => {
     modal.hide();
+  };
+
+  const handleRename = () => {
+    if (!currentChat?.id) return;
+    getName(currentChat.id);
   };
 
   return (
@@ -70,24 +95,22 @@ const RenameModal = NiceModal.create(({ id }: RenameModalProps) => {
       centered
       destroyOnHidden
     >
-      <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Form.Item
-          name="title"
-          label="对话标题"
-          rules={[
-            { required: true, message: "请输入对话标题" },
-            { max: 50, message: "标题不能超过50个字符" },
-            { whitespace: true, message: "标题不能为空" },
-          ]}
-        >
+      <div style={{ marginTop: 16 }}>
+        <div style={{ marginBottom: 8, fontWeight: 500 }}>对话标题</div>
+        <div className="flex flex-row gap-2">
           <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             placeholder="请输入新的对话标题"
             maxLength={50}
             showCount
             autoFocus
           />
-        </Form.Item>
-      </Form>
+          <Button onClick={handleRename} loading={autoRenameLoading}>
+            智能命名
+          </Button>
+        </div>
+      </div>
     </Modal>
   );
 });

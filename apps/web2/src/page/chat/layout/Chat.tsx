@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { HttpLoading, useHttp } from "utils";
@@ -8,6 +8,7 @@ import { Sender } from "../Sender/Sender";
 import { useChat } from "../hooks/useChat";
 import { v4 } from "uuid";
 import SimpleBar from "simplebar-react";
+import SimpleBarCore from "simplebar-core";
 import { ChatType, LocalStorageKey } from "../hooks/useHistory";
 
 const ROLE = {
@@ -46,6 +47,7 @@ const Chat = () => {
 
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
+  const simpleBarRef = useRef<SimpleBarCore | null>(null);
 
   const { ask, streamLoading, cancel } = useChat({
     chatId: chatId ?? v4(),
@@ -81,10 +83,25 @@ const Chat = () => {
         const reasoningContent = content.additional_kwargs.reasoning_content;
         const [foldThink, setFoldThink] = useState(true);
 
+        const responseScrollRef = useRef<SimpleBarCore | null>(null);
+
+        const scrollButton = () => {
+          const target = responseScrollRef.current?.getScrollElement();
+          if (target) {
+            target.scrollTo({
+              top: target.scrollHeight,
+            });
+          }
+        };
+
         useEffect(() => {
           // 处理中时展开，处理结束时折叠
           setFoldThink(!content.isProcessing);
         }, [content.isProcessing]);
+
+        useEffect(() => {
+          scrollButton();
+        }, [content.additional_kwargs.reasoning_content]);
 
         if (content.type === "tool") {
           return (
@@ -97,7 +114,7 @@ const Chat = () => {
         }
 
         return (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 min-w-[800px]">
             {reasoningContent && (
               <div className="bg-gray-50 rounded-lg border-l-4 border-blue-400 overflow-hidden shadow-sm">
                 <div
@@ -128,6 +145,7 @@ const Chat = () => {
                   <div className="relative">
                     <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-gray-50 to-transparent z-10 pointer-events-none"></div>
                     <SimpleBar
+                      ref={responseScrollRef}
                       className="w-full max-h-52 overflow-auto"
                       forceVisible="y"
                     >
@@ -185,6 +203,7 @@ const Chat = () => {
         </HeaderContent>
       </HeaderContainer>
       <SimpleBar
+        ref={simpleBarRef}
         className="flex-1"
         style={{
           width: "100%",

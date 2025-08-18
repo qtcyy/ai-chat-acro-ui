@@ -16,10 +16,15 @@ import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import RenameModal from "../modal/RenameModal";
 import { DeleteChatModal } from "../modal/DeleteChatModal";
+import { useEffect } from "react";
 
 const ChatHistory = () => {
-  const { chats, createChat } = useHistory();
+  const { chats, createChat, sortByTime } = useHistory();
   const route = useNavigate();
+
+  useEffect(() => {
+    sortByTime();
+  }, []);
 
   const handleClick = (id: UUIDTypes) => {
     route(`/chat/${id}`);
