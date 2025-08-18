@@ -2,7 +2,7 @@ import { HttpLoading, useHttp } from "utils";
 import { UUIDTypes } from "uuid";
 
 type AutoRenameProps = {
-  setName: React.Dispatch<React.SetStateAction<string>>;
+  setName: (name: string) => void;
 };
 
 export const useAutoRename = (props: AutoRenameProps) => {

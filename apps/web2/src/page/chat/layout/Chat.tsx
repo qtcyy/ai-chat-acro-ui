@@ -9,7 +9,8 @@ import { useChat } from "../hooks/useChat";
 import { v4 } from "uuid";
 import SimpleBar from "simplebar-react";
 import SimpleBarCore from "simplebar-core";
-import { ChatType, LocalStorageKey } from "../hooks/useHistory";
+import { ChatType, LocalStorageKey, useHistory } from "../hooks/useHistory";
+import { useAutoRename } from "../utils/AutoRename";
 
 const ROLE = {
   start: "start",
@@ -44,18 +45,38 @@ const Chat = () => {
     localStorage.getItem(LocalStorageKey) ?? ""
   ) as ChatType[];
   const chatItem = chats.find((chat) => chat.id === chatId);
+  const { renameChat } = useHistory();
+
+  const [title, setTitle] = useState(chatItem?.title ?? "");
+  const { getName } = useAutoRename({
+    setName: setTitle,
+  });
 
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
-  const simpleBarRef = useRef<SimpleBarCore | null>(null);
 
   const { ask, streamLoading, cancel } = useChat({
     chatId: chatId ?? v4(),
     messages: messages,
     setMessages: setMessages,
     onOpen() {},
-    onClose() {},
+    onClose() {
+      if (!chatId) return;
+      if (
+        messages.length > 1 &&
+        (!chatItem?.title || chatItem.title === "Untitled")
+      ) {
+        getName(chatId);
+      }
+    },
   });
+
+  useEffect(() => {
+    if (!chatId) return;
+    if (title !== chatItem?.title) {
+      renameChat(chatId, title);
+    }
+  }, [title]);
 
   useEffect(() => {
     http
@@ -202,19 +223,12 @@ const Chat = () => {
           <ChatTitle>{chatItem?.title || "新对话"}</ChatTitle>
         </HeaderContent>
       </HeaderContainer>
-      <SimpleBar
-        ref={simpleBarRef}
-        className="flex-1"
-        style={{
-          width: "100%",
-          // height: "calc(100vh - 194px)",
-          height: "100%",
-          overflow: "auto",
-        }}
-        forceVisible="y"
-      >
-        <MessageList<MessageType> messages={messages} renderer={renderer} />
-      </SimpleBar>
+
+      <MessageList<MessageType>
+        messages={messages}
+        renderer={renderer}
+        autoScroll
+      />
       <Sender ask={ask} cancel={cancel} loading={streamLoading} />
     </ChatContainer>
   );

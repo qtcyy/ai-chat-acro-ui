@@ -77,6 +77,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
   };
 
   const renameChat = (id: UUIDTypes, title: string) => {
+    console.log(title);
     const chatsCopy = [...chats];
     const idx = chatsCopy.findIndex((chat) => chat.id === id);
     if (idx === -1) {
