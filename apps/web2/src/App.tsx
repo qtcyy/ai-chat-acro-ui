@@ -5,6 +5,7 @@ import { routes } from "./routes/routes";
 import { ThemeProvider } from "theme";
 import { ConfigProvider } from "antd";
 import { HistoryProvider } from "./page/chat/hooks/useHistory";
+import "simplebar-react/dist/simplebar.min.css";
 
 const router = createHashRouter(routes);
 

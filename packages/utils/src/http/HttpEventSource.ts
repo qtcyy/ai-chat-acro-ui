@@ -182,7 +182,7 @@ export const createEventSource = (options: CreateEventSourceOptions) => {
 
           complete: () => {
             console.log("complete");
-            options.onError?.();
+            options.onFinal?.();
             setLoading(false);
             setCompletion(undefined);
             observer.complete();

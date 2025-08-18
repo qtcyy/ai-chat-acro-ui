@@ -46,6 +46,12 @@ const Sender = (props: SenderProps) => {
     }
   };
 
+  const handleClickArea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
   const handleCancel = () => {
     if (loading) {
       cancel();
@@ -54,7 +60,7 @@ const Sender = (props: SenderProps) => {
 
   return (
     <SenderContainer>
-      <InputWrapper>
+      <InputWrapper onClick={handleClickArea}>
         <TextArea
           ref={textareaRef}
           value={message}

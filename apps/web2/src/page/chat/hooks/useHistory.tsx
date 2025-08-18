@@ -24,6 +24,7 @@ type HistoryContextType = {
   createChat: (title?: string) => ChatType;
   renameChat: (id: UUIDTypes, title: string) => boolean;
   deleteChat: (id: UUIDTypes) => Promise<boolean>;
+  sortByTime: () => void;
 };
 
 const HistoryContext = createContext<HistoryContextType>({
@@ -31,6 +32,7 @@ const HistoryContext = createContext<HistoryContextType>({
   createChat: () => ({ id: v4(), title: "", messages: [] }),
   renameChat: () => true,
   deleteChat: () => Promise.resolve(true),
+  sortByTime: () => {},
 });
 
 export const useHistory = () => useContext(HistoryContext);
@@ -75,6 +77,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
   };
 
   const renameChat = (id: UUIDTypes, title: string) => {
+    console.log(title);
     const chatsCopy = [...chats];
     const idx = chatsCopy.findIndex((chat) => chat.id === id);
     if (idx === -1) {
@@ -113,11 +116,21 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     return true;
   };
 
+  const sortByTime = () => {
+    const newChats = chats;
+    newChats.sort((a, b) =>
+      dayjs(a.updateTime).isAfter(dayjs(b.updateTime)) ? -1 : 1
+    );
+    setChats(newChats);
+    localStorage.setItem(LocalStorageKey, JSON.stringify(newChats));
+  };
+
   const ContextValue = {
     chats,
     createChat,
     renameChat,
     deleteChat,
+    sortByTime,
   };
 
   return (

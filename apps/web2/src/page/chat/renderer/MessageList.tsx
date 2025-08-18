@@ -1,12 +1,15 @@
 import styled from "styled-components";
 import { MessageRenderer, MessageRendererContext } from "./MessageRenderer";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { RoleType } from "../layout/Chat";
 import { useMergeData } from "./useMergeData";
+import SimpleBarCore from "simplebar-core";
+import SimpleBar from "simplebar-react";
 
 export type MessageListProps<T> = {
   messages: T[];
   renderer: RenderersType<T>;
+  autoScroll?: boolean;
 };
 
 export type RendererType<T> = {
@@ -15,52 +18,109 @@ export type RendererType<T> = {
 
 export type RenderersType<T> = Record<RoleType, RendererType<T>>;
 
+const TOLERANCE = 1;
+
 export const MessageList = <T,>(props: MessageListProps<T>) => {
-  const { messages, renderer } = props;
+  const { messages, renderer, autoScroll } = props;
+  const [updateCount, setUpdateCount] = useState(0);
+  const [scrollReachEnd, setScrollReachEnd] = useState(true);
+  const simpleBarRef = useRef<SimpleBarCore | null>(null);
 
   const { mergedData } = useMergeData({ messages, renderer });
 
-  const onUpdate = () => {};
+  const onInternalScroll = () => {
+    const e = simpleBarRef.current?.getScrollElement();
+    if (e) {
+      setScrollReachEnd(
+        e.scrollHeight - Math.abs(e.scrollTop) - e.clientHeight <= TOLERANCE
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (simpleBarRef) {
+      const e = simpleBarRef.current?.getScrollElement();
+      if (e) {
+        e.scrollTo({
+          top: e.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (
+      scrollReachEnd &&
+      simpleBarRef &&
+      simpleBarRef.current?.getScrollElement()
+    ) {
+      const e = simpleBarRef.current.getScrollElement();
+      e?.scrollTo({
+        top: e.scrollHeight,
+      });
+    }
+  }, [updateCount]);
+
+  const onUpdate = () => {
+    if (autoScroll) {
+      setUpdateCount((c) => c + 1);
+    }
+  };
 
   return (
-    <MessageRendererContext.Provider value={{ onUpdate }}>
-      <MessageListWrapper>
-        <MessageContainer>
-          {mergedData.length === 0 ? (
-            <EmptyState>
-              <EmptyIcon>💬</EmptyIcon>
-              <EmptyText>开始与AI对话吧</EmptyText>
-              <EmptySubtext>发送消息开启你的智能对话体验</EmptySubtext>
-            </EmptyState>
-          ) : (
-            <>
-              <MessageStartIndicator>
-                <StartIcon>✨</StartIcon>
-                <StartText>对话开始</StartText>
-              </MessageStartIndicator>
+    <SimpleBar
+      ref={simpleBarRef}
+      className="flex-1"
+      style={{
+        width: "100%",
+        // height: "calc(100vh - 194px)",
+        height: "100%",
+        overflow: "auto",
+      }}
+      forceVisible="y"
+      onScroll={onInternalScroll}
+      onScrollCapture={onInternalScroll}
+    >
+      <MessageRendererContext.Provider value={{ onUpdate }}>
+        <MessageListWrapper>
+          <MessageContainer>
+            {mergedData.length === 0 ? (
+              <EmptyState>
+                <EmptyIcon>💬</EmptyIcon>
+                <EmptyText>开始与AI对话吧</EmptyText>
+                <EmptySubtext>发送消息开启你的智能对话体验</EmptySubtext>
+              </EmptyState>
+            ) : (
+              <>
+                <MessageStartIndicator>
+                  <StartIcon>✨</StartIcon>
+                  <StartText>对话开始</StartText>
+                </MessageStartIndicator>
 
-              {mergedData.map((data, i) => (
-                <MessageItemWrapper
-                  key={i}
-                  $isEven={i % 2 === 0}
-                  //@ts-ignore
-                  $messageType={data.message.type}
-                >
-                  <MessageRenderer<T>
+                {mergedData.map((data, i) => (
+                  <MessageItemWrapper
+                    key={i}
+                    $isEven={i % 2 === 0}
                     //@ts-ignore
-                    id={data.message.id ?? String(i)}
-                    render={data.render}
-                    content={data.message}
-                  />
-                </MessageItemWrapper>
-              ))}
+                    $messageType={data.message.type}
+                  >
+                    <MessageRenderer<T>
+                      //@ts-ignore
+                      id={data.message.id ?? String(i)}
+                      render={data.render}
+                      content={data.message}
+                    />
+                  </MessageItemWrapper>
+                ))}
 
-              <ScrollAnchor id="scroll-anchor" />
-            </>
-          )}
-        </MessageContainer>
-      </MessageListWrapper>
-    </MessageRendererContext.Provider>
+                <ScrollAnchor id="scroll-anchor" />
+              </>
+            )}
+          </MessageContainer>
+        </MessageListWrapper>
+      </MessageRendererContext.Provider>
+    </SimpleBar>
   );
 };
 
