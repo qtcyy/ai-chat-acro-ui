@@ -1,6 +1,8 @@
-import { useState, useRef, KeyboardEvent } from "react";
+import { useState, useRef, KeyboardEvent, useEffect } from "react";
 import styled from "styled-components";
-import { AiOutlineSend, AiOutlineStop } from "react-icons/ai";
+import { AiOutlineSend, AiOutlineStop, AiOutlineDown } from "react-icons/ai";
+import { BsRobot } from "react-icons/bs";
+import { MdSettings } from "react-icons/md";
 
 type SenderProps = {
   ask: (query: string, model?: string, summary?: boolean) => void;
@@ -8,20 +10,75 @@ type SenderProps = {
   loading?: boolean;
 };
 
+type ModelOption = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+const MODEL_OPTIONS: ModelOption[] = [
+  {
+    id: "Qwen/Qwen3-30B-A3B-Thinking-2507",
+    name: "Qwen3 30B Thinking",
+    description: "高性能推理模型，擅长复杂思考",
+  },
+  {
+    id: "deepseek-ai/DeepSeek-R1",
+    name: "DeepSeek R1",
+    description: "优秀的推理和代码生成模型",
+  },
+  {
+    id: "claude-3-5-sonnet-20241022",
+    name: "Claude 3.5 Sonnet",
+    description: "平衡性能和速度的通用模型",
+  },
+];
+
 const Sender = (props: SenderProps) => {
   const { ask, cancel, loading = false } = props;
   const [message, setMessage] = useState("");
+  const [selectedModel, setSelectedModel] = useState<ModelOption>(
+    MODEL_OPTIONS[0]
+  );
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const [showModelConfig, setShowModelConfig] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modelSelectorRef = useRef<HTMLDivElement>(null);
 
   const handleSend = () => {
     if (message.trim() && !loading) {
-      ask(message.trim(), "Qwen/Qwen3-30B-A3B-Thinking-2507", true);
+      ask(message.trim(), selectedModel.id, true);
       setMessage("");
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
     }
   };
+
+  const handleModelSelect = (model: ModelOption) => {
+    setSelectedModel(model);
+    setShowModelSelector(false);
+  };
+
+  // 点击外部关闭模型选择器
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        modelSelectorRef.current &&
+        !modelSelectorRef.current.contains(event.target as Node)
+      ) {
+        setShowModelSelector(false);
+      }
+    };
+
+    if (showModelSelector) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showModelSelector]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
@@ -60,6 +117,53 @@ const Sender = (props: SenderProps) => {
 
   return (
     <SenderContainer>
+      {/* 可折叠的模型配置区域 */}
+      {showModelConfig && (
+        <ModelConfigRow>
+          <ModelConfigContent>
+            <CurrentModelInfo>
+              <BsRobot size={16} />
+              <ModelDetails>
+                <ModelName>当前模型: {selectedModel.name}</ModelName>
+                <ModelDescription>{selectedModel.description}</ModelDescription>
+              </ModelDetails>
+            </CurrentModelInfo>
+            
+            <CompactModelSelector ref={modelSelectorRef}>
+              <ModelButton
+                onClick={() => setShowModelSelector(!showModelSelector)}
+                $isOpen={showModelSelector}
+              >
+                切换模型
+                <AiOutlineDown 
+                  size={12} 
+                  style={{
+                    transform: showModelSelector ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} 
+                />
+              </ModelButton>
+              
+              {showModelSelector && (
+                <CompactDropdown>
+                  {MODEL_OPTIONS.map((model) => (
+                    <CompactOption
+                      key={model.id}
+                      onClick={() => handleModelSelect(model)}
+                      $isSelected={selectedModel.id === model.id}
+                      title={model.description}
+                    >
+                      <BsRobot size={12} />
+                      <span>{model.name}</span>
+                    </CompactOption>
+                  ))}
+                </CompactDropdown>
+              )}
+            </CompactModelSelector>
+          </ModelConfigContent>
+        </ModelConfigRow>
+      )}
+
       <InputWrapper onClick={handleClickArea}>
         <TextArea
           ref={textareaRef}
@@ -71,6 +175,19 @@ const Sender = (props: SenderProps) => {
           rows={1}
         />
         <ButtonGroup>
+          {/* 配置按钮 */}
+          <ConfigButton
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowModelConfig(!showModelConfig);
+              if (showModelSelector) setShowModelSelector(false);
+            }}
+            $isActive={showModelConfig}
+            title="AI模型配置"
+          >
+            <MdSettings size={16} />
+          </ConfigButton>
+          
           {loading ? (
             <ActionButton
               onClick={handleCancel}
@@ -111,7 +228,6 @@ const Sender = (props: SenderProps) => {
 const SenderContainer = styled.div`
   position: sticky;
   bottom: 0;
-  /* margin: 0 auto; */
   background: linear-gradient(
     180deg,
     rgba(248, 250, 252, 0.95) 0%,
@@ -122,13 +238,156 @@ const SenderContainer = styled.div`
   padding: 20px 24px 16px;
   z-index: 100;
 
-  /* 响应式padding */
   @media (max-width: 768px) {
     padding: 16px 16px 12px;
   }
 
   @media (max-width: 480px) {
     padding: 12px 12px 8px;
+  }
+`;
+
+const ModelConfigRow = styled.div`
+  margin-bottom: 12px;
+  animation: slideDown 0.3s ease-out;
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+      max-height: 0;
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: 200px;
+    }
+  }
+`;
+
+const ModelConfigContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  @media (max-width: 1200px) {
+    max-width: 100%;
+  }
+`;
+
+const CurrentModelInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+`;
+
+const ModelDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const ModelName = styled.div`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+`;
+
+const ModelDescription = styled.div`
+  font-size: 0.75rem;
+  color: #64748b;
+`;
+
+const CompactModelSelector = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const ModelButton = styled.button<{ $isOpen: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #334155;
+  }
+
+  ${props => props.$isOpen && `
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #1e293b;
+  `}
+`;
+
+const CompactDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  margin-top: 4px;
+  animation: dropdownFadeIn 0.15s ease-out;
+  overflow: hidden;
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+`;
+
+const CompactOption = styled.button<{ $isSelected: boolean }>`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: ${props => props.$isSelected 
+    ? 'rgba(59, 130, 246, 0.1)'
+    : 'transparent'
+  };
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.8rem;
+  color: #1e293b;
+  text-align: left;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.08);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(59, 130, 246, 0.08);
   }
 `;
 
@@ -152,7 +411,6 @@ const InputWrapper = styled.div`
     transform: translateY(-2px);
   }
 
-  /* 响应式最大宽度 */
   @media (max-width: 1200px) {
     max-width: 100%;
   }
@@ -182,7 +440,6 @@ const TextArea = styled.textarea`
     cursor: not-allowed;
   }
 
-  /* 美化滚动条 */
   &::-webkit-scrollbar {
     width: 6px;
   }
@@ -202,6 +459,40 @@ const ButtonGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+`;
+
+const ConfigButton = styled.button<{ $isActive: boolean }>`
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: ${props => props.$isActive 
+    ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+    : 'rgba(59, 130, 246, 0.1)'
+  };
+  color: ${props => props.$isActive ? 'white' : '#475569'};
+  border: 1px solid ${props => props.$isActive 
+    ? 'rgba(59, 130, 246, 0.3)'
+    : 'rgba(59, 130, 246, 0.2)'
+  };
+
+  &:hover {
+    background: ${props => props.$isActive 
+      ? 'linear-gradient(135deg, #1d4ed8, #1e40af)'
+      : 'rgba(59, 130, 246, 0.15)'
+    };
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const ActionButton = styled.button<{ $variant: "send" | "stop" }>`
@@ -248,7 +539,6 @@ const ActionButton = styled.button<{ $variant: "send" | "stop" }>`
     transform: none;
   }
 
-  /* 发送按钮的波纹效果 */
   &:after {
     content: "";
     position: absolute;
@@ -289,7 +579,6 @@ const LoadingIndicator = styled.div`
     }
   }
 
-  /* 响应式最大宽度 */
   @media (max-width: 1200px) {
     max-width: 100%;
   }
@@ -358,7 +647,6 @@ const HintText = styled.div`
     }
   }
 
-  /* 响应式最大宽度 */
   @media (max-width: 1200px) {
     max-width: 100%;
   }
