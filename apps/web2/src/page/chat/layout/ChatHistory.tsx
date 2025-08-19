@@ -12,19 +12,40 @@ import {
   AiOutlineMore,
   AiFillDelete,
 } from "react-icons/ai";
-import { Dropdown } from "antd";
+import { Checkbox, Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import RenameModal from "../modal/RenameModal";
-import { DeleteChatModal } from "../modal/DeleteChatModal";
-import { useEffect } from "react";
+import {
+  DeleteChatModal,
+  DeleteChatBatchModal,
+} from "../modal/DeleteChatModal";
+import { useEffect, useState } from "react";
 
 const ChatHistory = () => {
   const { chats, createChat, sortByTime } = useHistory();
   const route = useNavigate();
 
+  const [onSelect, setOnSelect] = useState(false);
+  const [selectSet, setSelectSet] = useState<Set<UUIDTypes>>();
+
+  useEffect(() => {
+    if (!onSelect) {
+      setSelectSet((pre) => {
+        const newSet = pre;
+        newSet?.clear();
+        return new Set(newSet);
+      });
+    }
+  }, [onSelect]);
+
   useEffect(() => {
     sortByTime();
   }, []);
+
+  const handleCreate = () => {
+    const newChat = createChat();
+    route(`/chat/${newChat.id}`);
+  };
 
   const handleClick = (id: UUIDTypes) => {
     route(`/chat/${id}`);
@@ -36,6 +57,29 @@ const ChatHistory = () => {
 
   const handleDelete = (id: UUIDTypes) => {
     NiceModal.show(DeleteChatModal, { id: id.toString() });
+  };
+
+  const handleSelect = (id: UUIDTypes) => {
+    const newSet = new Set(selectSet);
+    if (selectSet?.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectSet(newSet);
+  };
+
+  const handleDeleteBatch = () => {
+    if (selectSet && selectSet.size > 0) {
+      const idsArray = Array.from(selectSet);
+      NiceModal.show(DeleteChatBatchModal, { ids: idsArray }).then((result) => {
+        if (result) {
+          // 删除成功后清空选择集合
+          setSelectSet(new Set());
+          setOnSelect(false);
+        }
+      });
+    }
   };
 
   const getMenuItems = (chatId: UUIDTypes): MenuProps["items"] => [
@@ -65,7 +109,20 @@ const ChatHistory = () => {
       <HeaderSection>
         <HeaderIcon>📚</HeaderIcon>
         <HeaderTitle>对话历史</HeaderTitle>
-        <CreateButton onClick={() => createChat()}>
+        <DeleteBatchButton
+          $visible={!!selectSet?.size}
+          onClick={handleDeleteBatch}
+        >
+          <AiFillDelete size={14} />
+          删除 ({selectSet?.size || 0})
+        </DeleteBatchButton>
+        <SelectToggleButton
+          $isActive={onSelect}
+          onClick={() => setOnSelect((pre) => !pre)}
+        >
+          {onSelect ? "取消选择" : "快速选择"}
+        </SelectToggleButton>
+        <CreateButton onClick={handleCreate}>
           <AiOutlinePlus size={16} />
           <span>新建对话</span>
         </CreateButton>
@@ -81,13 +138,23 @@ const ChatHistory = () => {
             <EmptySubtext>点击"新建对话"开始你的第一次AI对话</EmptySubtext>
           </EmptyState>
         ) : (
-          <ListContainer>
+          <ListContainer $selectMode={onSelect}>
             {chats.map((chat, index) => (
               <ListWrapper
                 key={chat.id.toString()}
-                onClick={() => handleClick(chat.id)}
+                onClick={() => {
+                  onSelect ? handleSelect(chat.id) : handleClick(chat.id);
+                }}
                 $index={index}
+                $selectMode={onSelect}
               >
+                <CheckboxContainer $visible={onSelect}>
+                  <Checkbox
+                    checked={selectSet?.has(chat.id)}
+                    onChange={() => handleSelect(chat.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </CheckboxContainer>
                 <ChatIcon>
                   <AiOutlineMessage size={20} />
                 </ChatIcon>
@@ -141,6 +208,34 @@ const HeaderSection = styled.div`
   align-items: center;
   gap: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+
+  /* 为所有按钮添加统一的进入动画 */
+  > button {
+    animation: buttonSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* 为每个按钮添加递增的延迟 */
+  > button:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  > button:nth-child(4) {
+    animation-delay: 0.2s;
+  }
+  > button:nth-child(5) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes buttonSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 `;
 
 const HeaderIcon = styled.div`
@@ -157,6 +252,79 @@ const HeaderTitle = styled.h1`
   color: #1e293b;
   margin: 0;
   flex: 1;
+`;
+
+const DeleteBatchButton = styled.button<{ $visible: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3);
+  opacity: ${(props) => (props.$visible ? 1 : 0)};
+  visibility: ${(props) => (props.$visible ? "visible" : "hidden")};
+  transform: ${(props) => (props.$visible ? "scale(1)" : "scale(0.9)")};
+
+  &:hover {
+    transform: translateY(-1px)
+      ${(props) => (props.$visible ? "scale(1.02)" : "scale(0.9)")};
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+  }
+
+  &:active {
+    transform: translateY(0)
+      ${(props) => (props.$visible ? "scale(1)" : "scale(0.9)")};
+  }
+`;
+
+const SelectToggleButton = styled.button<{ $isActive: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: ${(props) =>
+    props.$isActive
+      ? "linear-gradient(135deg, #059669, #047857)"
+      : "rgba(59, 130, 246, 0.1)"};
+  color: ${(props) => (props.$isActive ? "white" : "#475569")};
+  border: 1px solid
+    ${(props) =>
+      props.$isActive ? "rgba(5, 150, 105, 0.3)" : "rgba(59, 130, 246, 0.2)"};
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: ${(props) =>
+    props.$isActive
+      ? "0 3px 10px rgba(5, 150, 105, 0.3)"
+      : "0 2px 6px rgba(59, 130, 246, 0.15)"};
+
+  &:hover {
+    transform: translateY(-1px);
+    background: ${(props) =>
+      props.$isActive
+        ? "linear-gradient(135deg, #047857, #065f46)"
+        : "rgba(59, 130, 246, 0.15)"};
+    border-color: ${(props) =>
+      props.$isActive ? "rgba(5, 150, 105, 0.4)" : "rgba(59, 130, 246, 0.3)"};
+    box-shadow: ${(props) =>
+      props.$isActive
+        ? "0 4px 12px rgba(5, 150, 105, 0.4)"
+        : "0 4px 10px rgba(59, 130, 246, 0.2)"};
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const CreateButton = styled.button`
@@ -252,16 +420,59 @@ const EmptySubtext = styled.p`
   line-height: 1.5;
 `;
 
-const ListContainer = styled.ul`
+const ListContainer = styled.ul<{ $selectMode: boolean }>`
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transform: ${(props) =>
+    props.$selectMode ? "translateX(8px)" : "translateX(0)"};
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
-const ListWrapper = styled.li<{ $index: number }>`
+const CheckboxContainer = styled.div<{ $visible: boolean }>`
+  width: ${(props) => (props.$visible ? "32px" : "0px")};
+  opacity: ${(props) => (props.$visible ? 1 : 0)};
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: ${(props) =>
+    props.$visible ? "translateX(0)" : "translateX(-10px)"};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .ant-checkbox-wrapper {
+    transition: all 0.2s ease;
+    transform: ${(props) => (props.$visible ? "scale(1)" : "scale(0.8)")};
+  }
+
+  .ant-checkbox {
+    transform: ${(props) =>
+      props.$visible ? "rotate(0deg)" : "rotate(-15deg)"};
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .ant-checkbox-checked .ant-checkbox-inner {
+    animation: ${(props) =>
+      props.$visible ? "checkboxPulse 0.4s ease-out" : "none"};
+  }
+
+  @keyframes checkboxPulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+`;
+
+const ListWrapper = styled.li<{ $index: number; $selectMode: boolean }>`
   list-style: none;
   display: flex;
   align-items: center;
@@ -271,7 +482,8 @@ const ListWrapper = styled.li<{ $index: number }>`
   border: 2px solid rgba(59, 130, 246, 0.1);
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: ${(props) => (props.$selectMode ? "0.1s" : "0s")};
   position: relative;
   overflow: hidden;
   animation: slideInUp 0.4s ease-out;
