@@ -24,6 +24,7 @@ type HistoryContextType = {
   createChat: (title?: string) => ChatType;
   renameChat: (id: UUIDTypes, title: string) => boolean;
   deleteChat: (id: UUIDTypes) => Promise<boolean>;
+  deleteChatBatch: (ids: UUIDTypes[]) => Promise<boolean>;
   sortByTime: () => void;
 };
 
@@ -32,6 +33,7 @@ const HistoryContext = createContext<HistoryContextType>({
   createChat: () => ({ id: v4(), title: "", messages: [] }),
   renameChat: () => true,
   deleteChat: () => Promise.resolve(true),
+  deleteChatBatch: () => Promise.resolve(true),
   sortByTime: () => {},
 });
 
@@ -116,13 +118,36 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     return true;
   };
 
+  const deleteChatBatch = async (ids: UUIDTypes[]) => {
+    const postBody = {
+      thread_ids: ids,
+    };
+    const idSet = new Set(ids);
+    http
+      ?.post(`http://localhost:8000/chat/history/batch/delete`, postBody)
+      .pipe(loadingOperator)
+      .subscribe({
+        next(value) {
+          if (value.message === "success") {
+            const filteredChats = chats.filter((chat) => !idSet.has(chat.id));
+            localStorage.setItem(LocalStorageKey, JSON.stringify(filteredChats));
+            setChats([...filteredChats]);
+          } else {
+            throw Error("Error on delete chat batch");
+          }
+        },
+      });
+
+    return true;
+  };
+
   const sortByTime = () => {
-    const newChats = chats;
+    const newChats = [...chats];
     newChats.sort((a, b) =>
       dayjs(a.updateTime).isAfter(dayjs(b.updateTime)) ? -1 : 1
     );
-    setChats(newChats);
     localStorage.setItem(LocalStorageKey, JSON.stringify(newChats));
+    setChats(newChats);
   };
 
   const ContextValue = {
@@ -130,6 +155,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     createChat,
     renameChat,
     deleteChat,
+    deleteChatBatch,
     sortByTime,
   };
 
