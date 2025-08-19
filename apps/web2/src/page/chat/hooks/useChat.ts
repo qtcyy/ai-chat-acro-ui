@@ -79,10 +79,20 @@ export const useChat = (props: UseChatProps) => {
               messageChunk.additional_kwargs.reasoning_content;
             const chunkContent = messageChunk.content;
 
-            const newReason =
+            let newReason =
               contentTransfer(lastReason) + contentTransfer(chunkReason);
-            const newContent =
+            let newContent =
               contentTransfer(lastContent) + contentTransfer(chunkContent);
+
+            newReason = newReason.replace(/\\\((.*?)\\\)/g, "$$$1$$");
+            newReason = newReason.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+            newReason = newReason.replaceAll("\\[", "$$");
+            newReason = newReason.replaceAll("\\]", "$$");
+
+            newContent = newContent.replace(/\\\((.*?)\\\)/g, "$$$1$$");
+            newContent = newContent.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+            newContent = newContent.replaceAll("\\[", "$$");
+            newContent = newContent.replaceAll("\\]", "$$");
 
             const newMessage: MessageType = {
               id: messageChunk.id,

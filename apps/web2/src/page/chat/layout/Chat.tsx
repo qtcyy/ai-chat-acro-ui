@@ -69,12 +69,14 @@ const Chat = () => {
 
   const handleDelete = () => {
     if (!chatId) return;
-    NiceModal.show(DeleteChatModal, { id: chatId.toString() }).then((result) => {
-      if (result) {
-        // 删除成功后跳转到聊天历史页面
-        navigate('/chat/history');
+    NiceModal.show(DeleteChatModal, { id: chatId.toString() }).then(
+      (result) => {
+        if (result) {
+          // 删除成功后跳转到聊天历史页面
+          navigate("/chat/history");
+        }
       }
-    });
+    );
   };
 
   const getMenuItems = (): MenuProps["items"] => [
@@ -121,7 +123,41 @@ const Chat = () => {
       ?.get<MessageType[]>(`http://localhost:8000/chat/history/${chatId}`)
       .pipe(loadingOperator)
       .subscribe({
-        next: (data) => setMessages(data),
+        next: (data) => {
+          setMessages(
+            data.map((message) => {
+              if (message.type !== "ai") {
+                return message;
+              } else {
+                let newContent = message.content.replace(
+                  /\\\((.*?)\\\)/g,
+                  "$$$1$$"
+                );
+                newContent = newContent.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+                newContent = newContent.replaceAll("\\[", "$$");
+                newContent = newContent.replaceAll("\\]", "$$");
+
+                let newReason =
+                  message.additional_kwargs.reasoning_content?.replace(
+                    /\\\((.*?)\\\)/g,
+                    "$$$1$$"
+                  );
+                newReason = newReason?.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+                newReason = newReason?.replaceAll("\\[", "$$");
+                newReason = newReason?.replaceAll("\\]", "$$");
+
+                return {
+                  ...message,
+                  content: newContent,
+                  additional_kwargs: {
+                    ...message.additional_kwargs,
+                    reasoning_content: newReason,
+                  },
+                };
+              }
+            })
+          );
+        },
         error: (error) => console.error(`Error loading messages: ${error}`),
       });
   }, [chatId]);
@@ -305,7 +341,7 @@ const Chat = () => {
             menu={{ items: getMenuItems() }}
             trigger={["click"]}
             placement="bottomRight"
-            overlayStyle={{ minWidth: '120px' }}
+            overlayStyle={{ minWidth: "120px" }}
           >
             <DropdownButton>
               <AiOutlineMore size={16} />
@@ -349,10 +385,8 @@ const HeaderContainer = styled.div`
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 
-    0 8px 32px rgba(31, 38, 135, 0.15),
-    0 2px 8px rgba(31, 38, 135, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
+    0 2px 8px rgba(31, 38, 135, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
   box-sizing: border-box;
   position: relative;
@@ -360,33 +394,35 @@ const HeaderContainer = styled.div`
 
   /* 添加渐变装饰 */
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(99, 102, 241, 0.3) 20%, 
-      rgba(139, 92, 246, 0.3) 50%, 
-      rgba(99, 102, 241, 0.3) 80%, 
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(99, 102, 241, 0.3) 20%,
+      rgba(139, 92, 246, 0.3) 50%,
+      rgba(99, 102, 241, 0.3) 80%,
       transparent 100%
     );
   }
 
   /* 添加底部光影 */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 60%;
     height: 1px;
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(99, 102, 241, 0.2) 50%, 
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(99, 102, 241, 0.2) 50%,
       transparent 100%
     );
   }
@@ -414,23 +450,25 @@ const ChatIcon = styled.div`
   font-size: 20px;
   color: white;
   position: relative;
-  box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.3),
-    0 2px 4px rgba(102, 126, 234, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3),
+    0 2px 4px rgba(102, 126, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
     border-radius: 12px;
     pointer-events: none;
   }
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -442,10 +480,8 @@ const ChatIcon = styled.div`
 
   &:hover {
     transform: translateY(-1px) scale(1.05);
-    box-shadow: 
-      0 8px 20px rgba(102, 126, 234, 0.4),
-      0 4px 8px rgba(102, 126, 234, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4),
+      0 4px 8px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 
     &::after {
       opacity: 0.6;
