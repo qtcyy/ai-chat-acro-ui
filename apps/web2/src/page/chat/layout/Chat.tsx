@@ -11,6 +11,7 @@ import SimpleBar from "simplebar-react";
 import SimpleBarCore from "simplebar-core";
 import { ChatType, LocalStorageKey, useHistory } from "../hooks/useHistory";
 import { useAutoRename } from "../utils/AutoRename";
+import { useDebounceFn } from "ahooks";
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { AiOutlineEdit, AiFillDelete, AiOutlineMore } from "react-icons/ai";
@@ -177,17 +178,40 @@ const Chat = () => {
       render: (content, id) => {
         const reasoningContent = content.additional_kwargs.reasoning_content;
         const [foldThink, setFoldThink] = useState(true);
+        const [scrollReachEnd, setScrollReachEnd] = useState(true);
 
         const responseScrollRef = useRef<SimpleBarCore | null>(null);
+        const TOLERANCE = 1;
+
+        const onInternalScroll = () => {
+          const e = responseScrollRef.current?.getScrollElement();
+          if (e) {
+            setScrollReachEnd(
+              e.scrollHeight - Math.abs(e.scrollTop) - e.clientHeight <=
+                TOLERANCE
+            );
+          }
+        };
+
+        // 防抖的滚动监听函数，避免频繁更新状态
+        const { run: debouncedInternalScroll } = useDebounceFn(onInternalScroll, {
+          wait: 50,
+        });
 
         const scrollButton = () => {
           const target = responseScrollRef.current?.getScrollElement();
           if (target) {
             target.scrollTo({
               top: target.scrollHeight,
+              behavior: "smooth",
             });
           }
         };
+
+        // 防抖的滚动函数，防止频繁调用导致卡顿
+        const { run: debouncedScrollToBottom } = useDebounceFn(scrollButton, {
+          wait: 100,
+        });
 
         useEffect(() => {
           // 处理中时展开，处理结束时折叠
@@ -195,8 +219,11 @@ const Chat = () => {
         }, [content.isProcessing]);
 
         useEffect(() => {
-          scrollButton();
-        }, [content.additional_kwargs.reasoning_content]);
+          // 只有当用户在底部时才自动滚动，使用防抖函数避免卡顿
+          if (scrollReachEnd && reasoningContent) {
+            debouncedScrollToBottom();
+          }
+        }, [content.additional_kwargs.reasoning_content, scrollReachEnd, debouncedScrollToBottom]);
 
         if (content.type === "tool") {
           const [foldTool, setFoldTool] = useState(true);
@@ -285,6 +312,8 @@ const Chat = () => {
                       className="w-full max-h-52 overflow-auto"
                       forceVisible="y"
                       autoHide={false}
+                      onScroll={debouncedInternalScroll}
+                      onScrollCapture={debouncedInternalScroll}
                     >
                       <div className="px-4 pt-2">
                         <MDRenderer
