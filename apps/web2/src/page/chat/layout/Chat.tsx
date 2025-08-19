@@ -266,12 +266,22 @@ const Chat = () => {
         </HeaderContent>
       </HeaderContainer>
 
-      <MessageList<MessageType>
-        messages={messages}
-        renderer={renderer}
-        autoScroll
-      />
-      <Sender ask={ask} cancel={cancel} loading={streamLoading} />
+      {loading ? (
+        <LoadingContainer>
+          <LoadingSpinner />
+          <LoadingText>正在加载对话历史...</LoadingText>
+          <LoadingSubtext>请稍候片刻</LoadingSubtext>
+        </LoadingContainer>
+      ) : (
+        <>
+          <MessageList<MessageType>
+            messages={messages}
+            renderer={renderer}
+            autoScroll
+          />
+          <Sender ask={ask} cancel={cancel} loading={streamLoading} />
+        </>
+      )}
     </ChatContainer>
   );
 };
@@ -328,6 +338,68 @@ const ChatTitle = styled.h1`
   @media (max-width: 480px) {
     font-size: 14px;
   }
+`;
+
+const LoadingContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: linear-gradient(
+    135deg,
+    #f8fafc 0%,
+    #f1f5f9 30%,
+    #e2e8f0 70%,
+    #cbd5e1 100%
+  );
+  animation: fadeIn 0.6s ease-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+  margin-bottom: 24px;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const LoadingText = styled.div`
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
+const LoadingSubtext = styled.div`
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  opacity: 0.8;
 `;
 
 const ChatContainer = styled.div`
