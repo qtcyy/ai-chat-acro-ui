@@ -125,11 +125,52 @@ const Chat = () => {
         }, [content.additional_kwargs.reasoning_content]);
 
         if (content.type === "tool") {
+          const [foldTool, setFoldTool] = useState(true);
+
           return (
-            <div className="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
-              <div className="text-orange-800 font-medium">
-                🛠️ {content.isProcessing ? "Tool Calling" : "Tool Called"}
+            <div className="bg-orange-50 rounded-lg border-l-4 border-orange-400 overflow-hidden shadow-sm">
+              <div
+                className="p-4 cursor-pointer hover:bg-orange-100 transition-colors duration-200 flex items-center justify-between"
+                onClick={() => setFoldTool(!foldTool)}
+              >
+                <div className="text-orange-800 font-medium flex items-center gap-2">
+                  🛠️ {content.isProcessing ? "Tool Calling" : "Tool Called"}
+                </div>
+                <div
+                  className={`transform transition-transform duration-300 text-orange-600 ${
+                    foldTool ? "" : "rotate-180"
+                  }`}
+                >
+                  ▼
+                </div>
               </div>
+              {content.content && (
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    foldTool
+                      ? "max-h-0 opacity-0"
+                      : "max-h-[400px] opacity-100 pb-4"
+                  }`}
+                >
+                  <div className="relative">
+                    <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-orange-50 to-transparent z-10 pointer-events-none"></div>
+                    <div className="px-4 max-h-80 overflow-y-auto">
+                      <div className="text-orange-700 text-sm bg-white p-3 rounded border">
+                        {/* <pre className="whitespace-pre-wrap font-mono text-xs">
+                          {content.content}
+                        </pre> */}
+                        <MDRenderer
+                          text={content.content}
+                          fontSize="13px"
+                          textColor="#6b7280"
+                          lineHeight="1.5"
+                          className="tool-content"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
@@ -169,6 +210,7 @@ const Chat = () => {
                       ref={responseScrollRef}
                       className="w-full max-h-52 overflow-auto"
                       forceVisible="y"
+                      autoHide={false}
                     >
                       <div className="px-4 pt-2">
                         <MDRenderer
