@@ -18,7 +18,7 @@ type ModelOption = {
 
 const MODEL_OPTIONS: ModelOption[] = [
   {
-    id: "Qwen/Qwen3-30B-A3B-Thinking-2507",
+    id: "Qwen/Qwen3-30B-A3B-Instruct-2507",
     name: "Qwen3 30B Thinking",
     description: "高性能推理模型，擅长复杂思考",
   },
@@ -128,22 +128,24 @@ const Sender = (props: SenderProps) => {
                 <ModelDescription>{selectedModel.description}</ModelDescription>
               </ModelDetails>
             </CurrentModelInfo>
-            
+
             <CompactModelSelector ref={modelSelectorRef}>
               <ModelButton
                 onClick={() => setShowModelSelector(!showModelSelector)}
                 $isOpen={showModelSelector}
               >
                 切换模型
-                <AiOutlineDown 
-                  size={12} 
+                <AiOutlineDown
+                  size={12}
                   style={{
-                    transform: showModelSelector ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} 
+                    transform: showModelSelector
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s ease",
+                  }}
                 />
               </ModelButton>
-              
+
               {showModelSelector && (
                 <CompactDropdown>
                   {MODEL_OPTIONS.map((model) => (
@@ -187,7 +189,7 @@ const Sender = (props: SenderProps) => {
           >
             <MdSettings size={16} />
           </ConfigButton>
-          
+
           {loading ? (
             <ActionButton
               onClick={handleCancel}
@@ -250,7 +252,7 @@ const SenderContainer = styled.div`
 const ModelConfigRow = styled.div`
   margin-bottom: 12px;
   animation: slideDown 0.3s ease-out;
-  
+
   @keyframes slideDown {
     from {
       opacity: 0;
@@ -331,7 +333,9 @@ const ModelButton = styled.button<{ $isOpen: boolean }>`
     color: #334155;
   }
 
-  ${props => props.$isOpen && `
+  ${(props) =>
+    props.$isOpen &&
+    `
     background: rgba(59, 130, 246, 0.2);
     border-color: rgba(59, 130, 246, 0.4);
     color: #1e293b;
@@ -372,10 +376,8 @@ const CompactOption = styled.button<{ $isSelected: boolean }>`
   gap: 8px;
   padding: 8px 12px;
   border: none;
-  background: ${props => props.$isSelected 
-    ? 'rgba(59, 130, 246, 0.1)'
-    : 'transparent'
-  };
+  background: ${(props) =>
+    props.$isSelected ? "rgba(59, 130, 246, 0.1)" : "transparent"};
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 0.8rem;
@@ -471,21 +473,20 @@ const ConfigButton = styled.button<{ $isActive: boolean }>`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: ${props => props.$isActive 
-    ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-    : 'rgba(59, 130, 246, 0.1)'
-  };
-  color: ${props => props.$isActive ? 'white' : '#475569'};
-  border: 1px solid ${props => props.$isActive 
-    ? 'rgba(59, 130, 246, 0.3)'
-    : 'rgba(59, 130, 246, 0.2)'
-  };
+  background: ${(props) =>
+    props.$isActive
+      ? "linear-gradient(135deg, #3b82f6, #1d4ed8)"
+      : "rgba(59, 130, 246, 0.1)"};
+  color: ${(props) => (props.$isActive ? "white" : "#475569")};
+  border: 1px solid
+    ${(props) =>
+      props.$isActive ? "rgba(59, 130, 246, 0.3)" : "rgba(59, 130, 246, 0.2)"};
 
   &:hover {
-    background: ${props => props.$isActive 
-      ? 'linear-gradient(135deg, #1d4ed8, #1e40af)'
-      : 'rgba(59, 130, 246, 0.15)'
-    };
+    background: ${(props) =>
+      props.$isActive
+        ? "linear-gradient(135deg, #1d4ed8, #1e40af)"
+        : "rgba(59, 130, 246, 0.15)"};
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
   }

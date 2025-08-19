@@ -78,7 +78,7 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
         height: "100%",
         overflow: "auto",
       }}
-      forceVisible="y"
+      autoHide={false}
       onScroll={onInternalScroll}
       onScrollCapture={onInternalScroll}
     >

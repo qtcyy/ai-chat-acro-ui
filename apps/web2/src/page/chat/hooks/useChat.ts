@@ -50,6 +50,13 @@ export const useChat = (props: UseChatProps) => {
           return [...newMessages, newResponseMessage];
         });
       }
+      // 没有内容鉴定为工具调用挂起chunk
+      if (
+        !messageChunk.content &&
+        !messageChunk.additional_kwargs.reasoning_content
+      ) {
+        return;
+      }
       messageChunk.isProcessing = true;
       if (
         (messageChunk.type === "AIMessageChunk" &&
@@ -91,14 +98,10 @@ export const useChat = (props: UseChatProps) => {
             const newMessages = [...currentMessages];
             newMessages[newMessages.length - 1] = newMessage;
             return newMessages;
+          } else if (chunkType === "tool") {
+            return [...currentMessages, messageChunk];
           } else {
-            const newMessage: MessageType = {
-              ...messageChunk,
-              type: "tool",
-            };
-            const newMessages = [...currentMessages];
-            newMessages[newMessages.length - 1] = newMessage;
-            return newMessages;
+            return currentMessages;
           }
         } else {
           console.log(`add a new message with type: ${chunkType}`);
