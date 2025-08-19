@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { HttpLoading, useHttp } from "utils";
 import { MessageList, RenderersType } from "../renderer/MessageList";
@@ -11,6 +11,12 @@ import SimpleBar from "simplebar-react";
 import SimpleBarCore from "simplebar-core";
 import { ChatType, LocalStorageKey, useHistory } from "../hooks/useHistory";
 import { useAutoRename } from "../utils/AutoRename";
+import { Dropdown } from "antd";
+import type { MenuProps } from "antd";
+import { AiOutlineEdit, AiFillDelete, AiOutlineMore } from "react-icons/ai";
+import NiceModal from "@ebay/nice-modal-react";
+import RenameModal from "../modal/RenameModal";
+import { DeleteChatModal } from "../modal/DeleteChatModal";
 
 const ROLE = {
   start: "start",
@@ -40,12 +46,13 @@ export type MessageType = {
 
 const Chat = () => {
   const chatId = useParams().chatId;
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<MessageType[]>([]);
   const chats = JSON.parse(
     localStorage.getItem(LocalStorageKey) ?? ""
   ) as ChatType[];
   const chatItem = chats.find((chat) => chat.id === chatId);
-  const { renameChat } = useHistory();
+  const { renameChat, deleteChat } = useHistory();
 
   const [title, setTitle] = useState(chatItem?.title ?? "");
   const { getName } = useAutoRename({
@@ -54,6 +61,37 @@ const Chat = () => {
 
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
+
+  const handleRename = () => {
+    if (!chatId) return;
+    NiceModal.show(RenameModal, { id: chatId.toString() });
+  };
+
+  const handleDelete = () => {
+    if (!chatId) return;
+    NiceModal.show(DeleteChatModal, { id: chatId.toString() }).then((result) => {
+      if (result) {
+        // 删除成功后跳转到聊天历史页面
+        navigate('/chat/history');
+      }
+    });
+  };
+
+  const getMenuItems = (): MenuProps["items"] => [
+    {
+      key: "rename",
+      label: "重命名",
+      icon: <AiOutlineEdit />,
+      onClick: handleRename,
+    },
+    {
+      key: "delete",
+      label: "删除对话",
+      icon: <AiFillDelete />,
+      danger: true,
+      onClick: handleDelete,
+    },
+  ];
 
   const { ask, streamLoading, cancel } = useChat({
     chatId: chatId ?? v4(),
@@ -263,6 +301,16 @@ const Chat = () => {
         <HeaderContent>
           <ChatIcon>💬</ChatIcon>
           <ChatTitle>{chatItem?.title || "新对话"}</ChatTitle>
+          <Dropdown
+            menu={{ items: getMenuItems() }}
+            trigger={["click"]}
+            placement="bottomRight"
+            overlayStyle={{ minWidth: '120px' }}
+          >
+            <DropdownButton>
+              <AiOutlineMore size={16} />
+            </DropdownButton>
+          </Dropdown>
         </HeaderContent>
       </HeaderContainer>
 
@@ -420,24 +468,6 @@ const ChatTitle = styled.h1`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.025em;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    border-radius: 1px;
-    transition: width 0.3s ease;
-  }
-
-  &:hover::after {
-    width: 100%;
-  }
 
   @media (max-width: 768px) {
     font-size: 18px;
@@ -445,6 +475,36 @@ const ChatTitle = styled.h1`
 
   @media (max-width: 480px) {
     font-size: 16px;
+  }
+`;
+
+const DropdownButton = styled.button`
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(31, 38, 135, 0.1);
+
+  &:hover {
+    color: #475569;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(31, 38, 135, 0.1);
   }
 `;
 
