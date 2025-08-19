@@ -99,7 +99,9 @@ export const useChat = (props: UseChatProps) => {
             newMessages[newMessages.length - 1] = newMessage;
             return newMessages;
           } else if (chunkType === "tool") {
-            return [...currentMessages, messageChunk];
+            const newMessages = [...currentMessages];
+            newMessages[newMessages.length - 1].isProcessing = false;
+            return [...newMessages, messageChunk];
           } else {
             return currentMessages;
           }
