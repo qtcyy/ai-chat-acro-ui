@@ -85,8 +85,8 @@ const Sender = (props: SenderProps) => {
       if (e.shiftKey) {
         // Shift+Enter 换行
         return;
-      } else {
-        // Enter 发送
+      } else if (!e.nativeEvent.isComposing) {
+        // Enter 发送 (仅在非输入法状态下)
         e.preventDefault();
         handleSend();
       }
