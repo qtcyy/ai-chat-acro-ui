@@ -33,7 +33,7 @@ const ChatHistory = () => {
       setSelectSet((pre) => {
         const newSet = pre;
         newSet?.clear();
-        return newSet;
+        return new Set(newSet);
       });
     }
   }, [onSelect]);
