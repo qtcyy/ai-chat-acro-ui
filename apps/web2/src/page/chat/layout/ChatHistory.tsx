@@ -15,7 +15,10 @@ import {
 import { Checkbox, Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import RenameModal from "../modal/RenameModal";
-import { DeleteChatModal, DeleteChatBatchModal } from "../modal/DeleteChatModal";
+import {
+  DeleteChatModal,
+  DeleteChatBatchModal,
+} from "../modal/DeleteChatModal";
 import { useEffect, useState } from "react";
 
 const ChatHistory = () => {
@@ -107,7 +110,7 @@ const ChatHistory = () => {
         <HeaderIcon>📚</HeaderIcon>
         <HeaderTitle>对话历史</HeaderTitle>
         <DeleteBatchButton
-          $visible={!!(selectSet?.size)}
+          $visible={!!selectSet?.size}
           onClick={handleDeleteBatch}
         >
           <AiFillDelete size={14} />
@@ -139,7 +142,9 @@ const ChatHistory = () => {
             {chats.map((chat, index) => (
               <ListWrapper
                 key={chat.id.toString()}
-                onClick={() => handleClick(chat.id)}
+                onClick={() => {
+                  onSelect ? handleSelect(chat.id) : handleClick(chat.id);
+                }}
                 $index={index}
                 $selectMode={onSelect}
               >
@@ -211,9 +216,15 @@ const HeaderSection = styled.div`
   }
 
   /* 为每个按钮添加递增的延迟 */
-  > button:nth-child(3) { animation-delay: 0.1s; }
-  > button:nth-child(4) { animation-delay: 0.2s; }
-  > button:nth-child(5) { animation-delay: 0.3s; }
+  > button:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  > button:nth-child(4) {
+    animation-delay: 0.2s;
+  }
+  > button:nth-child(5) {
+    animation-delay: 0.3s;
+  }
 
   @keyframes buttonSlideIn {
     from {
@@ -257,18 +268,20 @@ const DeleteBatchButton = styled.button<{ $visible: boolean }>`
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3);
-  opacity: ${props => props.$visible ? 1 : 0};
-  visibility: ${props => props.$visible ? 'visible' : 'hidden'};
-  transform: ${props => props.$visible ? 'scale(1)' : 'scale(0.9)'};
+  opacity: ${(props) => (props.$visible ? 1 : 0)};
+  visibility: ${(props) => (props.$visible ? "visible" : "hidden")};
+  transform: ${(props) => (props.$visible ? "scale(1)" : "scale(0.9)")};
 
   &:hover {
-    transform: translateY(-1px) ${props => props.$visible ? 'scale(1.02)' : 'scale(0.9)'};
+    transform: translateY(-1px)
+      ${(props) => (props.$visible ? "scale(1.02)" : "scale(0.9)")};
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
     background: linear-gradient(135deg, #b91c1c, #991b1b);
   }
 
   &:active {
-    transform: translateY(0) ${props => props.$visible ? 'scale(1)' : 'scale(0.9)'};
+    transform: translateY(0)
+      ${(props) => (props.$visible ? "scale(1)" : "scale(0.9)")};
   }
 `;
 
@@ -277,39 +290,36 @@ const SelectToggleButton = styled.button<{ $isActive: boolean }>`
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: ${props => props.$isActive 
-    ? 'linear-gradient(135deg, #059669, #047857)' 
-    : 'rgba(59, 130, 246, 0.1)'
-  };
-  color: ${props => props.$isActive ? 'white' : '#475569'};
-  border: 1px solid ${props => props.$isActive 
-    ? 'rgba(5, 150, 105, 0.3)' 
-    : 'rgba(59, 130, 246, 0.2)'
-  };
+  background: ${(props) =>
+    props.$isActive
+      ? "linear-gradient(135deg, #059669, #047857)"
+      : "rgba(59, 130, 246, 0.1)"};
+  color: ${(props) => (props.$isActive ? "white" : "#475569")};
+  border: 1px solid
+    ${(props) =>
+      props.$isActive ? "rgba(5, 150, 105, 0.3)" : "rgba(59, 130, 246, 0.2)"};
   border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: ${props => props.$isActive 
-    ? '0 3px 10px rgba(5, 150, 105, 0.3)' 
-    : '0 2px 6px rgba(59, 130, 246, 0.15)'
-  };
+  box-shadow: ${(props) =>
+    props.$isActive
+      ? "0 3px 10px rgba(5, 150, 105, 0.3)"
+      : "0 2px 6px rgba(59, 130, 246, 0.15)"};
 
   &:hover {
     transform: translateY(-1px);
-    background: ${props => props.$isActive 
-      ? 'linear-gradient(135deg, #047857, #065f46)' 
-      : 'rgba(59, 130, 246, 0.15)'
-    };
-    border-color: ${props => props.$isActive 
-      ? 'rgba(5, 150, 105, 0.4)' 
-      : 'rgba(59, 130, 246, 0.3)'
-    };
-    box-shadow: ${props => props.$isActive 
-      ? '0 4px 12px rgba(5, 150, 105, 0.4)' 
-      : '0 4px 10px rgba(59, 130, 246, 0.2)'
-    };
+    background: ${(props) =>
+      props.$isActive
+        ? "linear-gradient(135deg, #047857, #065f46)"
+        : "rgba(59, 130, 246, 0.15)"};
+    border-color: ${(props) =>
+      props.$isActive ? "rgba(5, 150, 105, 0.4)" : "rgba(59, 130, 246, 0.3)"};
+    box-shadow: ${(props) =>
+      props.$isActive
+        ? "0 4px 12px rgba(5, 150, 105, 0.4)"
+        : "0 4px 10px rgba(59, 130, 246, 0.2)"};
   }
 
   &:active {
@@ -417,32 +427,36 @@ const ListContainer = styled.ul<{ $selectMode: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transform: ${props => props.$selectMode ? 'translateX(8px)' : 'translateX(0)'};
+  transform: ${(props) =>
+    props.$selectMode ? "translateX(8px)" : "translateX(0)"};
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 `;
 
 const CheckboxContainer = styled.div<{ $visible: boolean }>`
-  width: ${props => props.$visible ? '32px' : '0px'};
-  opacity: ${props => props.$visible ? 1 : 0};
+  width: ${(props) => (props.$visible ? "32px" : "0px")};
+  opacity: ${(props) => (props.$visible ? 1 : 0)};
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: ${props => props.$visible ? 'translateX(0)' : 'translateX(-10px)'};
+  transform: ${(props) =>
+    props.$visible ? "translateX(0)" : "translateX(-10px)"};
   display: flex;
   align-items: center;
   justify-content: center;
 
   .ant-checkbox-wrapper {
     transition: all 0.2s ease;
-    transform: ${props => props.$visible ? 'scale(1)' : 'scale(0.8)'};
+    transform: ${(props) => (props.$visible ? "scale(1)" : "scale(0.8)")};
   }
 
   .ant-checkbox {
-    transform: ${props => props.$visible ? 'rotate(0deg)' : 'rotate(-15deg)'};
+    transform: ${(props) =>
+      props.$visible ? "rotate(0deg)" : "rotate(-15deg)"};
     transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .ant-checkbox-checked .ant-checkbox-inner {
-    animation: ${props => props.$visible ? 'checkboxPulse 0.4s ease-out' : 'none'};
+    animation: ${(props) =>
+      props.$visible ? "checkboxPulse 0.4s ease-out" : "none"};
   }
 
   @keyframes checkboxPulse {
@@ -469,7 +483,7 @@ const ListWrapper = styled.li<{ $index: number; $selectMode: boolean }>`
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transition-delay: ${props => props.$selectMode ? '0.1s' : '0s'};
+  transition-delay: ${(props) => (props.$selectMode ? "0.1s" : "0s")};
   position: relative;
   overflow: hidden;
   animation: slideInUp 0.4s ease-out;
