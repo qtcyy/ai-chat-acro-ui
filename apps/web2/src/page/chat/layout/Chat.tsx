@@ -292,51 +292,159 @@ const HeaderContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60px !important;
-  min-height: 60px;
-  max-height: 60px;
+  height: 70px !important;
+  min-height: 70px;
+  max-height: 70px;
   width: 100%;
-  z-index: 10;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.15),
+    0 2px 8px rgba(31, 38, 135, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+
+  /* 添加渐变装饰 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(99, 102, 241, 0.3) 20%, 
+      rgba(139, 92, 246, 0.3) 50%, 
+      rgba(99, 102, 241, 0.3) 80%, 
+      transparent 100%
+    );
+  }
+
+  /* 添加底部光影 */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(99, 102, 241, 0.2) 50%, 
+      transparent 100%
+    );
+  }
 `;
 
 const HeaderContent = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 20px;
-  max-width: 800px;
+  gap: 16px;
+  padding: 0 24px;
+  max-width: 900px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 `;
 
 const ChatIcon = styled.div`
-  font-size: 24px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  position: relative;
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.3),
+    0 2px 4px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 14px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 
+      0 8px 20px rgba(102, 126, 234, 0.4),
+      0 4px 8px rgba(102, 126, 234, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+    &::after {
+      opacity: 0.6;
+    }
+  }
 `;
 
 const ChatTitle = styled.h1`
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
+  color: #1a202c;
+  font-size: 20px;
+  font-weight: 700;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   text-align: center;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.025em;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 1px;
+    transition: width 0.3s ease;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
 
   @media (max-width: 768px) {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   @media (max-width: 480px) {
-    font-size: 14px;
+    font-size: 16px;
   }
 `;
 
