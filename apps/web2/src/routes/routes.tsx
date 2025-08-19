@@ -5,6 +5,7 @@ import ChatLayout from "../page/chat/layout/ChatLayout";
 import { ChatHome } from "../page/chat/layout/ChatHome";
 import { Chat } from "../page/chat/layout/Chat";
 import { ChatHistory } from "../page/chat/layout/ChatHistory";
+import { NotFound } from "../page/error/NotFound";
 
 export const routes: RouteObject[] = [
   {
@@ -34,5 +35,9 @@ export const routes: RouteObject[] = [
         element: <Chat />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ];

@@ -69,6 +69,14 @@ Rsbuild           // 现代化构建工具
 - **动画效果**: 丰富的过渡动画和交互反馈，提升用户体验
 - **智能交互**: 选择模式下改变点击行为，正常模式下恢复导航功能
 
+### 🚫 404错误页面
+- **智能路由捕获**: 自动捕获所有无效的顶级路由
+- **专业视觉设计**: 渐变背景、玻璃拟态效果、动画过渡
+- **智能导航**: "返回首页"和"返回上页"按钮，智能处理无历史记录情况
+- **错误追踪**: 详细的控制台日志记录，包含完整路由信息和时间戳
+- **响应式设计**: 完美适配桌面端和移动端设备
+- **用户体验**: 友好的错误提示和流畅的交互动画
+
 ```typescript
 // 批量删除功能的核心实现
 const ChatHistory = () => {
@@ -112,6 +120,76 @@ const ChatHistory = () => {
 - **条件渲染** - 根据选择模式动态显示UI元素
 - **事件委托** - 智能的点击事件处理
 - **Modal系统** - 基于NiceModal的确认对话框
+
+### 🚫 404错误页面系统
+```typescript
+// NotFound.tsx - 404错误页面实现
+const NotFound: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 错误追踪和日志记录
+  React.useEffect(() => {
+    console.group("🔍 404 Page Not Found");
+    console.warn("Route not found:", location.pathname);
+    console.info("Full location:", {
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      state: location.state,
+    });
+    console.info("Current URL:", window.location.href);
+    console.info("Referrer:", document.referrer || "Direct access");
+    console.info("Timestamp:", new Date().toISOString());
+    console.groupEnd();
+  }, [location]);
+
+  // 智能导航处理
+  const handleGoBack = () => {
+    console.log("↩️ Going back from 404 page");
+    if (window.history.length > 1) {
+      navigate(-1);  // 有历史记录时回退
+    } else {
+      navigate("/"); // 无历史记录时返回首页
+    }
+  };
+
+  return (
+    <PageContainer>
+      <StyledResult
+        status="404"
+        title="404"
+        subTitle="抱歉，您访问的页面不存在"
+        extra={[
+          <ActionButton type="primary" onClick={() => navigate("/")}>
+            返回首页
+          </ActionButton>,
+          <ActionButton onClick={handleGoBack}>
+            返回上页
+          </ActionButton>
+        ]}
+      />
+    </PageContainer>
+  );
+};
+
+// 路由配置 - routes.tsx
+const routes: RouteObject[] = [
+  { path: "/", element: <HomePage /> },
+  { path: "/test", element: <TestHome /> },
+  { path: "/chat/*", element: <ChatLayout /> },
+  // 捕获所有未匹配的路由
+  { path: "*", element: <NotFound /> }
+];
+```
+
+**404页面技术特性**:
+- **智能路由捕获** - 使用React Router的通配符路由(`path: "*"`)
+- **详细错误日志** - 完整的路由信息、来源页面、时间戳记录
+- **智能导航回退** - 检测浏览历史长度，智能选择回退或首页跳转
+- **Ant Design Result** - 专业的错误展示组件，符合设计规范
+- **渐变动画设计** - 玻璃拟态效果、浮动动画、响应式布局
+- **控制台分组日志** - 便于开发调试的分组错误信息展示
 
 ### 🔄 RxJS响应式编程
 ```typescript
@@ -244,6 +322,8 @@ src/
 │   │   │   └── RenameModal.tsx     # 重命名对话弹窗
 │   │   ├── Sender/         # 消息发送器
 │   │   └── types/          # 类型定义
+│   ├── error/              # 错误页面模块
+│   │   └── NotFound.tsx    # 404错误页面(路由捕获、错误追踪)
 │   ├── home/               # 首页模块
 │   └── sider/              # 侧边栏组件
 ├── routes/                 # 路由配置
@@ -560,6 +640,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **📱 现代化ChatHome**: 重新设计的首页，包含特性介绍和动画效果
 - **🎨 MDRenderer增强**: 支持fontSize、textColor、lineHeight等自定义参数
 - **🗂️ 批量删除功能**: 聊天历史支持多选和批量删除，包含确认模态框和动画效果
+- **🚫 404错误页面**: 完整的错误路由处理，包含智能导航和错误追踪功能
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
