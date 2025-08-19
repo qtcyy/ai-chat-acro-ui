@@ -61,6 +61,58 @@ Rsbuild           // 现代化构建工具
 - **美观设计**: 渐变背景、glassmorphism效果
 - **响应式布局**: 适配不同屏幕尺寸的标题显示
 
+### 🗂️ 批量删除功能
+- **快速选择模式**: 一键切换选择/取消选择模式
+- **多选交互**: 复选框选择多个对话，支持整行点击选择
+- **批量删除确认**: 详细的删除确认模态框，显示即将删除的对话列表
+- **状态管理**: 使用Set数据结构优化选择状态管理，O(1)查找性能
+- **动画效果**: 丰富的过渡动画和交互反馈，提升用户体验
+- **智能交互**: 选择模式下改变点击行为，正常模式下恢复导航功能
+
+```typescript
+// 批量删除功能的核心实现
+const ChatHistory = () => {
+  const [onSelect, setOnSelect] = useState(false);
+  const [selectSet, setSelectSet] = useState<Set<UUIDTypes>>();
+
+  const handleSelect = (id: UUIDTypes) => {
+    const newSet = new Set(selectSet);
+    if (selectSet?.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectSet(newSet);
+  };
+
+  const handleDeleteBatch = () => {
+    if (selectSet && selectSet.size > 0) {
+      const idsArray = Array.from(selectSet);
+      NiceModal.show(DeleteChatBatchModal, { ids: idsArray });
+    }
+  };
+
+  return (
+    <ListWrapper
+      onClick={() => {
+        onSelect ? handleSelect(chat.id) : handleClick(chat.id);
+      }}
+    >
+      <CheckboxContainer $visible={onSelect}>
+        <Checkbox checked={selectSet?.has(chat.id)} />
+      </CheckboxContainer>
+      {/* 其他内容 */}
+    </ListWrapper>
+  );
+};
+```
+
+**技术特点**:
+- **Set数据结构** - 高性能的选择状态管理
+- **条件渲染** - 根据选择模式动态显示UI元素
+- **事件委托** - 智能的点击事件处理
+- **Modal系统** - 基于NiceModal的确认对话框
+
 ### 🔄 RxJS响应式编程
 ```typescript
 // HTTP请求的响应式处理
@@ -188,7 +240,7 @@ src/
 │   │   │   ├── useChat.ts  # 聊天逻辑(流式响应、状态管理)
 │   │   │   └── useHistory.tsx # 历史管理(CRUD操作)
 │   │   ├── modal/          # 对话框组件
-│   │   │   ├── DeleteChatModal.tsx # 删除对话确认弹窗
+│   │   │   ├── DeleteChatModal.tsx # 删除对话确认弹窗(单个+批量)
 │   │   │   └── RenameModal.tsx     # 重命名对话弹窗
 │   │   ├── Sender/         # 消息发送器
 │   │   └── types/          # 类型定义
@@ -503,16 +555,20 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 
 ### ✨ 新增功能
 - **🧠 AI思考过程可视化**: thinking内容智能展开/折叠，支持自定义渲染样式
-- **🛠️ 工具调用状态管理**: 实时显示Tool Calling/Called状态
+- **🛠️ 工具调用状态管理**: 实时显示Tool Calling/Called状态，支持工具调用内容展示
 - **💬 对话标题显示**: 页面顶部美观的对话标题栏，支持渐变背景
 - **📱 现代化ChatHome**: 重新设计的首页，包含特性介绍和动画效果
 - **🎨 MDRenderer增强**: 支持fontSize、textColor、lineHeight等自定义参数
+- **🗂️ 批量删除功能**: 聊天历史支持多选和批量删除，包含确认模态框和动画效果
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
 - **isProcessing字段**: 新增消息处理状态追踪
 - **智能UI响应**: thinking栏根据处理状态自动展开/折叠
 - **样式系统完善**: 更好的响应式设计和视觉效果
+- **批量操作性能**: 使用Set数据结构优化多选性能，避免O(n)查找
+- **交互逻辑优化**: 条件点击行为，选择模式与导航模式智能切换
+- **动画系统重构**: 统一的过渡动画和微交互，提升用户体验
 
 ---
 
