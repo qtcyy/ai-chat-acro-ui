@@ -200,6 +200,9 @@ const ChatHistoryContainer = styled.div`
 `;
 
 const HeaderSection = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   padding: 24px;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
