@@ -215,17 +215,19 @@ const HeaderSection = styled.div`
 
   /* 为所有按钮添加统一的进入动画 */
   > button {
-    animation: buttonSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: buttonSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-fill-mode: both;
+    opacity: 0;
   }
 
-  /* 为每个按钮添加递增的延迟 */
-  > button:nth-child(3) {
+  /* 为每个按钮添加正确的递增延迟 */
+  > button:nth-child(3) { /* DeleteBatchButton */
     animation-delay: 0.1s;
   }
-  > button:nth-child(4) {
+  > button:nth-child(4) { /* SelectToggleButton */
     animation-delay: 0.2s;
   }
-  > button:nth-child(5) {
+  > button:nth-child(5) { /* CreateButton */
     animation-delay: 0.3s;
   }
 

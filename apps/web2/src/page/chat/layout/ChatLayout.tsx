@@ -84,6 +84,8 @@ const SiderWrapper = styled.div`
   flex-direction: column;
   position: relative;
   backdrop-filter: blur(8px);
+  /* Ensure sidebar appears above main content */
+  z-index: 1001;
 
   /* 添加细微的内阴影 */
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.5),
@@ -195,7 +197,8 @@ const Tooltip = styled.div`
   transform: translateX(-8px);
   transition: all 0.2s ease;
   backdrop-filter: blur(8px);
-  z-index: 1000;
+  /* Ensure sidebar tooltips appear above all content */
+  z-index: 9999;
 
   &:before {
     content: "";
@@ -245,6 +248,8 @@ const ContentWrapper = styled.div`
   width: calc(100vw - 72px);
   /* height: 100vh; */
   /* overflow: hidden; */
+  /* Main content z-index */
+  z-index: 1000;
 `;
 
 const LayoutContainer = styled.div`

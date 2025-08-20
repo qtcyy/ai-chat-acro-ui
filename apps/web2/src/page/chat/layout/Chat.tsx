@@ -11,9 +11,17 @@ import SimpleBar from "simplebar-react";
 import SimpleBarCore from "simplebar-core";
 import { ChatType, LocalStorageKey, useHistory } from "../hooks/useHistory";
 import { useAutoRename } from "../utils/AutoRename";
+import { useDebounceFn } from "ahooks";
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
-import { AiOutlineEdit, AiFillDelete, AiOutlineMore } from "react-icons/ai";
+import {
+  AiOutlineEdit,
+  AiFillDelete,
+  AiOutlineMore,
+  AiOutlineCopy,
+  AiOutlineShareAlt,
+} from "react-icons/ai";
+import { motion } from "motion/react";
 import NiceModal from "@ebay/nice-modal-react";
 import RenameModal from "../modal/RenameModal";
 import { DeleteChatModal } from "../modal/DeleteChatModal";
@@ -44,6 +52,48 @@ export type MessageType = {
   isProcessing?: boolean;
 };
 
+interface MessageToolbarProps {
+  messageId: string;
+  onCopy?: (messageId: string) => void;
+  onEdit?: (messageId: string) => void;
+  onShare?: (messageId: string) => void;
+}
+
+const MessageToolbar: React.FC<MessageToolbarProps> = ({
+  messageId,
+  onCopy,
+  onEdit,
+  onShare,
+}) => {
+  const handleCopy = () => onCopy?.(messageId);
+  const handleEdit = () => onEdit?.(messageId);
+  const handleShare = () => onShare?.(messageId);
+
+  return (
+    <motion.div
+      className="ml-auto"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.3,
+        ease: [0.4, 0.0, 0.2, 1],
+      }}
+    >
+      <ToolbarContainer>
+        <ToolbarButton onClick={handleCopy} title="复制内容">
+          <AiOutlineCopy size={16} />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleEdit} title="编辑消息">
+          <AiOutlineEdit size={16} />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleShare} title="分享消息">
+          <AiOutlineShareAlt size={16} />
+        </ToolbarButton>
+      </ToolbarContainer>
+    </motion.div>
+  );
+};
+
 const Chat = () => {
   const chatId = useParams().chatId;
   const navigate = useNavigate();
@@ -69,12 +119,14 @@ const Chat = () => {
 
   const handleDelete = () => {
     if (!chatId) return;
-    NiceModal.show(DeleteChatModal, { id: chatId.toString() }).then((result) => {
-      if (result) {
-        // 删除成功后跳转到聊天历史页面
-        navigate('/chat/history');
+    NiceModal.show(DeleteChatModal, { id: chatId.toString() }).then(
+      (result) => {
+        if (result) {
+          // 删除成功后跳转到聊天历史页面
+          navigate("/chat/history");
+        }
       }
-    });
+    );
   };
 
   const getMenuItems = (): MenuProps["items"] => [
@@ -121,7 +173,41 @@ const Chat = () => {
       ?.get<MessageType[]>(`http://localhost:8000/chat/history/${chatId}`)
       .pipe(loadingOperator)
       .subscribe({
-        next: (data) => setMessages(data),
+        next: (data) => {
+          setMessages(
+            data.map((message) => {
+              if (message.type !== "ai") {
+                return message;
+              } else {
+                let newContent = message.content.replace(
+                  /\\\((.*?)\\\)/g,
+                  "$$$1$$"
+                );
+                newContent = newContent.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+                newContent = newContent.replaceAll("\\[", "$$");
+                newContent = newContent.replaceAll("\\]", "$$");
+
+                let newReason =
+                  message.additional_kwargs.reasoning_content?.replace(
+                    /\\\((.*?)\\\)/g,
+                    "$$$1$$"
+                  );
+                newReason = newReason?.replace(/\\\[(.*?)\\\]/g, "$$$$$1$$$$");
+                newReason = newReason?.replaceAll("\\[", "$$");
+                newReason = newReason?.replaceAll("\\]", "$$");
+
+                return {
+                  ...message,
+                  content: newContent,
+                  additional_kwargs: {
+                    ...message.additional_kwargs,
+                    reasoning_content: newReason,
+                  },
+                };
+              }
+            })
+          );
+        },
         error: (error) => console.error(`Error loading messages: ${error}`),
       });
   }, [chatId]);
@@ -141,17 +227,43 @@ const Chat = () => {
       render: (content, id) => {
         const reasoningContent = content.additional_kwargs.reasoning_content;
         const [foldThink, setFoldThink] = useState(true);
+        const [scrollReachEnd, setScrollReachEnd] = useState(true);
 
         const responseScrollRef = useRef<SimpleBarCore | null>(null);
+        const TOLERANCE = 1;
+
+        const onInternalScroll = () => {
+          const e = responseScrollRef.current?.getScrollElement();
+          if (e) {
+            setScrollReachEnd(
+              e.scrollHeight - Math.abs(e.scrollTop) - e.clientHeight <=
+                TOLERANCE
+            );
+          }
+        };
+
+        // 防抖的滚动监听函数，避免频繁更新状态
+        const { run: debouncedInternalScroll } = useDebounceFn(
+          onInternalScroll,
+          {
+            wait: 50,
+          }
+        );
 
         const scrollButton = () => {
           const target = responseScrollRef.current?.getScrollElement();
           if (target) {
             target.scrollTo({
               top: target.scrollHeight,
+              behavior: "smooth",
             });
           }
         };
+
+        // 防抖的滚动函数，防止频繁调用导致卡顿
+        const { run: debouncedScrollToBottom } = useDebounceFn(scrollButton, {
+          wait: 100,
+        });
 
         useEffect(() => {
           // 处理中时展开，处理结束时折叠
@@ -159,8 +271,15 @@ const Chat = () => {
         }, [content.isProcessing]);
 
         useEffect(() => {
-          scrollButton();
-        }, [content.additional_kwargs.reasoning_content]);
+          // 只有当用户在底部时才自动滚动，使用防抖函数避免卡顿
+          if (scrollReachEnd && reasoningContent) {
+            debouncedScrollToBottom();
+          }
+        }, [
+          content.additional_kwargs.reasoning_content,
+          scrollReachEnd,
+          debouncedScrollToBottom,
+        ]);
 
         if (content.type === "tool") {
           const [foldTool, setFoldTool] = useState(true);
@@ -249,6 +368,8 @@ const Chat = () => {
                       className="w-full max-h-52 overflow-auto"
                       forceVisible="y"
                       autoHide={false}
+                      onScroll={debouncedInternalScroll}
+                      onScrollCapture={debouncedInternalScroll}
                     >
                       <div className="px-4 pt-2">
                         <MDRenderer
@@ -266,16 +387,42 @@ const Chat = () => {
             )}
 
             {content.content.trim() && (
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
-                <MDRenderer
-                  text={content.content}
-                  fontSize="15px"
-                  textColor="#374151"
-                  lineHeight="1.7"
-                  className="main-content"
-                />
+              <div className="flex flex-col">
+                <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                  <MDRenderer
+                    text={content.content}
+                    fontSize="15px"
+                    textColor="#374151"
+                    lineHeight="1.7"
+                    className="main-content"
+                  />
+                </div>
+
+                {/* Add MessageToolbar for completed messages */}
+                {content.response_metadata.finish_reason === "stop" && (
+                  <MessageToolbar
+                    messageId={content.id}
+                    onCopy={(id) => {
+                      // Placeholder for copy functionality
+                      console.log("Copy message:", id);
+                    }}
+                    onEdit={(id) => {
+                      // Placeholder for edit functionality
+                      console.log("Edit message:", id);
+                    }}
+                    onShare={(id) => {
+                      // Placeholder for share functionality
+                      console.log("Share message:", id);
+                    }}
+                  />
+                )}
               </div>
             )}
+
+            {/**最后一条停止信息 */}
+            {/* {content.response_metadata.finish_reason === "stop" && (
+              <div className="ml-auto">结束符</div>
+            )} */}
           </div>
         );
       },
@@ -305,7 +452,7 @@ const Chat = () => {
             menu={{ items: getMenuItems() }}
             trigger={["click"]}
             placement="bottomRight"
-            overlayStyle={{ minWidth: '120px' }}
+            overlayStyle={{ minWidth: "120px" }}
           >
             <DropdownButton>
               <AiOutlineMore size={16} />
@@ -349,10 +496,8 @@ const HeaderContainer = styled.div`
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 
-    0 8px 32px rgba(31, 38, 135, 0.15),
-    0 2px 8px rgba(31, 38, 135, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
+    0 2px 8px rgba(31, 38, 135, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
   box-sizing: border-box;
   position: relative;
@@ -360,33 +505,35 @@ const HeaderContainer = styled.div`
 
   /* 添加渐变装饰 */
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(99, 102, 241, 0.3) 20%, 
-      rgba(139, 92, 246, 0.3) 50%, 
-      rgba(99, 102, 241, 0.3) 80%, 
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(99, 102, 241, 0.3) 20%,
+      rgba(139, 92, 246, 0.3) 50%,
+      rgba(99, 102, 241, 0.3) 80%,
       transparent 100%
     );
   }
 
   /* 添加底部光影 */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 60%;
     height: 1px;
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(99, 102, 241, 0.2) 50%, 
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(99, 102, 241, 0.2) 50%,
       transparent 100%
     );
   }
@@ -414,23 +561,25 @@ const ChatIcon = styled.div`
   font-size: 20px;
   color: white;
   position: relative;
-  box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.3),
-    0 2px 4px rgba(102, 126, 234, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3),
+    0 2px 4px rgba(102, 126, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
     border-radius: 12px;
     pointer-events: none;
   }
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -442,10 +591,8 @@ const ChatIcon = styled.div`
 
   &:hover {
     transform: translateY(-1px) scale(1.05);
-    box-shadow: 
-      0 8px 20px rgba(102, 126, 234, 0.4),
-      0 4px 8px rgba(102, 126, 234, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4),
+      0 4px 8px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 
     &::after {
       opacity: 0.6;
@@ -588,6 +735,92 @@ const ChatContainer = styled.div`
 
   @media (max-width: 480px) {
     min-width: 240px;
+  }
+`;
+
+const ToolbarContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-top: 8px;
+  background: rgba(249, 250, 251, 0.8);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  width: fit-content;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(243, 244, 246, 0.9);
+    border-color: rgba(209, 213, 219, 0.8);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (max-width: 768px) {
+    gap: 4px;
+    padding: 4px 6px;
+    margin-top: 6px;
+  }
+`;
+
+const ToolbarButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(107, 114, 128, 0.1);
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover {
+    color: #374151;
+    transform: translateY(-1px);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+
+    &::before {
+      background: rgba(107, 114, 128, 0.15);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    width: 24px;
+    height: 24px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
   }
 `;
 

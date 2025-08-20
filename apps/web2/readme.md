@@ -61,6 +61,49 @@ Rsbuild           // 现代化构建工具
 - **美观设计**: 渐变背景、glassmorphism效果
 - **响应式布局**: 适配不同屏幕尺寸的标题显示
 
+### ⚡ 消息交互工具栏
+- **操作工具栏**: AI消息下方显示复制、编辑、分享等操作按钮
+- **智能显示**: 仅在消息完成（非处理中）时显示工具栏
+- **滑入动画**: 使用motion库实现平滑的slide-up动画效果
+- **响应式设计**: 移动端自适应按钮尺寸和间距
+- **视觉优化**: Glass-morphism风格，与消息主题保持一致
+
+```typescript
+// 消息工具栏的核心实现
+const MessageToolbar: React.FC<MessageToolbarProps> = ({ 
+  messageId, 
+  onCopy, 
+  onEdit, 
+  onShare 
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+    >
+      <ToolbarContainer>
+        <ToolbarButton onClick={() => onCopy?.(messageId)} title="复制内容">
+          <AiOutlineCopy size={16} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => onEdit?.(messageId)} title="编辑消息">
+          <AiOutlineEdit size={16} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => onShare?.(messageId)} title="分享消息">
+          <AiOutlineShareAlt size={16} />
+        </ToolbarButton>
+      </ToolbarContainer>
+    </motion.div>
+  );
+};
+```
+
+**技术特点**:
+- **Motion动画库**: 流畅的进入动画和交互反馈
+- **TypeScript接口**: 完整的类型定义和可选回调
+- **Styled Components**: CSS-in-JS实现主题一致性
+- **16px图标**: 精心调整的图标和容器尺寸比例
+
 ### 🗂️ 批量删除功能
 - **快速选择模式**: 一键切换选择/取消选择模式
 - **多选交互**: 复选框选择多个对话，支持整行点击选择
@@ -68,6 +111,14 @@ Rsbuild           // 现代化构建工具
 - **状态管理**: 使用Set数据结构优化选择状态管理，O(1)查找性能
 - **动画效果**: 丰富的过渡动画和交互反馈，提升用户体验
 - **智能交互**: 选择模式下改变点击行为，正常模式下恢复导航功能
+
+### 🚫 404错误页面
+- **智能路由捕获**: 自动捕获所有无效的顶级路由
+- **专业视觉设计**: 渐变背景、玻璃拟态效果、动画过渡
+- **智能导航**: "返回首页"和"返回上页"按钮，智能处理无历史记录情况
+- **错误追踪**: 详细的控制台日志记录，包含完整路由信息和时间戳
+- **响应式设计**: 完美适配桌面端和移动端设备
+- **用户体验**: 友好的错误提示和流畅的交互动画
 
 ```typescript
 // 批量删除功能的核心实现
@@ -112,6 +163,76 @@ const ChatHistory = () => {
 - **条件渲染** - 根据选择模式动态显示UI元素
 - **事件委托** - 智能的点击事件处理
 - **Modal系统** - 基于NiceModal的确认对话框
+
+### 🚫 404错误页面系统
+```typescript
+// NotFound.tsx - 404错误页面实现
+const NotFound: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 错误追踪和日志记录
+  React.useEffect(() => {
+    console.group("🔍 404 Page Not Found");
+    console.warn("Route not found:", location.pathname);
+    console.info("Full location:", {
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      state: location.state,
+    });
+    console.info("Current URL:", window.location.href);
+    console.info("Referrer:", document.referrer || "Direct access");
+    console.info("Timestamp:", new Date().toISOString());
+    console.groupEnd();
+  }, [location]);
+
+  // 智能导航处理
+  const handleGoBack = () => {
+    console.log("↩️ Going back from 404 page");
+    if (window.history.length > 1) {
+      navigate(-1);  // 有历史记录时回退
+    } else {
+      navigate("/"); // 无历史记录时返回首页
+    }
+  };
+
+  return (
+    <PageContainer>
+      <StyledResult
+        status="404"
+        title="404"
+        subTitle="抱歉，您访问的页面不存在"
+        extra={[
+          <ActionButton type="primary" onClick={() => navigate("/")}>
+            返回首页
+          </ActionButton>,
+          <ActionButton onClick={handleGoBack}>
+            返回上页
+          </ActionButton>
+        ]}
+      />
+    </PageContainer>
+  );
+};
+
+// 路由配置 - routes.tsx
+const routes: RouteObject[] = [
+  { path: "/", element: <HomePage /> },
+  { path: "/test", element: <TestHome /> },
+  { path: "/chat/*", element: <ChatLayout /> },
+  // 捕获所有未匹配的路由
+  { path: "*", element: <NotFound /> }
+];
+```
+
+**404页面技术特性**:
+- **智能路由捕获** - 使用React Router的通配符路由(`path: "*"`)
+- **详细错误日志** - 完整的路由信息、来源页面、时间戳记录
+- **智能导航回退** - 检测浏览历史长度，智能选择回退或首页跳转
+- **Ant Design Result** - 专业的错误展示组件，符合设计规范
+- **渐变动画设计** - 玻璃拟态效果、浮动动画、响应式布局
+- **控制台分组日志** - 便于开发调试的分组错误信息展示
 
 ### 🔄 RxJS响应式编程
 ```typescript
@@ -244,6 +365,8 @@ src/
 │   │   │   └── RenameModal.tsx     # 重命名对话弹窗
 │   │   ├── Sender/         # 消息发送器
 │   │   └── types/          # 类型定义
+│   ├── error/              # 错误页面模块
+│   │   └── NotFound.tsx    # 404错误页面(路由捕获、错误追踪)
 │   ├── home/               # 首页模块
 │   └── sider/              # 侧边栏组件
 ├── routes/                 # 路由配置
@@ -551,7 +674,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **函数式编程** - 避免副作用，使用纯函数
 - **可观测性** - 添加充分的日志和监控
 
-## 🆕 最新更新 (2024)
+## 🆕 最新更新 (2024-2025)
 
 ### ✨ 新增功能
 - **🧠 AI思考过程可视化**: thinking内容智能展开/折叠，支持自定义渲染样式
@@ -560,6 +683,9 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **📱 现代化ChatHome**: 重新设计的首页，包含特性介绍和动画效果
 - **🎨 MDRenderer增强**: 支持fontSize、textColor、lineHeight等自定义参数
 - **🗂️ 批量删除功能**: 聊天历史支持多选和批量删除，包含确认模态框和动画效果
+- **🚫 404错误页面**: 完整的错误路由处理，包含智能导航和错误追踪功能
+- **⬆️ 悬浮滚动按钮**: Ant Design FloatButton实现，智能显示/隐藏，平滑滚动动画，响应式设计
+- **🔧 消息工具栏**: AI消息下方的操作工具栏，包含复制、编辑、分享按钮（UI已实现，含滑入动画）
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
@@ -569,6 +695,8 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **批量操作性能**: 使用Set数据结构优化多选性能，避免O(n)查找
 - **交互逻辑优化**: 条件点击行为，选择模式与导航模式智能切换
 - **动画系统重构**: 统一的过渡动画和微交互，提升用户体验
+- **按钮动画修复**: 优化ChatHistory页面顶栏按钮加载动画，解决动画时序问题
+- **组件尺寸优化**: 工具栏容器和按钮尺寸根据图标大小进行比例调整，提升视觉和谐度
 
 ---
 

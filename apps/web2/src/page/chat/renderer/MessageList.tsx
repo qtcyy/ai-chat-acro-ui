@@ -5,6 +5,8 @@ import { RoleType } from "../layout/Chat";
 import { useMergeData } from "./useMergeData";
 import SimpleBarCore from "simplebar-core";
 import SimpleBar from "simplebar-react";
+import { FloatButton } from "antd";
+import { VerticalAlignTopOutlined } from "@ant-design/icons";
 
 export type MessageListProps<T> = {
   messages: T[];
@@ -24,6 +26,7 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
   const { messages, renderer, autoScroll } = props;
   const [updateCount, setUpdateCount] = useState(0);
   const [scrollReachEnd, setScrollReachEnd] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const simpleBarRef = useRef<SimpleBarCore | null>(null);
 
   const { mergedData } = useMergeData({ messages, renderer });
@@ -31,9 +34,13 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
   const onInternalScroll = () => {
     const e = simpleBarRef.current?.getScrollElement();
     if (e) {
+      // Track if scroll has reached end
       setScrollReachEnd(
         e.scrollHeight - Math.abs(e.scrollTop) - e.clientHeight <= TOLERANCE
       );
+      
+      // Track scroll position for button visibility (show after 200px scroll down)
+      setShowScrollButton(e.scrollTop > 200);
     }
   };
 
@@ -68,59 +75,80 @@ export const MessageList = <T,>(props: MessageListProps<T>) => {
     }
   };
 
+  const scrollToTop = () => {
+    const e = simpleBarRef.current?.getScrollElement();
+    if (e) {
+      e.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <SimpleBar
-      ref={simpleBarRef}
-      className="flex-1"
-      style={{
-        width: "100%",
-        // height: "calc(100vh - 194px)",
-        height: "100%",
-        overflow: "auto",
-      }}
-      autoHide={false}
-      onScroll={onInternalScroll}
-      onScrollCapture={onInternalScroll}
-    >
-      <MessageRendererContext.Provider value={{ onUpdate }}>
-        <MessageListWrapper>
-          <MessageContainer>
-            {mergedData.length === 0 ? (
-              <EmptyState>
-                <EmptyIcon>💬</EmptyIcon>
-                <EmptyText>开始与AI对话吧</EmptyText>
-                <EmptySubtext>发送消息开启你的智能对话体验</EmptySubtext>
-              </EmptyState>
-            ) : (
-              <>
-                <MessageStartIndicator>
-                  <StartIcon>✨</StartIcon>
-                  <StartText>对话开始</StartText>
-                </MessageStartIndicator>
+    <>
+      <SimpleBar
+        ref={simpleBarRef}
+        className="flex-1"
+        style={{
+          width: "100%",
+          // height: "calc(100vh - 194px)",
+          height: "100%",
+          overflow: "auto",
+        }}
+        autoHide={false}
+        onScroll={onInternalScroll}
+        onScrollCapture={onInternalScroll}
+      >
+        <MessageRendererContext.Provider value={{ onUpdate }}>
+          <MessageListWrapper>
+            <MessageContainer>
+              {mergedData.length === 0 ? (
+                <EmptyState>
+                  <EmptyIcon>💬</EmptyIcon>
+                  <EmptyText>开始与AI对话吧</EmptyText>
+                  <EmptySubtext>发送消息开启你的智能对话体验</EmptySubtext>
+                </EmptyState>
+              ) : (
+                <>
+                  <MessageStartIndicator>
+                    <StartIcon>✨</StartIcon>
+                    <StartText>对话开始</StartText>
+                  </MessageStartIndicator>
 
-                {mergedData.map((data, i) => (
-                  <MessageItemWrapper
-                    key={i}
-                    $isEven={i % 2 === 0}
-                    //@ts-ignore
-                    $messageType={data.message.type}
-                  >
-                    <MessageRenderer<T>
+                  {mergedData.map((data, i) => (
+                    <MessageItemWrapper
+                      key={i}
+                      $isEven={i % 2 === 0}
                       //@ts-ignore
-                      id={data.message.id ?? String(i)}
-                      render={data.render}
-                      content={data.message}
-                    />
-                  </MessageItemWrapper>
-                ))}
+                      $messageType={data.message.type}
+                    >
+                      <MessageRenderer<T>
+                        //@ts-ignore
+                        id={data.message.id ?? String(i)}
+                        render={data.render}
+                        content={data.message}
+                      />
+                    </MessageItemWrapper>
+                  ))}
 
-                <ScrollAnchor id="scroll-anchor" />
-              </>
-            )}
-          </MessageContainer>
-        </MessageListWrapper>
-      </MessageRendererContext.Provider>
-    </SimpleBar>
+                  <ScrollAnchor id="scroll-anchor" />
+                </>
+              )}
+            </MessageContainer>
+          </MessageListWrapper>
+        </MessageRendererContext.Provider>
+      </SimpleBar>
+      
+      {showScrollButton && (
+        <StyledFloatButton
+          icon={<VerticalAlignTopOutlined />}
+          onClick={scrollToTop}
+          type="primary"
+          shape="circle"
+        />
+      )}
+    </>
   );
 };
 
@@ -342,4 +370,64 @@ const StartText = styled.span`
 const ScrollAnchor = styled.div`
   height: 1px;
   width: 1px;
+`;
+
+const StyledFloatButton = styled(FloatButton)`
+  position: fixed !important;
+  bottom: 140px !important;
+  right: 24px !important;
+  z-index: 1000 !important;
+  box-shadow: 0 8px 24px rgba(24, 144, 255, 0.3), 
+              0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(8px);
+  
+  /* Smooth entrance animation */
+  animation: float-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  &:hover {
+    transform: translateY(-2px) !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    box-shadow: 0 12px 32px rgba(24, 144, 255, 0.4), 
+                0 6px 16px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  &:active {
+    transform: translateY(0px) !important;
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+
+  /* Mobile responsive positioning - adjusted for Sender component height */
+  @media (max-width: 768px) {
+    bottom: 120px !important;
+    right: 20px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  @media (max-width: 480px) {
+    bottom: 110px !important;
+    right: 16px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  @keyframes float-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  /* Icon styling */
+  .anticon {
+    font-size: 18px !important;
+    
+    @media (max-width: 480px) {
+      font-size: 16px !important;
+    }
+  }
 `;

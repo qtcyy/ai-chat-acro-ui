@@ -23,7 +23,7 @@ const MODEL_OPTIONS: ModelOption[] = [
     description: "高性能推理模型，擅长复杂思考",
   },
   {
-    id: "deepseek-ai/DeepSeek-R1",
+    id: "deepseek-r1-0528",
     name: "DeepSeek R1",
     description: "优秀的推理和代码生成模型",
   },
@@ -85,8 +85,8 @@ const Sender = (props: SenderProps) => {
       if (e.shiftKey) {
         // Shift+Enter 换行
         return;
-      } else {
-        // Enter 发送
+      } else if (!e.nativeEvent.isComposing) {
+        // Enter 发送 (仅在非输入法状态下)
         e.preventDefault();
         handleSend();
       }
