@@ -39,7 +39,9 @@ export const useChat = (props: UseChatProps) => {
           additional_kwargs: {
             reasoning_content: "",
           },
-          response_metadata: {},
+          response_metadata: {
+            ...messageChunk.response_metadata,
+          },
           type: "AIMessageChunk",
           isProcessing: true,
           id: v4(),
@@ -94,13 +96,19 @@ export const useChat = (props: UseChatProps) => {
             newContent = newContent.replaceAll("\\[", "$$");
             newContent = newContent.replaceAll("\\]", "$$");
 
+            // const newFinishReason =
+            //   messageChunk.response_metadata.finish_reason ??
+            //   lastMessage.response_metadata.finish_reason;
+
             const newMessage: MessageType = {
               id: messageChunk.id,
               content: newContent,
               additional_kwargs: {
                 reasoning_content: newReason,
               },
-              response_metadata: {},
+              response_metadata: {
+                ...messageChunk.response_metadata,
+              },
               isProcessing: newContent ? false : true,
               type: chunkType,
             };
@@ -130,7 +138,7 @@ export const useChat = (props: UseChatProps) => {
   const { complete, cancel, completion, loading } = createEventSource({
     api: "http://localhost:8000/chat/tools",
     onMessage(event, completion) {
-      // console.log(event.data);
+      // console.log(JSON.parse(event.data));
       onMessageChunk(event.data);
       return completion;
     },

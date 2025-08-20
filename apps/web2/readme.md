@@ -61,6 +61,49 @@ Rsbuild           // 现代化构建工具
 - **美观设计**: 渐变背景、glassmorphism效果
 - **响应式布局**: 适配不同屏幕尺寸的标题显示
 
+### ⚡ 消息交互工具栏
+- **操作工具栏**: AI消息下方显示复制、编辑、分享等操作按钮
+- **智能显示**: 仅在消息完成（非处理中）时显示工具栏
+- **滑入动画**: 使用motion库实现平滑的slide-up动画效果
+- **响应式设计**: 移动端自适应按钮尺寸和间距
+- **视觉优化**: Glass-morphism风格，与消息主题保持一致
+
+```typescript
+// 消息工具栏的核心实现
+const MessageToolbar: React.FC<MessageToolbarProps> = ({ 
+  messageId, 
+  onCopy, 
+  onEdit, 
+  onShare 
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+    >
+      <ToolbarContainer>
+        <ToolbarButton onClick={() => onCopy?.(messageId)} title="复制内容">
+          <AiOutlineCopy size={16} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => onEdit?.(messageId)} title="编辑消息">
+          <AiOutlineEdit size={16} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => onShare?.(messageId)} title="分享消息">
+          <AiOutlineShareAlt size={16} />
+        </ToolbarButton>
+      </ToolbarContainer>
+    </motion.div>
+  );
+};
+```
+
+**技术特点**:
+- **Motion动画库**: 流畅的进入动画和交互反馈
+- **TypeScript接口**: 完整的类型定义和可选回调
+- **Styled Components**: CSS-in-JS实现主题一致性
+- **16px图标**: 精心调整的图标和容器尺寸比例
+
 ### 🗂️ 批量删除功能
 - **快速选择模式**: 一键切换选择/取消选择模式
 - **多选交互**: 复选框选择多个对话，支持整行点击选择
@@ -631,7 +674,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **函数式编程** - 避免副作用，使用纯函数
 - **可观测性** - 添加充分的日志和监控
 
-## 🆕 最新更新 (2024)
+## 🆕 最新更新 (2024-2025)
 
 ### ✨ 新增功能
 - **🧠 AI思考过程可视化**: thinking内容智能展开/折叠，支持自定义渲染样式
@@ -641,6 +684,8 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **🎨 MDRenderer增强**: 支持fontSize、textColor、lineHeight等自定义参数
 - **🗂️ 批量删除功能**: 聊天历史支持多选和批量删除，包含确认模态框和动画效果
 - **🚫 404错误页面**: 完整的错误路由处理，包含智能导航和错误追踪功能
+- **⬆️ 悬浮滚动按钮**: Ant Design FloatButton实现，智能显示/隐藏，平滑滚动动画，响应式设计
+- **🔧 消息工具栏**: AI消息下方的操作工具栏，包含复制、编辑、分享按钮（UI已实现，含滑入动画）
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
@@ -650,6 +695,8 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **批量操作性能**: 使用Set数据结构优化多选性能，避免O(n)查找
 - **交互逻辑优化**: 条件点击行为，选择模式与导航模式智能切换
 - **动画系统重构**: 统一的过渡动画和微交互，提升用户体验
+- **按钮动画修复**: 优化ChatHistory页面顶栏按钮加载动画，解决动画时序问题
+- **组件尺寸优化**: 工具栏容器和按钮尺寸根据图标大小进行比例调整，提升视觉和谐度
 
 ---
 
