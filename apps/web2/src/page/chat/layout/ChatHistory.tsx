@@ -81,6 +81,7 @@ const ChatHistory = () => {
           // 删除成功后清空选择集合
           setSelectSet(new Set());
           setOnSelect(false);
+          loadChats();
         }
       });
     }

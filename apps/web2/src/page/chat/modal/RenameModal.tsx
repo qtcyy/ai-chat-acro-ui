@@ -72,9 +72,9 @@ const RenameModal = NiceModal.create(({ id }: RenameModalProps) => {
     modal.hide();
   };
 
-  const handleRename = () => {
+  const handleRename = async () => {
     if (!currentChat?.id) return;
-    getName(currentChat.id);
+    await getName(currentChat.id);
   };
 
   return (

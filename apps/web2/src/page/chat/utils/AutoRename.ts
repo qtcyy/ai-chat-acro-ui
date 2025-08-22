@@ -3,7 +3,7 @@ import { UUIDTypes } from "uuid";
 import { apiConfig } from "../../../config/api";
 
 type AutoRenameProps = {
-  setName: (name: string) => void;
+  setName?: (name: string) => void;
 };
 
 export const useAutoRename = (props: AutoRenameProps) => {
@@ -11,18 +11,22 @@ export const useAutoRename = (props: AutoRenameProps) => {
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
 
-  const getName = (id: UUIDTypes) => {
-    http
-      ?.post(apiConfig.getChatbotUrl(`/chat/name/${id}`))
-      .pipe(loadingOperator)
-      .subscribe({
-        next: (value) => {
-          setName(value.title);
-        },
-        error(err) {
-          console.error(err);
-        },
-      });
+  const getName = (id: UUIDTypes): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      http
+        ?.post(apiConfig.getChatbotUrl(`/chat/name/${id}`))
+        .pipe(loadingOperator)
+        .subscribe({
+          next: (value) => {
+            setName?.(value.title);
+            resolve(value.title);
+          },
+          error(err) {
+            console.error(err);
+            reject(err);
+          },
+        });
+    });
   };
 
   return { loading, getName };

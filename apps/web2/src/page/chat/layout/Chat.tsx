@@ -52,13 +52,10 @@ const Chat = () => {
   const chatId = useParams().chatId;
   const navigate = useNavigate();
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const { chats, renameChat, deleteChat, loadChats } = useHistory();
+  const { chats, renameChat, deleteChat, getOneChat } = useHistory();
   const chatItem = chats.find((chat) => chat.id === chatId);
 
-  const [title, setTitle] = useState(chatItem?.title ?? "");
-  const { getName } = useAutoRename({
-    setName: setTitle,
-  });
+  const { getName } = useAutoRename({});
 
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
@@ -73,7 +70,7 @@ const Chat = () => {
   const handleRename = async () => {
     if (!chatId) return;
     await NiceModal.show(RenameModal, { id: chatId.toString() });
-    await loadChats();
+    await getOneChat(chatId);
   };
 
   const handleDelete = () => {
@@ -121,17 +118,14 @@ const Chat = () => {
         messages.length > 1 &&
         (!chatItem?.title || chatItem.title === "Untitled")
       ) {
-        getName(chatId);
+        getName(chatId)
+          .then((value) => {
+            renameChat(chatId, value);
+          })
+          .catch((error) => console.error("Error on closing stream: ", error));
       }
     },
   });
-
-  useEffect(() => {
-    if (!chatId) return;
-    if (title !== chatItem?.title) {
-      renameChat(chatId, title);
-    }
-  }, [title]);
 
   useEffect(() => {
     http
