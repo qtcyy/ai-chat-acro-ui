@@ -9,6 +9,7 @@ import { UUIDTypes } from "uuid";
 import { v4 } from "uuid";
 import dayjs from "dayjs";
 import { HttpLoading, useHttp } from "utils";
+import { apiConfig } from "../../../config/api";
 
 export const LocalStorageKey = "ai-chat-history";
 
@@ -105,7 +106,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     setChats(chatsCopy);
     localStorage.setItem(LocalStorageKey, JSON.stringify(chatsCopy));
     http
-      ?.delete(`http://localhost:8000/chat/history/${id}`)
+      ?.delete(apiConfig.getChatbotUrl(`/chat/history/${id}`))
       .pipe(loadingOperator)
       .subscribe({
         next: (data) => console.log(data),
@@ -124,7 +125,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     };
     const idSet = new Set(ids);
     http
-      ?.post(`http://localhost:8000/chat/history/batch/delete`, postBody)
+      ?.post(apiConfig.getChatbotUrl('/chat/history/batch/delete'), postBody)
       .pipe(loadingOperator)
       .subscribe({
         next(value) {

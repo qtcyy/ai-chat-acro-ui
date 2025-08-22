@@ -1,5 +1,6 @@
 import { HttpLoading, useHttp } from "utils";
 import { UUIDTypes } from "uuid";
+import { apiConfig } from "../../../config/api";
 
 type AutoRenameProps = {
   setName: (name: string) => void;
@@ -12,7 +13,7 @@ export const useAutoRename = (props: AutoRenameProps) => {
 
   const getName = (id: UUIDTypes) => {
     http
-      ?.post(`http://localhost:8000/chat/name/${id}`)
+      ?.post(apiConfig.getChatbotUrl(`/chat/name/${id}`))
       .pipe(loadingOperator)
       .subscribe({
         next: (value) => {

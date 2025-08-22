@@ -6,6 +6,7 @@ import { ThemeProvider } from "theme";
 import { ConfigProvider } from "antd";
 import { HistoryProvider } from "./page/chat/hooks/useHistory";
 import { TokenInterceptor } from "./interceptors/TokenInterceptor";
+import { apiConfig } from "./config/api";
 import "simplebar-react/dist/simplebar.min.css";
 
 const router = createHashRouter(routes);
@@ -14,7 +15,7 @@ const App = () => {
   return (
     <ThemeProvider>
       <ConfigProvider>
-        <AxiosProvider baseUrl="http://localhost:8000/">
+        <AxiosProvider baseUrl={`${apiConfig.chatbotBaseUrl}/`}>
           <HttpContextProvider fnInterceptors={[TokenInterceptor]}>
             <HistoryProvider>
               <NiceModal.Provider>

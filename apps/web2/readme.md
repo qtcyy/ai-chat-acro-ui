@@ -400,6 +400,110 @@ import { logout } from './utils/auth';
 logout(); // 清除token和相关状态
 ```
 
+### 🌍 环境变量配置系统
+```typescript
+// 环境变量配置 - src/config/api.ts
+class ApiConfig {
+  private readonly config: Required<ApiEnvironment>;
+
+  constructor() {
+    this.config = getEnvironmentConfig();
+    this.validateConfiguration();
+  }
+
+  // Service-specific URL getters
+  get chatManageBaseUrl(): string {
+    return validateUrl(this.config.REACT_APP_CHAT_MANAGE_BACKEND, 'Chat Management');
+  }
+
+  get chatbotBaseUrl(): string {
+    return validateUrl(this.config.REACT_APP_CHATBOT_BACKEND, 'Chatbot');
+  }
+
+  // Utility methods for endpoint construction
+  getChatManageUrl(endpoint: string = ''): string {
+    const baseUrl = this.chatManageBaseUrl;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${baseUrl}${cleanEndpoint}`;
+  }
+
+  getChatbotUrl(endpoint: string = ''): string {
+    const baseUrl = this.chatbotBaseUrl;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${baseUrl}${cleanEndpoint}`;
+  }
+}
+
+// 全局单例实例
+export const apiConfig = new ApiConfig();
+```
+
+**环境配置特性**:
+- **类型安全配置** - 完整的TypeScript类型定义和验证
+- **构建时注入** - Rsbuild在构建时替换环境变量为具体值
+- **URL验证** - 自动验证URL格式有效性，防止配置错误
+- **智能fallback** - 环境变量缺失时使用默认开发环境地址
+- **调试信息** - 开发环境下自动输出配置信息到控制台
+
+**环境变量配置文件** (`.env`):
+```bash
+# 聊天管理后端地址
+REACT_APP_CHAT_MANAGE_BACKEND=http://localhost:8082
+
+# 聊天机器人后端地址  
+REACT_APP_CHATBOT_BACKEND=http://localhost:8000
+```
+
+**不同环境配置示例**:
+```bash
+# 开发环境 (.env.development)
+REACT_APP_CHAT_MANAGE_BACKEND=http://localhost:8082
+REACT_APP_CHATBOT_BACKEND=http://localhost:8000
+
+# 生产环境 (.env.production)
+REACT_APP_CHAT_MANAGE_BACKEND=https://api.yourapp.com
+REACT_APP_CHATBOT_BACKEND=https://chat.yourapp.com
+
+# 测试环境 (.env.test)
+REACT_APP_CHAT_MANAGE_BACKEND=https://test-api.yourapp.com
+REACT_APP_CHATBOT_BACKEND=https://test-chat.yourapp.com
+```
+
+**Rsbuild构建配置**:
+```typescript
+// rsbuild.config.ts - 环境变量注入配置
+export default defineConfig({
+  source: {
+    define: {
+      'process.env.REACT_APP_CHAT_MANAGE_BACKEND': JSON.stringify(process.env.REACT_APP_CHAT_MANAGE_BACKEND),
+      'process.env.REACT_APP_CHATBOT_BACKEND': JSON.stringify(process.env.REACT_APP_CHATBOT_BACKEND),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    },
+    include: [/[\\/]node_modules[\\/]/],
+  },
+});
+```
+
+**使用示例**:
+```typescript
+// 在应用中使用环境配置
+import { apiConfig } from './config/api';
+
+// 获取基础URL
+const chatbotBaseUrl = apiConfig.chatbotBaseUrl;
+const chatManageBaseUrl = apiConfig.chatManageBaseUrl;
+
+// 构建具体端点URL
+const messagesEndpoint = apiConfig.getChatbotUrl('/chat/history/123');
+const userEndpoint = apiConfig.getChatManageUrl('/api/users');
+
+// HTTP请求中使用
+http.get(apiConfig.getChatbotUrl('/chat/tools'))
+  .subscribe(response => {
+    console.log('Response from:', response);
+  });
+```
+
 ## 📂 项目结构
 
 ```
@@ -427,11 +531,14 @@ src/
 │   │   └── NotFound.tsx    # 404错误页面(路由捕获、错误追踪)
 │   ├── home/               # 首页模块
 │   └── sider/              # 侧边栏组件
+├── config/                 # 配置模块
+│   └── api.ts             # API配置管理(环境变量、URL构建、类型安全)
 ├── interceptors/           # HTTP拦截器
 │   ├── TokenInterceptor.ts # Token认证拦截器(自动注入Bearer Token)
 │   └── README.md          # 拦截器使用文档
 ├── utils/                  # 工具函数
 │   └── auth.ts            # 认证工具函数(login/logout/isAuthenticated)
+├── env.d.ts               # TypeScript环境变量类型声明
 ├── routes/                # 路由配置
 ├── store/                 # 状态管理
 └── App.tsx                # 应用入口
@@ -750,6 +857,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **⬆️ 悬浮滚动按钮**: Ant Design FloatButton实现，智能显示/隐藏，平滑滚动动画，响应式设计
 - **🔧 消息工具栏**: AI消息下方的操作工具栏，包含复制、编辑、分享按钮（UI已实现，含滑入动画）
 - **🔐 Token认证拦截器**: 完整的HTTP请求认证系统，自动注入Bearer Token，支持localStorage存储管理
+- **🌍 环境变量配置系统**: 类型安全的环境配置管理，支持多环境后端URL配置，构建时变量注入
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
@@ -761,6 +869,9 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **动画系统重构**: 统一的过渡动画和微交互，提升用户体验
 - **按钮动画修复**: 优化ChatHistory页面顶栏按钮加载动画，解决动画时序问题
 - **组件尺寸优化**: 工具栏容器和按钮尺寸根据图标大小进行比例调整，提升视觉和谐度
+- **环境变量系统重构**: 构建时变量注入，类型安全配置管理，支持多环境URL切换
+- **构建配置优化**: 修复Rsbuild配置结构问题，解决process.env未定义错误
+- **TypeScript类型增强**: 添加环境变量类型声明，提供完整的IntelliSense支持
 
 ---
 

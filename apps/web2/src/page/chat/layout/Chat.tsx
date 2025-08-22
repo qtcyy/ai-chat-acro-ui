@@ -20,6 +20,7 @@ import RenameModal from "../modal/RenameModal";
 import { DeleteChatModal } from "../modal/DeleteChatModal";
 import { StarOutlined } from "@ant-design/icons";
 import { MessageToolbar } from "../components/MessageToolBar";
+import { apiConfig } from "../../../config/api";
 
 const ROLE = {
   start: "start",
@@ -136,7 +137,7 @@ const Chat = () => {
 
   useEffect(() => {
     http
-      ?.get<MessageType[]>(`http://localhost:8000/chat/history/${chatId}`)
+      ?.get<MessageType[]>(apiConfig.getChatbotUrl(`/chat/history/${chatId}`))
       .pipe(loadingOperator)
       .subscribe({
         next: (data) => {

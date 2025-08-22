@@ -1,6 +1,7 @@
 import { createEventSource } from "utils";
 import { MessageType } from "../layout/Chat";
 import { UUIDTypes, v4 } from "uuid";
+import { apiConfig } from "../../../config/api";
 
 type UseChatProps = {
   chatId: UUIDTypes;
@@ -136,7 +137,7 @@ export const useChat = (props: UseChatProps) => {
   };
 
   const { complete, cancel, completion, loading } = createEventSource({
-    api: "http://localhost:8000/chat/tools",
+    api: apiConfig.getChatbotUrl('/chat/tools'),
     onMessage(event, completion) {
       // console.log(JSON.parse(event.data));
       onMessageChunk(event.data);

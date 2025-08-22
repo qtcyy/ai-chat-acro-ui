@@ -4,6 +4,14 @@ import { pluginSvgr } from "@rsbuild/plugin-svgr";
 
 export default defineConfig({
   plugins: [pluginReact()],
+  source: {
+    define: {
+      'process.env.REACT_APP_CHAT_MANAGE_BACKEND': JSON.stringify(process.env.REACT_APP_CHAT_MANAGE_BACKEND),
+      'process.env.REACT_APP_CHATBOT_BACKEND': JSON.stringify(process.env.REACT_APP_CHATBOT_BACKEND),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    },
+    include: [/[\\/]node_modules[\\/]/],
+  },
   // server: {
   //   proxy: {
   //     "/api": {
@@ -25,8 +33,5 @@ export default defineConfig({
   output: {
     assetPrefix: "./",
     polyfill: "entry",
-  },
-  source: {
-    include: [/[\\/]node_modules[\\/]/],
   },
 });
