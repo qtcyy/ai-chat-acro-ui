@@ -342,6 +342,64 @@ export const HttpLoading = () => {
 - **retryOperator** - 重试机制
 - **cacheOperator** - 响应缓存
 
+### 🔐 Token认证拦截器
+```typescript
+// TokenInterceptor - 自动认证拦截器
+export function TokenInterceptor(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn
+): Observable<HttpEvent<unknown>> {
+  try {
+    // 检查是否需要添加 token
+    if (!shouldAddToken(req)) {
+      return next(req);
+    }
+
+    // 从 localStorage 获取 token
+    const token = getTokenFromStorage();
+    
+    if (!token || !isValidToken(token)) {
+      return next(req);
+    }
+
+    // 克隆请求并添加 Authorization header
+    const authReq = req.clone({
+      headers: req.headers.set('Authorization', `Bearer ${token}`)
+    });
+
+    return next(authReq);
+  } catch (error) {
+    console.error("TokenInterceptor: Error processing request", error);
+    return next(req);
+  }
+}
+```
+
+**认证拦截器特性**:
+- **自动Token注入** - 智能识别需要认证的端点，自动添加Bearer Token
+- **localStorage集成** - 从本地存储获取和管理认证token
+- **Token验证** - 完整的token格式验证和错误处理
+- **智能端点识别** - 只对匹配模式的API端点添加认证（/api/, /chat/, /user/, /admin/）
+- **错误恢复** - 发生错误时继续原始请求，确保系统稳定性
+- **工具函数** - 提供setToken、clearToken、hasValidToken等便捷管理函数
+
+**使用示例**:
+```typescript
+// 用户登录设置token
+import { login } from './utils/auth';
+login('your-jwt-token');
+
+// 检查登录状态
+import { isAuthenticated } from './utils/auth';
+if (isAuthenticated()) {
+  // 用户已登录，所有API请求将自动带上Authorization header
+}
+
+// 用户登出
+import { logout } from './utils/auth';
+logout(); // 清除token和相关状态
+```
+
 ## 📂 项目结构
 
 ```
@@ -369,9 +427,14 @@ src/
 │   │   └── NotFound.tsx    # 404错误页面(路由捕获、错误追踪)
 │   ├── home/               # 首页模块
 │   └── sider/              # 侧边栏组件
-├── routes/                 # 路由配置
-├── store/                  # 状态管理
-└── App.tsx                 # 应用入口
+├── interceptors/           # HTTP拦截器
+│   ├── TokenInterceptor.ts # Token认证拦截器(自动注入Bearer Token)
+│   └── README.md          # 拦截器使用文档
+├── utils/                  # 工具函数
+│   └── auth.ts            # 认证工具函数(login/logout/isAuthenticated)
+├── routes/                # 路由配置
+├── store/                 # 状态管理
+└── App.tsx                # 应用入口
 ```
 
 ### 核心模块详解
@@ -686,6 +749,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **🚫 404错误页面**: 完整的错误路由处理，包含智能导航和错误追踪功能
 - **⬆️ 悬浮滚动按钮**: Ant Design FloatButton实现，智能显示/隐藏，平滑滚动动画，响应式设计
 - **🔧 消息工具栏**: AI消息下方的操作工具栏，包含复制、编辑、分享按钮（UI已实现，含滑入动画）
+- **🔐 Token认证拦截器**: 完整的HTTP请求认证系统，自动注入Bearer Token，支持localStorage存储管理
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
