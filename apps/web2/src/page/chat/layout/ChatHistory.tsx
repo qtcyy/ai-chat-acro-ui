@@ -12,7 +12,7 @@ import {
   AiOutlineMore,
   AiFillDelete,
 } from "react-icons/ai";
-import { Checkbox, Dropdown } from "antd";
+import { Checkbox, Dropdown, Input } from "antd";
 import type { MenuProps } from "antd";
 import RenameModal from "../modal/RenameModal";
 import {
@@ -27,6 +27,7 @@ const ChatHistory = () => {
 
   const [onSelect, setOnSelect] = useState(false);
   const [selectSet, setSelectSet] = useState<Set<UUIDTypes>>();
+  const [searchTitle, setSearchTitle] = useState("");
 
   useEffect(() => {
     if (!onSelect) {
@@ -82,6 +83,8 @@ const ChatHistory = () => {
     }
   };
 
+  const handleSearch = () => {};
+
   const getMenuItems = (chatId: UUIDTypes): MenuProps["items"] => [
     {
       key: "rename",
@@ -109,6 +112,9 @@ const ChatHistory = () => {
       <HeaderSection>
         <HeaderIcon>📚</HeaderIcon>
         <HeaderTitle>对话历史</HeaderTitle>
+        <div className="mx-auto">
+          <Input.Search placeholder="搜索对话标题" onSearch={handleSearch} />
+        </div>
         <DeleteBatchButton
           $visible={!!selectSet?.size}
           onClick={handleDeleteBatch}
@@ -221,13 +227,16 @@ const HeaderSection = styled.div`
   }
 
   /* 为每个按钮添加正确的递增延迟 */
-  > button:nth-child(3) { /* DeleteBatchButton */
+  > button:nth-child(3) {
+    /* DeleteBatchButton */
     animation-delay: 0.1s;
   }
-  > button:nth-child(4) { /* SelectToggleButton */
+  > button:nth-child(4) {
+    /* SelectToggleButton */
     animation-delay: 0.2s;
   }
-  > button:nth-child(5) { /* CreateButton */
+  > button:nth-child(5) {
+    /* CreateButton */
     animation-delay: 0.3s;
   }
 
