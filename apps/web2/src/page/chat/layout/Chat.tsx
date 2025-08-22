@@ -9,7 +9,7 @@ import { useChat } from "../hooks/useChat";
 import { v4 } from "uuid";
 import SimpleBar from "simplebar-react";
 import SimpleBarCore from "simplebar-core";
-import { ChatType, LocalStorageKey, useHistory } from "../hooks/useHistory";
+import { useHistory } from "../hooks/useHistory";
 import { useAutoRename } from "../utils/AutoRename";
 import { useDebounceFn } from "ahooks";
 import { Dropdown, message } from "antd";
@@ -52,11 +52,8 @@ const Chat = () => {
   const chatId = useParams().chatId;
   const navigate = useNavigate();
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const chats = JSON.parse(
-    localStorage.getItem(LocalStorageKey) ?? ""
-  ) as ChatType[];
+  const { chats, renameChat, deleteChat, loadChats } = useHistory();
   const chatItem = chats.find((chat) => chat.id === chatId);
-  const { renameChat, deleteChat } = useHistory();
 
   const [title, setTitle] = useState(chatItem?.title ?? "");
   const { getName } = useAutoRename({
@@ -73,9 +70,10 @@ const Chat = () => {
     };
   };
 
-  const handleRename = () => {
+  const handleRename = async () => {
     if (!chatId) return;
-    NiceModal.show(RenameModal, { id: chatId.toString() });
+    await NiceModal.show(RenameModal, { id: chatId.toString() });
+    await loadChats();
   };
 
   const handleDelete = () => {

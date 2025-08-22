@@ -22,7 +22,7 @@ import {
 import { useEffect, useState } from "react";
 
 const ChatHistory = () => {
-  const { chats, createChat, sortByTime } = useHistory();
+  const { chats, createChat, sortByTime, loadChats } = useHistory();
   const route = useNavigate();
 
   const [onSelect, setOnSelect] = useState(false);
@@ -40,24 +40,27 @@ const ChatHistory = () => {
   }, [onSelect]);
 
   useEffect(() => {
-    sortByTime();
+    loadChats();
   }, []);
 
-  const handleCreate = () => {
-    const newChat = createChat();
+  const handleCreate = async () => {
+    const newChat = await createChat();
+    await loadChats();
     route(`/chat/${newChat.id}`);
   };
 
-  const handleClick = (id: UUIDTypes) => {
+  const handleClick = async (id: UUIDTypes) => {
     route(`/chat/${id}`);
   };
 
-  const handleRename = (id: UUIDTypes) => {
-    NiceModal.show(RenameModal, { id: id.toString() });
+  const handleRename = async (id: UUIDTypes) => {
+    await NiceModal.show(RenameModal, { id: id.toString() });
+    await loadChats();
   };
 
-  const handleDelete = (id: UUIDTypes) => {
-    NiceModal.show(DeleteChatModal, { id: id.toString() });
+  const handleDelete = async (id: UUIDTypes) => {
+    await NiceModal.show(DeleteChatModal, { id: id.toString() });
+    await loadChats();
   };
 
   const handleSelect = (id: UUIDTypes) => {

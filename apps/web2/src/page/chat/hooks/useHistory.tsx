@@ -10,6 +10,7 @@ import { v4 } from "uuid";
 import dayjs from "dayjs";
 import { HttpLoading, useHttp } from "utils";
 import { apiConfig } from "../../../config/api";
+import { useAsyncEffect } from "ahooks";
 
 export const LocalStorageKey = "ai-chat-history";
 
@@ -22,8 +23,9 @@ export type ChatType = {
 
 type HistoryContextType = {
   chats: ChatType[];
-  createChat: (title?: string) => ChatType;
-  renameChat: (id: UUIDTypes, title: string) => boolean;
+  loadChats: () => Promise<boolean>;
+  createChat: (title?: string) => Promise<ChatType>;
+  renameChat: (id: UUIDTypes, title: string) => Promise<boolean>;
   deleteChat: (id: UUIDTypes) => Promise<boolean>;
   deleteChatBatch: (ids: UUIDTypes[]) => Promise<boolean>;
   sortByTime: () => void;
@@ -31,8 +33,9 @@ type HistoryContextType = {
 
 const HistoryContext = createContext<HistoryContextType>({
   chats: [],
-  createChat: () => ({ id: v4(), title: "", messages: [] }),
-  renameChat: () => true,
+  loadChats: () => Promise.resolve(true),
+  createChat: () => Promise.reject(),
+  renameChat: () => Promise.resolve(true),
   deleteChat: () => Promise.resolve(true),
   deleteChatBatch: () => Promise.resolve(true),
   sortByTime: () => {},
@@ -41,82 +44,92 @@ const HistoryContext = createContext<HistoryContextType>({
 export const useHistory = () => useContext(HistoryContext);
 
 export const HistoryProvider = (props: { children: ReactNode }) => {
-  // 获取本地保存的历史对话信息（临时方案）
-  const StorageStr = localStorage.getItem(LocalStorageKey);
-
-  const [storageItem, setStorageItem] = useState<ChatType[]>(
-    // 序列化为对象
-    JSON.parse(StorageStr ?? "")
-  );
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
 
-  // 如果类型不是列表，说明保存内容错误
-  if (!Array.isArray(storageItem)) {
-    setStorageItem([]);
-    localStorage.setItem(LocalStorageKey, JSON.stringify([]));
-  }
-
   // 初始化chats，注意messages为空，需要调用函数进行加载
-  const [chats, setChats] = useState<ChatType[]>(
-    storageItem.map((item) => ({ ...item, messages: [] }))
-  );
+  const [chats, setChats] = useState<ChatType[]>([]);
 
-  useEffect(() => {}, []);
-
-  const createChat = (title?: string): ChatType => {
-    const newId = v4();
-    const newChat: ChatType = {
-      title: title ?? "Untitled",
-      id: newId,
-      createTime: dayjs().toISOString(),
-      updateTime: dayjs().toISOString(),
-    };
-    const newChats = [...chats, newChat];
-    setChats(newChats);
-    localStorage.setItem(LocalStorageKey, JSON.stringify(newChats));
-
-    return newChat;
+  const loadChats = (): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      http
+        ?.get(apiConfig.getChatManageUrl("/chat/get/list"))
+        .pipe(loadingOperator)
+        .subscribe({
+          next(value) {
+            console.log(value);
+            setChats(value.data);
+            resolve(true);
+          },
+          error(err) {
+            console.error("Error on get chat list:", err);
+            reject(false);
+          },
+        });
+    });
   };
 
-  const renameChat = (id: UUIDTypes, title: string) => {
-    console.log(title);
-    const chatsCopy = [...chats];
-    const idx = chatsCopy.findIndex((chat) => chat.id === id);
-    if (idx === -1) {
-      return false;
-    }
-    chatsCopy[idx] = {
-      ...chatsCopy[idx],
-      title: title,
-    };
-    setChats(chatsCopy);
-    localStorage.setItem(LocalStorageKey, JSON.stringify(chatsCopy));
+  useAsyncEffect(async () => {
+    await loadChats();
+  }, []);
 
-    return true;
+  const createChat = (title?: string): Promise<ChatType> => {
+    return new Promise((resolve, reject) => {
+      http
+        ?.post(apiConfig.getChatManageUrl("/chat/create"), { title: title })
+        .subscribe({
+          next(value) {
+            resolve(value.data);
+          },
+          error(err) {
+            console.error("Error on creating chat: ", err);
+            reject();
+          },
+        });
+    });
   };
 
-  const deleteChat = async (id: UUIDTypes) => {
-    let chatsCopy = [...chats];
-    const idx = chatsCopy.findIndex((chat) => chat.id === id);
-    if (idx === -1) {
-      return false;
-    }
-    chatsCopy = chatsCopy.filter((chat) => chat.id !== id);
-    setChats(chatsCopy);
-    localStorage.setItem(LocalStorageKey, JSON.stringify(chatsCopy));
-    http
-      ?.delete(apiConfig.getChatbotUrl(`/chat/history/${id}`))
-      .pipe(loadingOperator)
-      .subscribe({
-        next: (data) => console.log(data),
-        error: (error) => {
-          console.error(error);
-          throw error;
-        },
-      });
+  const renameChat = (id: UUIDTypes, title: string): Promise<boolean> => {
+    return new Promise<boolean>((resolve, reject) => {
+      const poseBody = {
+        id: id,
+        newTitle: title,
+      };
+      http
+        ?.post(apiConfig.getChatManageUrl("/chat/rename"), poseBody)
+        .subscribe({
+          next() {
+            resolve(true);
+          },
+          error(err) {
+            console.error("Error on renaming chat: ", err);
+            reject(false);
+          },
+        });
+    });
+  };
 
-    return true;
+  const deleteChat = async (id: UUIDTypes): Promise<boolean> => {
+    const deleteBody = {
+      id: id,
+    };
+    return new Promise<boolean>((resolve, reject) => {
+      http
+        ?.post(apiConfig.getChatManageUrl("/chat/delete"), deleteBody)
+        .subscribe({
+          next(value) {
+            console.log(value);
+            if (value.msg === "success") {
+              resolve(true);
+            }
+            reject(false);
+          },
+          error(err) {
+            console.error("Error on deleting chat: ", err);
+            reject(false);
+          },
+        });
+    });
   };
 
   const deleteChatBatch = async (ids: UUIDTypes[]) => {
@@ -125,13 +138,16 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     };
     const idSet = new Set(ids);
     http
-      ?.post(apiConfig.getChatbotUrl('/chat/history/batch/delete'), postBody)
+      ?.post(apiConfig.getChatbotUrl("/chat/history/batch/delete"), postBody)
       .pipe(loadingOperator)
       .subscribe({
         next(value) {
           if (value.message === "success") {
             const filteredChats = chats.filter((chat) => !idSet.has(chat.id));
-            localStorage.setItem(LocalStorageKey, JSON.stringify(filteredChats));
+            localStorage.setItem(
+              LocalStorageKey,
+              JSON.stringify(filteredChats)
+            );
             setChats([...filteredChats]);
           } else {
             throw Error("Error on delete chat batch");
@@ -153,6 +169,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
 
   const ContextValue = {
     chats,
+    loadChats,
     createChat,
     renameChat,
     deleteChat,

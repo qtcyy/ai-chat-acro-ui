@@ -45,10 +45,7 @@ export function TokenInterceptor(
 
     // 克隆请求并添加 Authorization header
     const authReq = req.clone({
-      headers: req.headers.set(
-        HEADER_AUTHORIZATION,
-        `${TOKEN_PREFIX} ${token}`
-      ),
+      headers: req.headers.set(HEADER_AUTHORIZATION, `${token}`),
     });
 
     console.debug("TokenInterceptor: Added token to request", {
