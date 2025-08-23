@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useHistory } from "../hooks/useHistory";
+import { useHistory, ChatType } from "../hooks/useHistory";
 import { useNavigate } from "react-router-dom";
 import { UUIDTypes } from "uuid";
 import dayjs from "dayjs";
@@ -20,14 +20,17 @@ import {
   DeleteChatBatchModal,
 } from "../modal/DeleteChatModal";
 import { useEffect, useState } from "react";
+import { Subscription } from "rxjs";
 
 const ChatHistory = () => {
-  const { chats, createChat, sortByTime, loadChats } = useHistory();
+  const { chats, createChat, loadChats, searchQuery$, filteredChats$ } = useHistory();
   const route = useNavigate();
 
   const [onSelect, setOnSelect] = useState(false);
   const [selectSet, setSelectSet] = useState<Set<UUIDTypes>>();
   const [searchTitle, setSearchTitle] = useState("");
+  const [displayChats, setDisplayChats] = useState<ChatType[]>(chats);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (!onSelect) {
@@ -42,6 +45,30 @@ const ChatHistory = () => {
   useEffect(() => {
     loadChats();
   }, []);
+
+  // 订阅过滤后的聊天列表
+  useEffect(() => {
+    const subscription: Subscription = filteredChats$.subscribe({
+      next: (filteredChats) => {
+        setDisplayChats(filteredChats);
+        setIsSearching(false);
+      },
+      error: (error) => {
+        console.error("过滤聊天列表失败:", error);
+        setDisplayChats(chats); // 出错时回退到原始列表
+        setIsSearching(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [filteredChats$, chats]);
+
+  // 当原始chats变化时，如果没有搜索，更新显示列表
+  useEffect(() => {
+    if (!searchTitle || searchTitle.trim() === "") {
+      setDisplayChats(chats);
+    }
+  }, [chats, searchTitle]);
 
   const handleCreate = async () => {
     const newChat = await createChat();
@@ -87,7 +114,15 @@ const ChatHistory = () => {
     }
   };
 
-  const handleSearch = () => {};
+  const handleSearch = (value: string) => {
+    setSearchTitle(value);
+    setIsSearching(true);
+    
+    // 更新搜索查询流
+    searchQuery$.next(value);
+    
+    console.log("执行搜索:", value);
+  };
 
   const getMenuItems = (chatId: UUIDTypes): MenuProps["items"] => [
     {
@@ -117,7 +152,15 @@ const ChatHistory = () => {
         <HeaderIcon>📚</HeaderIcon>
         <HeaderTitle>对话历史</HeaderTitle>
         <div className="mx-auto">
-          <Input.Search placeholder="搜索对话标题" onSearch={handleSearch} />
+          <Input.Search 
+            placeholder="搜索对话标题" 
+            onSearch={handleSearch}
+            onChange={(e) => handleSearch(e.target.value)}
+            value={searchTitle}
+            loading={isSearching}
+            allowClear
+            onClear={() => handleSearch("")}
+          />
         </div>
         <DeleteBatchButton
           $visible={!!selectSet?.size}
@@ -139,17 +182,24 @@ const ChatHistory = () => {
       </HeaderSection>
 
       <ContentSection>
-        {chats.length === 0 ? (
+        {displayChats.length === 0 ? (
           <EmptyState>
             <EmptyIcon>
               <AiOutlineMessage size={48} />
             </EmptyIcon>
-            <EmptyText>还没有对话记录</EmptyText>
-            <EmptySubtext>点击"新建对话"开始你的第一次AI对话</EmptySubtext>
+            <EmptyText>
+              {searchTitle ? "未找到匹配的对话" : "还没有对话记录"}
+            </EmptyText>
+            <EmptySubtext>
+              {searchTitle 
+                ? "尝试使用不同的关键词搜索" 
+                : "点击'新建对话'开始你的第一次AI对话"
+              }
+            </EmptySubtext>
           </EmptyState>
         ) : (
           <ListContainer $selectMode={onSelect}>
-            {chats.map((chat, index) => (
+            {displayChats.map((chat, index) => (
               <ListWrapper
                 key={chat.id.toString()}
                 onClick={() => {

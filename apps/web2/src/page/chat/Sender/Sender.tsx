@@ -18,8 +18,8 @@ type ModelOption = {
 
 const MODEL_OPTIONS: ModelOption[] = [
   {
-    id: "Qwen/Qwen3-30B-A3B-Instruct-2507",
-    name: "Qwen3 30B Thinking",
+    id: "deepseek-v3.1",
+    name: "DeepSeek-V3.1",
     description: "高性能推理模型，擅长复杂思考",
   },
   {

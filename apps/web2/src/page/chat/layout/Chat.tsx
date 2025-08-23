@@ -9,12 +9,18 @@ import { useChat } from "../hooks/useChat";
 import { v4 } from "uuid";
 import SimpleBar from "simplebar-react";
 import SimpleBarCore from "simplebar-core";
-import { useHistory } from "../hooks/useHistory";
+import { ChatType, useHistory } from "../hooks/useHistory";
 import { useAutoRename } from "../utils/AutoRename";
 import { useDebounceFn } from "ahooks";
 import { Dropdown, message } from "antd";
 import type { MenuProps } from "antd";
-import { AiOutlineEdit, AiFillDelete, AiOutlineMore } from "react-icons/ai";
+import {
+  AiOutlineEdit,
+  AiFillDelete,
+  AiOutlineMore,
+  AiFillStar,
+  AiOutlineStar,
+} from "react-icons/ai";
 import NiceModal from "@ebay/nice-modal-react";
 import RenameModal from "../modal/RenameModal";
 import { DeleteChatModal } from "../modal/DeleteChatModal";
@@ -52,7 +58,7 @@ const Chat = () => {
   const chatId = useParams().chatId;
   const navigate = useNavigate();
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const { chats, renameChat, deleteChat, getOneChat } = useHistory();
+  const { chats, renameChat, deleteChat, getOneChat, setChats } = useHistory();
   const chatItem = chats.find((chat) => chat.id === chatId);
 
   const { getName } = useAutoRename({});
@@ -63,8 +69,29 @@ const Chat = () => {
   const handleStar = () => {
     console.log("star chat: ", chatId);
     const postBody = {
-      thread_id: chatId,
+      id: chatId,
     };
+    http
+      ?.post(apiConfig.getChatManageUrl("chat/star/toggle"), postBody)
+      .subscribe({
+        next(value) {
+          const newChat = value.data as ChatType;
+          const newChats = [...chats];
+          const idx = newChats.findIndex((chat) => chat.id === chatId);
+          newChats[idx] = newChat;
+          setChats(newChats);
+          if (newChat.star) {
+            message.success("收藏成功");
+          } else {
+            message.info("取消收藏");
+          }
+        },
+        error(err) {
+          console.error("Error on star chat");
+          message.error("收藏操作失败");
+          throw err;
+        },
+      });
   };
 
   const handleRename = async () => {
@@ -89,7 +116,7 @@ const Chat = () => {
     {
       key: "star",
       label: "收藏",
-      icon: <StarOutlined />,
+      icon: chatItem?.star ? <AiFillStar /> : <AiOutlineStar />,
       onClick: handleStar,
     },
     {

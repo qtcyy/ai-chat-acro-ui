@@ -504,6 +504,169 @@ http.get(apiConfig.getChatbotUrl('/chat/tools'))
   });
 ```
 
+### 🔍 RxJS响应式搜索系统
+```typescript
+// 完全重构的搜索功能 - src/page/chat/hooks/useHistory.tsx
+export const HistoryProvider = () => {
+  // 搜索查询的响应式流
+  const [searchQuery$] = useState(() => new BehaviorSubject<string>(""));
+  
+  // 聊天列表的响应式流
+  const [chats$] = useState(() => new BehaviorSubject<ChatType[]>([]));
+  
+  // 增强的搜索功能，支持远程搜索和本地过滤
+  const searchChats = (title?: string): Observable<ChatType[]> => {
+    if (!title || title.trim() === "") {
+      return of([]);
+    }
+
+    const searchUrl = apiConfig.getChatManageUrl(
+      `/chat/search?title=${encodeURIComponent(title.trim())}`
+    );
+    
+    return http!.get<{ data: ChatType[]; msg: string }>(searchUrl).pipe(
+      loadingOperator,
+      map(response => {
+        if (response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return [];
+      }),
+      catchError((error) => {
+        console.error("搜索聊天失败:", error);
+        // 发生错误时，回退到本地搜索
+        return of(
+          chats.filter(chat => 
+            chat.title.toLowerCase().includes(title.toLowerCase())
+          )
+        );
+      }),
+      shareReplay(1) // 缓存最新的搜索结果
+    );
+  };
+
+  // 创建过滤后的聊天列表流
+  const [filteredChats$] = useState(() => 
+    combineLatest([
+      searchQuery$.pipe(
+        debounceTime(300), // 300ms防抖
+        distinctUntilChanged() // 去除重复查询
+      ),
+      chats$ // 响应式聊天列表
+    ]).pipe(
+      switchMap(([query, currentChats]) => {
+        if (!query || query.trim() === "") {
+          return of(currentChats);
+        }
+        
+        // 优先使用本地过滤，快速响应
+        const localResults = currentChats.filter(chat => 
+          chat.title.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        // 如果本地结果不够（少于3个），则进行远程搜索
+        if (localResults.length < 3 && query.trim().length > 0) {
+          return searchChats(query).pipe(
+            map(remoteResults => {
+              // 合并本地和远程结果，去重
+              const combined = [...localResults];
+              remoteResults.forEach(remote => {
+                if (!combined.some(local => local.id === remote.id)) {
+                  combined.push(remote);
+                }
+              });
+              return combined;
+            }),
+            catchError((error) => {
+              console.error("远程搜索失败，使用本地结果:", error);
+              return of(localResults);
+            })
+          );
+        }
+        
+        return of(localResults);
+      }),
+      shareReplay(1) // 缓存最新的过滤结果
+    )
+  );
+};
+```
+
+**RxJS搜索系统特性**:
+- **🚀 性能优化**: 300ms防抖机制，避免频繁API调用
+- **🧠 智能搜索策略**: 本地过滤优先，远程搜索补充
+- **🔄 响应式数据流**: 自动响应聊天列表和搜索查询变化
+- **🛡️ 错误恢复**: API失败时自动回退到本地搜索
+- **💾 结果缓存**: 使用shareReplay(1)缓存搜索结果
+- **🎯 去重机制**: 智能合并本地和远程搜索结果
+
+**组件集成示例**:
+```typescript
+// ChatHistory组件中的搜索集成
+const ChatHistory = () => {
+  const { searchQuery$, filteredChats$ } = useHistory();
+  const [displayChats, setDisplayChats] = useState<ChatType[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // 订阅过滤后的聊天列表
+  useEffect(() => {
+    const subscription = filteredChats$.subscribe({
+      next: (filteredChats) => {
+        setDisplayChats(filteredChats);
+        setIsSearching(false);
+      },
+      error: (error) => {
+        console.error("过滤聊天列表失败:", error);
+        setDisplayChats(chats);
+        setIsSearching(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [filteredChats$, chats]);
+
+  const handleSearch = (value: string) => {
+    setSearchTitle(value);
+    setIsSearching(true);
+    searchQuery$.next(value); // 触发响应式搜索
+  };
+
+  return (
+    <div>
+      <Input.Search 
+        placeholder="搜索对话标题" 
+        onSearch={handleSearch}
+        onChange={(e) => handleSearch(e.target.value)}
+        loading={isSearching}
+        allowClear
+      />
+      {/* 显示搜索结果 */}
+      {displayChats.map(chat => (
+        <ChatItem key={chat.id} chat={chat} />
+      ))}
+    </div>
+  );
+};
+```
+
+**搜索流程图**:
+```
+用户输入 → searchQuery$ → debounce(300ms) → distinctUntilChanged() →
+combineLatest(chats$) → 
+  ↓
+判断查询类型:
+  - 空查询 → 返回所有聊天
+  - 有查询 → 本地过滤
+    ↓
+  本地结果 < 3个?
+    - 否 → 返回本地结果
+    - 是 → 触发远程搜索
+      ↓
+    合并本地+远程结果 → 去重 → 返回最终结果
+      ↓
+  错误处理 → 回退到本地结果
+```
+
 ## 📂 项目结构
 
 ```
@@ -858,6 +1021,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **🔧 消息工具栏**: AI消息下方的操作工具栏，包含复制、编辑、分享按钮（UI已实现，含滑入动画）
 - **🔐 Token认证拦截器**: 完整的HTTP请求认证系统，自动注入Bearer Token，支持localStorage存储管理
 - **🌍 环境变量配置系统**: 类型安全的环境配置管理，支持多环境后端URL配置，构建时变量注入
+- **🔍 RxJS响应式搜索系统**: 完全重构的搜索功能，支持本地过滤、远程搜索、防抖优化和智能回退机制
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新
@@ -872,6 +1036,10 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **环境变量系统重构**: 构建时变量注入，类型安全配置管理，支持多环境URL切换
 - **构建配置优化**: 修复Rsbuild配置结构问题，解决process.env未定义错误
 - **TypeScript类型增强**: 添加环境变量类型声明，提供完整的IntelliSense支持
+- **🔍 搜索系统重构**: 基于RxJS的响应式搜索架构，支持防抖、缓存、智能回退和本地/远程混合搜索
+- **📊 Observable状态管理**: 引入BehaviorSubject管理搜索状态和聊天数据流
+- **⚡ 搜索性能优化**: combineLatest + switchMap实现高效的搜索结果合并与切换
+- **🛠️ 错误处理增强**: 完善的搜索错误恢复机制和用户反馈
 
 ---
 
