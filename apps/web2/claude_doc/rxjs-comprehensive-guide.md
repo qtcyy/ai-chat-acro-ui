@@ -677,6 +677,675 @@ fileList$.pipe(mergeMap(file => uploadFile(file)))
 taskQueue$.pipe(concatMap(task => processTask(task)))
 ```
 
+## ⚛️ RxJS 与 React 集成
+
+### 1. 基本集成模式
+
+#### 使用 useEffect 管理订阅
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { interval } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+function TimerComponent() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // 创建定时器Observable
+    const timer$ = interval(1000).pipe(
+      map(n => n + 1)
+    );
+
+    // 订阅Observable
+    const subscription = timer$.subscribe(value => {
+      setCount(value);
+    });
+
+    // 清理函数：组件卸载时取消订阅
+    return () => {
+      subscription.unsubscribe();
+      console.log('定时器已清理');
+    };
+  }, []); // 空依赖数组，只在挂载时执行
+
+  return <div>计数器: {count}</div>;
+}
+```
+
+#### 自定义 Hook 封装 Observable
+
+```typescript
+import { useState, useEffect } from 'react';
+import { Observable } from 'rxjs';
+
+// 通用的Observable Hook
+function useObservable<T>(observable$: Observable<T>, initialValue: T): T {
+  const [value, setValue] = useState<T>(initialValue);
+
+  useEffect(() => {
+    const subscription = observable$.subscribe({
+      next: setValue,
+      error: (error) => console.error('Observable错误:', error)
+    });
+
+    return () => subscription.unsubscribe();
+  }, [observable$]);
+
+  return value;
+}
+
+// 使用示例
+function WeatherComponent() {
+  const weather = useObservable(weatherService.getCurrentWeather(), '加载中...');
+  
+  return <div>当前天气: {weather}</div>;
+}
+```
+
+### 2. 状态管理集成
+
+#### BehaviorSubject 作为全局状态
+
+```typescript
+import { BehaviorSubject } from 'rxjs';
+import { useState, useEffect } from 'react';
+
+// 创建全局状态
+export class UserStore {
+  private userSubject$ = new BehaviorSubject({ name: '', loggedIn: false });
+  
+  // 暴露只读的Observable
+  user$ = this.userSubject$.asObservable();
+  
+  // 更新用户信息
+  updateUser(user: { name: string; loggedIn: boolean }) {
+    this.userSubject$.next(user);
+  }
+  
+  // 获取当前值
+  getCurrentUser() {
+    return this.userSubject$.value;
+  }
+}
+
+export const userStore = new UserStore();
+
+// React组件中使用
+function UserProfile() {
+  const [user, setUser] = useState(userStore.getCurrentUser());
+
+  useEffect(() => {
+    const subscription = userStore.user$.subscribe(setUser);
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return (
+    <div>
+      {user.loggedIn ? `欢迎, ${user.name}` : '请登录'}
+    </div>
+  );
+}
+
+// 更新用户状态
+function LoginButton() {
+  const handleLogin = () => {
+    userStore.updateUser({ name: 'Alice', loggedIn: true });
+  };
+
+  return <button onClick={handleLogin}>登录</button>;
+}
+```
+
+#### 结合 React Context
+
+```typescript
+import React, { createContext, useContext, ReactNode } from 'react';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+// 创建响应式数据流
+class AppStateStore {
+  private theme$ = new BehaviorSubject<'light' | 'dark'>('light');
+  private language$ = new BehaviorSubject<'zh' | 'en'>('zh');
+  
+  // 组合状态流
+  appState$ = combineLatest([this.theme$, this.language$]).pipe(
+    map(([theme, language]) => ({ theme, language }))
+  );
+  
+  setTheme(theme: 'light' | 'dark') {
+    this.theme$.next(theme);
+  }
+  
+  setLanguage(language: 'zh' | 'en') {
+    this.language$.next(language);
+  }
+}
+
+// 创建Context
+const AppStateContext = createContext<AppStateStore | null>(null);
+
+// Provider组件
+export function AppStateProvider({ children }: { children: ReactNode }) {
+  const [store] = useState(() => new AppStateStore());
+  
+  return (
+    <AppStateContext.Provider value={store}>
+      {children}
+    </AppStateContext.Provider>
+  );
+}
+
+// Hook for using the store
+export function useAppState() {
+  const store = useContext(AppStateContext);
+  if (!store) throw new Error('useAppState must be used within AppStateProvider');
+  
+  const [state, setState] = useState({ theme: 'light', language: 'zh' });
+  
+  useEffect(() => {
+    const subscription = store.appState$.subscribe(setState);
+    return () => subscription.unsubscribe();
+  }, [store]);
+  
+  return {
+    state,
+    setTheme: store.setTheme.bind(store),
+    setLanguage: store.setLanguage.bind(store)
+  };
+}
+
+// 使用示例
+function ThemeToggle() {
+  const { state, setTheme } = useAppState();
+  
+  return (
+    <button onClick={() => setTheme(state.theme === 'light' ? 'dark' : 'light')}>
+      当前主题: {state.theme}
+    </button>
+  );
+}
+```
+
+### 3. 表单处理
+
+#### 响应式表单验证
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
+function useFormValidation() {
+  const [email$] = useState(() => new BehaviorSubject(''));
+  const [password$] = useState(() => new BehaviorSubject(''));
+  
+  // 验证逻辑
+  const emailValid$ = email$.pipe(
+    debounceTime(300),
+    distinctUntilChanged(),
+    map(email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+  );
+  
+  const passwordValid$ = password$.pipe(
+    debounceTime(300),
+    distinctUntilChanged(),
+    map(password => password.length >= 6)
+  );
+  
+  // 表单整体有效性
+  const formValid$ = combineLatest([emailValid$, passwordValid$]).pipe(
+    map(([emailValid, passwordValid]) => emailValid && passwordValid)
+  );
+  
+  const [validation, setValidation] = useState({
+    emailValid: false,
+    passwordValid: false,
+    formValid: false
+  });
+  
+  useEffect(() => {
+    const subscription = combineLatest([
+      emailValid$,
+      passwordValid$,
+      formValid$
+    ]).subscribe(([emailValid, passwordValid, formValid]) => {
+      setValidation({ emailValid, passwordValid, formValid });
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [emailValid$, passwordValid$, formValid$]);
+  
+  return {
+    validation,
+    updateEmail: (email: string) => email$.next(email),
+    updatePassword: (password: string) => password$.next(password)
+  };
+}
+
+// 登录表单组件
+function LoginForm() {
+  const { validation, updateEmail, updatePassword } = useFormValidation();
+  
+  return (
+    <form>
+      <div>
+        <input
+          type="email"
+          placeholder="邮箱"
+          onChange={e => updateEmail(e.target.value)}
+          style={{
+            borderColor: validation.emailValid ? 'green' : 'red'
+          }}
+        />
+        {!validation.emailValid && <span>请输入有效邮箱</span>}
+      </div>
+      
+      <div>
+        <input
+          type="password"
+          placeholder="密码"
+          onChange={e => updatePassword(e.target.value)}
+          style={{
+            borderColor: validation.passwordValid ? 'green' : 'red'
+          }}
+        />
+        {!validation.passwordValid && <span>密码至少6位</span>}
+      </div>
+      
+      <button 
+        type="submit" 
+        disabled={!validation.formValid}
+      >
+        登录
+      </button>
+    </form>
+  );
+}
+```
+
+### 4. API 数据获取
+
+#### 响应式数据加载
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { BehaviorSubject, of } from 'rxjs';
+import { switchMap, catchError, startWith } from 'rxjs/operators';
+import { ajax } from 'rxjs/ajax';
+
+// 数据状态接口
+interface DataState<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+}
+
+// 响应式数据获取Hook
+function useAsyncData<T>(url$: BehaviorSubject<string>) {
+  const [state, setState] = useState<DataState<T>>({
+    data: null,
+    loading: false,
+    error: null
+  });
+  
+  useEffect(() => {
+    const subscription = url$.pipe(
+      switchMap(url => 
+        ajax.getJSON<T>(url).pipe(
+          map(data => ({ data, loading: false, error: null })),
+          startWith({ data: null, loading: true, error: null }),
+          catchError(error => 
+            of({ data: null, loading: false, error: error.message })
+          )
+        )
+      )
+    ).subscribe(setState);
+    
+    return () => subscription.unsubscribe();
+  }, [url$]);
+  
+  return state;
+}
+
+// 用户列表组件
+function UserList() {
+  const [url$] = useState(() => new BehaviorSubject('/api/users'));
+  const { data, loading, error } = useAsyncData<User[]>(url$);
+  
+  const loadPage = (page: number) => {
+    url$.next(`/api/users?page=${page}`);
+  };
+  
+  if (loading) return <div>加载中...</div>;
+  if (error) return <div>错误: {error}</div>;
+  if (!data) return <div>暂无数据</div>;
+  
+  return (
+    <div>
+      {data.map(user => (
+        <div key={user.id}>{user.name}</div>
+      ))}
+      <button onClick={() => loadPage(1)}>第1页</button>
+      <button onClick={() => loadPage(2)}>第2页</button>
+    </div>
+  );
+}
+```
+
+### 5. 实时数据与WebSocket
+
+#### React中的WebSocket集成
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { webSocket } from 'rxjs/webSocket';
+import { retry, tap } from 'rxjs/operators';
+
+interface Message {
+  id: string;
+  text: string;
+  timestamp: number;
+}
+
+function useChatSocket(url: string) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [connected, setConnected] = useState(false);
+  const [ws$] = useState(() => 
+    webSocket({
+      url,
+      openObserver: {
+        next: () => setConnected(true)
+      },
+      closeObserver: {
+        next: () => setConnected(false)
+      }
+    })
+  );
+  
+  useEffect(() => {
+    const subscription = ws$.pipe(
+      retry({ delay: 5000 }), // 断线5秒后重连
+      tap(message => console.log('收到消息:', message))
+    ).subscribe({
+      next: (message: Message) => {
+        setMessages(prev => [...prev, message]);
+      },
+      error: (error) => {
+        console.error('WebSocket错误:', error);
+        setConnected(false);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [ws$]);
+  
+  const sendMessage = (text: string) => {
+    const message: Message = {
+      id: Date.now().toString(),
+      text,
+      timestamp: Date.now()
+    };
+    ws$.next(message);
+  };
+  
+  return { messages, connected, sendMessage };
+}
+
+// 聊天组件
+function ChatRoom() {
+  const { messages, connected, sendMessage } = useChatSocket('ws://localhost:8080');
+  const [inputValue, setInputValue] = useState('');
+  
+  const handleSend = () => {
+    if (inputValue.trim()) {
+      sendMessage(inputValue);
+      setInputValue('');
+    }
+  };
+  
+  return (
+    <div>
+      <div>连接状态: {connected ? '已连接' : '未连接'}</div>
+      
+      <div style={{ height: '300px', overflowY: 'auto' }}>
+        {messages.map(message => (
+          <div key={message.id}>
+            <span>{new Date(message.timestamp).toLocaleTimeString()}</span>
+            <span>{message.text}</span>
+          </div>
+        ))}
+      </div>
+      
+      <div>
+        <input
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onKeyPress={e => e.key === 'Enter' && handleSend()}
+          placeholder="输入消息..."
+        />
+        <button onClick={handleSend} disabled={!connected}>
+          发送
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 6. 搜索功能实现
+
+#### 基于我们项目的搜索Hook
+
+```typescript
+import { useState, useEffect } from 'react';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+
+// 搜索Hook（基于项目实际代码）
+function useReactiveSearch<T>(
+  items: T[],
+  searchFn: (query: string) => Observable<T[]>,
+  filterFn: (items: T[], query: string) => T[]
+) {
+  const [searchQuery$] = useState(() => new BehaviorSubject<string>(''));
+  const [items$] = useState(() => new BehaviorSubject<T[]>([]));
+  const [results, setResults] = useState<T[]>([]);
+  const [searching, setSearching] = useState(false);
+  
+  // 同步items到流
+  useEffect(() => {
+    items$.next(items);
+  }, [items, items$]);
+  
+  // 响应式搜索流
+  useEffect(() => {
+    const subscription = combineLatest([
+      searchQuery$.pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      ),
+      items$
+    ]).pipe(
+      switchMap(([query, currentItems]) => {
+        if (!query.trim()) {
+          return of(currentItems);
+        }
+        
+        setSearching(true);
+        
+        // 本地搜索
+        const localResults = filterFn(currentItems, query);
+        
+        // 如果本地结果不足，执行远程搜索
+        if (localResults.length < 3) {
+          return searchFn(query).pipe(
+            map(remoteResults => {
+              // 合并并去重
+              const combined = [...localResults];
+              remoteResults.forEach(remote => {
+                if (!combined.some(local => 
+                  JSON.stringify(local) === JSON.stringify(remote)
+                )) {
+                  combined.push(remote);
+                }
+              });
+              return combined;
+            }),
+            catchError(() => of(localResults))
+          );
+        }
+        
+        return of(localResults);
+      })
+    ).subscribe({
+      next: (results) => {
+        setResults(results);
+        setSearching(false);
+      },
+      error: () => setSearching(false)
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [searchQuery$, items$, searchFn, filterFn]);
+  
+  const search = (query: string) => {
+    searchQuery$.next(query);
+  };
+  
+  return { results, searching, search };
+}
+
+// 聊天历史搜索组件
+function ChatHistorySearch() {
+  const { searchChats } = useHistory();
+  const [chats, setChats] = useState<ChatType[]>([]);
+  
+  const { results, searching, search } = useReactiveSearch(
+    chats,
+    searchChats, // 远程搜索函数
+    (items, query) => items.filter(chat => 
+      chat.title.toLowerCase().includes(query.toLowerCase())
+    ) // 本地过滤函数
+  );
+  
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="搜索聊天历史..."
+        onChange={e => search(e.target.value)}
+      />
+      
+      {searching && <div>搜索中...</div>}
+      
+      <div>
+        {results.map(chat => (
+          <div key={chat.id}>
+            {chat.title}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### 7. 最佳实践
+
+#### 内存泄漏预防
+
+```typescript
+// ✅ 使用自定义Hook管理订阅生命周期
+function useSubscription() {
+  const subscriptionsRef = useRef<Subscription[]>([]);
+  
+  useEffect(() => {
+    return () => {
+      // 组件卸载时取消所有订阅
+      subscriptionsRef.current.forEach(sub => sub.unsubscribe());
+    };
+  }, []);
+  
+  const addSubscription = (subscription: Subscription) => {
+    subscriptionsRef.current.push(subscription);
+  };
+  
+  return { addSubscription };
+}
+
+// 使用示例
+function MyComponent() {
+  const { addSubscription } = useSubscription();
+  
+  useEffect(() => {
+    const sub1 = observable1$.subscribe(handler1);
+    const sub2 = observable2$.subscribe(handler2);
+    
+    addSubscription(sub1);
+    addSubscription(sub2);
+  }, [addSubscription]);
+  
+  return <div>组件内容</div>;
+}
+```
+
+#### React 严格模式兼容
+
+```typescript
+// ✅ 处理React 18 严格模式下的双重执行
+function useObservableValue<T>(observable$: Observable<T>, initialValue: T) {
+  const [value, setValue] = useState(initialValue);
+  
+  useEffect(() => {
+    let subscription: Subscription;
+    
+    // 延迟订阅，避免严格模式下的问题
+    const timeoutId = setTimeout(() => {
+      subscription = observable$.subscribe(setValue);
+    }, 0);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      subscription?.unsubscribe();
+    };
+  }, [observable$]);
+  
+  return value;
+}
+```
+
+#### TypeScript 类型安全
+
+```typescript
+// ✅ 强类型的Observable Hook
+interface UseObservableOptions<T> {
+  initialValue: T;
+  onError?: (error: any) => void;
+  onComplete?: () => void;
+}
+
+function useTypedObservable<T>(
+  observable$: Observable<T>,
+  options: UseObservableOptions<T>
+): T {
+  const [value, setValue] = useState<T>(options.initialValue);
+  
+  useEffect(() => {
+    const subscription = observable$.subscribe({
+      next: setValue,
+      error: options.onError || console.error,
+      complete: options.onComplete
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [observable$, options]);
+  
+  return value;
+}
+```
+
 ## 📖 学习路径建议
 
 1. **基础概念**: Observable, Observer, Subscription
@@ -686,7 +1355,8 @@ taskQueue$.pipe(concatMap(task => processTask(task)))
 5. **组合操作**: combineLatest, merge, zip
 6. **错误处理**: catchError, retry
 7. **高级概念**: Subject, BehaviorSubject, 冷热流
-8. **实战应用**: 搜索、轮询、WebSocket
+8. **React集成**: useEffect订阅管理、自定义Hook、Context集成
+9. **实战应用**: 搜索、表单验证、实时数据、状态管理
 
 ## 🎓 总结
 
@@ -697,4 +1367,16 @@ RxJS 是一个强大的响应式编程库，它的核心优势包括：
 - **异步统一**: 用同一套API处理各种异步场景
 - **错误处理**: 提供完善的错误处理和恢复机制
 
-掌握 RxJS 需要转变思维方式，从命令式编程转向声明式的数据流编程。通过大量练习和实际项目应用，你将能够利用 RxJS 构建出优雅、可维护的异步应用程序。
+掌握 RxJS 需要转变思维方式，从命令式编程转向声明式的数据流编程。在 React 项目中，RxJS 提供了强大的状态管理和异步处理能力，特别适合处理复杂的用户交互、实时数据和搜索功能。通过大量练习和实际项目应用，你将能够利用 RxJS 构建出优雅、可维护的响应式应用程序。
+
+## 🚀 项目实践建议
+
+基于我们项目中的实际应用，推荐以下实践步骤：
+
+1. **从简单Hook开始**: 先实现 `useObservable` 等基础Hook
+2. **状态管理升级**: 使用BehaviorSubject替代复杂的useState场景
+3. **搜索功能优化**: 参考项目中的响应式搜索实现
+4. **表单验证改进**: 利用RxJS的组合操作符处理复杂验证逻辑
+5. **实时数据处理**: WebSocket、SSE等实时数据流的统一处理
+
+通过这些实践，你将深刻理解响应式编程在现代React应用中的价值和威力。
