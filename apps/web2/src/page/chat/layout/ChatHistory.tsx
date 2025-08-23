@@ -11,8 +11,10 @@ import {
   AiOutlineEdit,
   AiOutlineMore,
   AiFillDelete,
+  AiOutlineStar,
+  AiFillStar,
 } from "react-icons/ai";
-import { Checkbox, Dropdown, Input } from "antd";
+import { Checkbox, Dropdown, Input, message } from "antd";
 import type { MenuProps } from "antd";
 import RenameModal from "../modal/RenameModal";
 import {
@@ -23,7 +25,15 @@ import { useEffect, useState } from "react";
 import { Subscription } from "rxjs";
 
 const ChatHistory = () => {
-  const { chats, createChat, loadChats, searchQuery$, filteredChats$ } = useHistory();
+  const {
+    chats,
+    createChat,
+    loadChats,
+    searchQuery$,
+    filteredChats$,
+    toggleStarChat,
+    getOneChat,
+  } = useHistory();
   const route = useNavigate();
 
   const [onSelect, setOnSelect] = useState(false);
@@ -57,7 +67,7 @@ const ChatHistory = () => {
         console.error("过滤聊天列表失败:", error);
         setDisplayChats(chats); // 出错时回退到原始列表
         setIsSearching(false);
-      }
+      },
     });
 
     return () => subscription.unsubscribe();
@@ -117,21 +127,46 @@ const ChatHistory = () => {
   const handleSearch = (value: string) => {
     setSearchTitle(value);
     setIsSearching(true);
-    
+
     // 更新搜索查询流
     searchQuery$.next(value);
-    
+
     console.log("执行搜索:", value);
   };
 
-  const getMenuItems = (chatId: UUIDTypes): MenuProps["items"] => [
+  const handleToggleStar = (id: UUIDTypes) => {
+    toggleStarChat(id).subscribe({
+      next(value) {
+        if (value) {
+          message.success("收藏成功");
+          getOneChat(id);
+        } else {
+          message.error("收藏失败");
+        }
+      },
+      error(err) {
+        console.log("Error on toggle star chat: ", err);
+      },
+    });
+  };
+
+  const getMenuItems = (chat: ChatType): MenuProps["items"] => [
+    {
+      key: "star",
+      label: "收藏",
+      icon: chat.star ? <AiFillStar /> : <AiOutlineStar />,
+      onClick: (e) => {
+        e.domEvent.stopPropagation();
+        handleToggleStar(chat.id);
+      },
+    },
     {
       key: "rename",
       label: "重命名",
       icon: <AiOutlineEdit />,
       onClick: (e) => {
         e.domEvent.stopPropagation();
-        handleRename(chatId);
+        handleRename(chat.id);
       },
     },
     {
@@ -141,7 +176,7 @@ const ChatHistory = () => {
       danger: true,
       onClick: (e) => {
         e.domEvent.stopPropagation();
-        handleDelete(chatId);
+        handleDelete(chat.id);
       },
     },
   ];
@@ -152,8 +187,8 @@ const ChatHistory = () => {
         <HeaderIcon>📚</HeaderIcon>
         <HeaderTitle>对话历史</HeaderTitle>
         <div className="mx-auto">
-          <Input.Search 
-            placeholder="搜索对话标题" 
+          <Input.Search
+            placeholder="搜索对话标题"
             onSearch={handleSearch}
             onChange={(e) => handleSearch(e.target.value)}
             value={searchTitle}
@@ -191,10 +226,9 @@ const ChatHistory = () => {
               {searchTitle ? "未找到匹配的对话" : "还没有对话记录"}
             </EmptyText>
             <EmptySubtext>
-              {searchTitle 
-                ? "尝试使用不同的关键词搜索" 
-                : "点击'新建对话'开始你的第一次AI对话"
-              }
+              {searchTitle
+                ? "尝试使用不同的关键词搜索"
+                : "点击'新建对话'开始你的第一次AI对话"}
             </EmptySubtext>
           </EmptyState>
         ) : (
@@ -227,7 +261,7 @@ const ChatHistory = () => {
                 </ChatContent>
                 <ActionMenu>
                   <Dropdown
-                    menu={{ items: getMenuItems(chat.id) }}
+                    menu={{ items: getMenuItems(chat) }}
                     trigger={["click"]}
                     placement="bottomRight"
                   >
