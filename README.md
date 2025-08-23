@@ -3,11 +3,16 @@
 <div align="center">
   <h3>🚀 现代化AI对话平台 - 基于React + TypeScript的智能聊天应用</h3>
   
-  ![React](https://img.shields.io/badge/React-19.0-blue)
+  ![React](https://img.shields.io/badge/React-18.3-blue)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
   ![Arco Design](https://img.shields.io/badge/Arco%20Design-2.65-green)
-  ![RxJS](https://img.shields.io/badge/RxJS-7.8-purple)
+  ![RxJS](https://img.shields.io/badge/RxJS-7.8.2-purple)
+  ![Ant Design](https://img.shields.io/badge/Ant%20Design-Latest-cyan)
   ![pnpm](https://img.shields.io/badge/pnpm-Monorepo-orange)
+  
+  ![Version](https://img.shields.io/badge/Version-1.0.0-success)
+  ![Status](https://img.shields.io/badge/Status-Active%20Development-brightgreen)
+  ![License](https://img.shields.io/badge/License-MIT-informational)
 </div>
 
 ## ✨ 项目简介
@@ -21,9 +26,12 @@ AI Chat Acro UI 是一个现代化的AI对话平台，支持多模型聊天、�
 - **🧠 AI思考展示** - 智能折叠thinking内容，根据处理状态自动展开/收起
 - **🛠️ 工具调用跟踪** - 实时显示Tool Calling/Called状态，完整的工具调用流程
 - **📁 项目管理** - 聊天项目组织、历史记录管理、重命名删除操作、批量删除功能
+- **⭐ 收藏系统** - 支持聊天收藏，收藏状态实时同步，优雅的错误处理机制
+- **🔍 智能搜索** - 基于RxJS的响应式搜索，支持本地过滤和远程API搜索的混合策略
+- **🔒 Token认证** - 完整的Token认证拦截器系统，自动处理授权和过期刷新
 - **🎨 现代化UI** - 支持深色/浅色主题，响应式设计，glassmorphism效果
 - **🔧 组件化架构** - 高度可复用的组件设计，支持自定义渲染参数
-- **📡 RxJS集成** - 函数式响应编程，优雅处理异步数据流
+- **📡 RxJS深度集成** - 函数式响应编程，优雅处理异步数据流，防抖搜索，错误处理
 - **🏗️ Monorepo结构** - 多应用共享组件和工具库
 
 ## 🏗️ 项目架构
@@ -168,6 +176,7 @@ const renderer: RenderersType<MessageType> = {
 - **自动Loading管理** - loadingOperator操作符
 - **错误处理** - 统一的错误拦截和处理
 - **请求上传** - 文件上传和进度跟踪
+- **Token拦截器** - 自动Token注入和刷新机制
 
 ```typescript
 // HTTP工具使用示例
@@ -179,6 +188,73 @@ http.get<MessageType[]>(`/chat/history/${chatId}`)
     next: (messages) => setMessages(messages),
     error: (err) => handleError(err)
   });
+```
+
+### 4. 响应式搜索系统 (`apps/web2/src/page/chat/hooks/useHistory.tsx`)
+
+- **RxJS驱动搜索** - 基于BehaviorSubject的响应式搜索流
+- **防抖优化** - 300ms防抖，避免频繁API调用
+- **混合搜索策略** - 本地过滤 + 远程API的智能切换
+- **错误恢复** - 远程搜索失败时自动降级到本地搜索
+
+```typescript
+// 响应式搜索实现示例
+const [filteredChats$] = useState(() =>
+  combineLatest([
+    searchQuery$.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ),
+    chats$
+  ]).pipe(
+    switchMap(([query, currentChats]) => {
+      if (!query) return of(currentChats);
+      
+      // 本地过滤
+      const localResults = currentChats.filter(chat =>
+        chat.title.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      // 结果不足时进行远程搜索
+      if (localResults.length < 3) {
+        return searchChats(query).pipe(
+          map(remoteResults => mergeResults(localResults, remoteResults)),
+          catchError(() => of(localResults))
+        );
+      }
+      
+      return of(localResults);
+    }),
+    shareReplay(1)
+  )
+);
+```
+
+### 5. 收藏功能系统 (`apps/web2/src/page/chat/layout/ChatHistory.tsx`)
+
+- **响应式收藏操作** - 基于Observable的收藏状态管理
+- **乐观更新** - 立即更新UI，后续同步服务端状态
+- **错误处理** - 分层错误处理，用户友好的错误提示
+- **状态同步** - 收藏操作后自动刷新聊天详情
+
+```typescript
+// 收藏功能实现示例
+const handleToggleStar = (id: UUIDTypes) => {
+  toggleStarChat(id).subscribe({
+    next(value) {
+      if (value) {
+        message.success("收藏成功");
+        getOneChat(id); // 同步最新状态
+      } else {
+        message.error("收藏失败");
+      }
+    },
+    error(err) {
+      console.error("收藏操作失败:", err);
+      message.error("网络错误，请稍后重试");
+    }
+  });
+};
 ```
 
 ## 📦 包管理
@@ -261,6 +337,44 @@ git merge ws
 - 遵循React Hooks最佳实践
 - 组件采用函数式编程风格
 - 使用RxJS处理复杂异步逻辑
+- Observable命名约定：以$结尾 (如: `filteredChats$`, `searchQuery$`)
+- 错误处理：优先使用catchError操作符，提供用户友好的降级策略
+
+## 📚 学习资源
+
+### RxJS集成指南
+
+项目深度集成了RxJS，提供了完整的学习文档：
+
+- **[RxJS全面学习指南](apps/web2/claude_doc/rxjs-comprehensive-guide.md)** - 从基础到高级的完整RxJS教程
+- **[RxJS与React集成](apps/web2/claude_doc/rxjs-comprehensive-guide.md#⚛️-rxjs-与-react-集成)** - 详细的React集成模式和最佳实践
+- **[响应式搜索系统实现](apps/web2/claude_doc/rxjs-search-system.md)** - 搜索系统的具体实现案例
+
+### 关键概念示例
+
+```typescript
+// BehaviorSubject用于状态管理
+const searchQuery$ = new BehaviorSubject<string>("");
+
+// combineLatest用于多流合并
+const filteredData$ = combineLatest([searchQuery$, data$]).pipe(
+  debounceTime(300),
+  switchMap(([query, data]) => filterData(query, data)),
+  shareReplay(1)
+);
+
+// React组件中使用Observable
+function useObservable<T>(observable$: Observable<T>, initialValue: T): T {
+  const [value, setValue] = useState<T>(initialValue);
+  
+  useEffect(() => {
+    const subscription = observable$.subscribe(setValue);
+    return () => subscription.unsubscribe();
+  }, [observable$]);
+  
+  return value;
+}
+```
 
 ## 🤝 贡献指南
 
