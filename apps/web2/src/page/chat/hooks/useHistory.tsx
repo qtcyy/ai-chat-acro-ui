@@ -22,27 +22,54 @@ import {
   combineLatest,
 } from "rxjs";
 
+/** LocalStorage键值，用于存储聊天历史记录 */
 export const LocalStorageKey = "ai-chat-history";
 
+/**
+ * 聊天记录类型定义
+ * @interface ChatType
+ */
 export type ChatType = {
+  /** 聊天唯一标识符 */
   id: UUIDTypes;
+  /** 聊天标题 */
   title: string;
+  /** 是否已收藏 */
   star?: boolean;
+  /** 创建时间 */
   createTime?: string;
+  /** 最后更新时间 */
   updateTime?: string;
 };
 
+/**
+ * 聊天历史Context类型定义
+ * @interface HistoryContextType
+ */
 type HistoryContextType = {
+  /** 当前聊天记录列表 */
   chats: ChatType[];
+  /** 设置聊天记录列表的状态更新函数 */
   setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
+  /** 加载所有聊天记录 */
   loadChats: () => Promise<boolean>;
+  /** 获取单个聊天记录详情 */
   getOneChat: (id: UUIDTypes) => Promise<boolean>;
+  /** 创建新的聊天记录 */
   createChat: (title?: string) => Promise<ChatType>;
+  /** 重命名聊天记录 */
   renameChat: (id: UUIDTypes, title: string) => Promise<boolean>;
+  /** 删除单个聊天记录 */
   deleteChat: (id: UUIDTypes) => Promise<boolean>;
+  /** 批量删除聊天记录 */
   deleteChatBatch: (ids: UUIDTypes[]) => Promise<boolean>;
+  /** 搜索聊天记录 */
   searchChats: (title?: string) => Observable<ChatType[]>;
+  /** 切换聊天收藏状态 */
+  toggleStarChat: (id: UUIDTypes) => Observable<boolean>;
+  /** 搜索查询的响应式流 */
   searchQuery$: BehaviorSubject<string>;
+  /** 过滤后的聊天列表响应式流 */
   filteredChats$: Observable<ChatType[]>;
 };
 
@@ -56,30 +83,48 @@ const HistoryContext = createContext<HistoryContextType>({
   deleteChat: () => Promise.resolve(true),
   deleteChatBatch: () => Promise.resolve(true),
   searchChats: () => new Observable<ChatType[]>(),
+  toggleStarChat: (id: UUIDTypes) => new Observable<boolean>(),
   searchQuery$: new BehaviorSubject<string>(""),
   filteredChats$: new Observable<ChatType[]>(),
 });
 
+/**
+ * 获取聊天历史Context数据的Hook
+ * @returns {HistoryContextType} 聊天历史相关的所有方法和状态
+ */
 export const useHistory = () => useContext(HistoryContext);
 
+/**
+ * 聊天历史Context提供者组件
+ * @param {Object} props - 组件属性
+ * @param {ReactNode} props.children - 子组件
+ * @returns {JSX.Element} Context Provider组件
+ */
 export const HistoryProvider = (props: { children: ReactNode }) => {
   const http = useHttp();
   const { loading, loadingOperator } = HttpLoading();
 
-  // 初始化chats，注意messages为空，需要调用函数进行加载
+  /** 聊天记录列表状态（初始为空，需调用loadChats进行加载） */
   const [chats, setChats] = useState<ChatType[]>([]);
 
-  // 搜索查询的响应式流
+  /** 搜索查询的响应式流，用于实时搜索功能 */
   const [searchQuery$] = useState(() => new BehaviorSubject<string>(""));
 
-  // 聊天列表的响应式流
+  /** 聊天列表的响应式流，用于响应式数据管理 */
   const [chats$] = useState(() => new BehaviorSubject<ChatType[]>([]));
 
-  // 当chats状态变化时，更新BehaviorSubject
+  /**
+   * 同步chats状态变化到BehaviorSubject
+   * 确保响应式流能够及时获取最新的聊天数据
+   */
   useEffect(() => {
     chats$.next(chats);
   }, [chats, chats$]);
 
+  /**
+   * 加载所有聊天记录
+   * @returns {Promise<boolean>} 加载是否成功
+   */
   const loadChats = (): Promise<boolean> => {
     return new Promise((resolve, reject) => {
       http
@@ -103,6 +148,11 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     await loadChats();
   }, []);
 
+  /**
+   * 获取单个聊天记录详情并更新本地状态
+   * @param {UUIDTypes} id - 聊天ID
+   * @returns {Promise<boolean>} 获取是否成功
+   */
   const getOneChat = (id: UUIDTypes): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
       http
@@ -129,6 +179,11 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     });
   };
 
+  /**
+   * 创建新的聊天记录
+   * @param {string} [title] - 可选的聊天标题
+   * @returns {Promise<ChatType>} 新创建的聊天记录
+   */
   const createChat = (title?: string): Promise<ChatType> => {
     return new Promise((resolve, reject) => {
       http
@@ -145,6 +200,12 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     });
   };
 
+  /**
+   * 重命名聊天记录
+   * @param {UUIDTypes} id - 聊天ID
+   * @param {string} title - 新的聊天标题
+   * @returns {Promise<boolean>} 重命名是否成功
+   */
   const renameChat = (id: UUIDTypes, title: string): Promise<boolean> => {
     return new Promise<boolean>((resolve, reject) => {
       const poseBody = {
@@ -165,6 +226,11 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     });
   };
 
+  /**
+   * 删除单个聊天记录
+   * @param {UUIDTypes} id - 要删除的聊天ID
+   * @returns {Promise<boolean>} 删除是否成功
+   */
   const deleteChat = (id: UUIDTypes): Promise<boolean> => {
     const deleteBody = {
       id: id,
@@ -188,6 +254,11 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     });
   };
 
+  /**
+   * 批量删除聊天记录
+   * @param {UUIDTypes[]} ids - 要删除的聊天ID数组
+   * @returns {Promise<boolean>} 批量删除是否成功
+   */
   const deleteChatBatch = async (ids: UUIDTypes[]): Promise<boolean> => {
     const postBody = {
       chatIds: ids,
@@ -210,7 +281,11 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     });
   };
 
-  // 增强的搜索聊天功能，支持远程搜索和本地过滤
+  /**
+   * 搜索聊天记录（支持远程API搜索，失败时回退到本地过滤）
+   * @param {string} [title] - 搜索关键词
+   * @returns {Observable<ChatType[]>} 搜索结果的Observable流
+   */
   const searchChats = (title?: string): Observable<ChatType[]> => {
     // 如果没有提供搜索词，返回空的Observable
     if (!title || title.trim() === "") {
@@ -244,7 +319,13 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     );
   };
 
-  // 创建过滤后的聊天列表流
+  /**
+   * 创建过滤后的聊天列表响应式流
+   * 结合搜索查询和聊天数据，提供防抖、去重和智能搜索功能
+   * - 空查询时返回所有聊天记录
+   * - 优先本地过滤，结果不足时进行远程搜索
+   * - 支持本地和远程结果的智能合并
+   */
   const [filteredChats$] = useState(() =>
     combineLatest([
       searchQuery$.pipe(
@@ -290,6 +371,22 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     )
   );
 
+  /**
+   * 切换聊天记录的收藏状态
+   * @param {UUIDTypes} id - 聊天ID
+   * @returns {Observable<boolean>} 操作结果的Observable流
+   */
+  const toggleStarChat = (id: UUIDTypes): Observable<boolean> => {
+    const url = apiConfig.getChatManageUrl("/chat/star/toggle");
+    const postBody = {
+      id: id,
+    };
+    return http!.post(url, postBody).pipe(
+      loadingOperator,
+      map((c) => c.msg === "success")
+    );
+  };
+
   const ContextValue = {
     chats,
     setChats,
@@ -300,6 +397,7 @@ export const HistoryProvider = (props: { children: ReactNode }) => {
     deleteChat,
     deleteChatBatch,
     searchChats,
+    toggleStarChat,
     searchQuery$,
     filteredChats$,
   };
