@@ -6,9 +6,20 @@ import {
   MessageOutlined,
   StarOutlined,
 } from "@ant-design/icons";
+import { useAuth } from "../../hooks/auth/AuthProvider";
 
 const HomePage = () => {
   const route = useNavigate();
+  const auth = useAuth();
+
+  const handleStart = () => {
+    const loginState = auth?.authState;
+    if (loginState?.isAuthed) {
+      route("/chat/home");
+    } else {
+      route("/login");
+    }
+  };
 
   return (
     <PageContainer>
@@ -35,11 +46,7 @@ const HomePage = () => {
         </FeatureGrid>
 
         <ActionSection>
-          <EnterButton
-            type="primary"
-            size="large"
-            onClick={() => route("/chat/home")}
-          >
+          <EnterButton type="primary" size="large" onClick={handleStart}>
             开始对话
           </EnterButton>
         </ActionSection>

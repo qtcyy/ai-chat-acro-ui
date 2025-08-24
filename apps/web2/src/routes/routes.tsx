@@ -7,6 +7,7 @@ import { Chat } from "../page/chat/layout/Chat";
 import { ChatHistory } from "../page/chat/layout/ChatHistory";
 import { NotFound } from "../page/error/NotFound";
 import LoginPage from "../page/login/LoginPage";
+import RegisterPage from "../page/login/RegisterPage";
 
 export const routes: RouteObject[] = [
   {
@@ -22,6 +23,10 @@ export const routes: RouteObject[] = [
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "register",
+    element: <RegisterPage />,
   },
   {
     path: "/chat/",

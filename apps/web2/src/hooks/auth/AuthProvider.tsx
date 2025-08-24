@@ -14,6 +14,7 @@ import {
   map,
   Observable,
   switchMap,
+  take,
   tap,
   throwError,
 } from "rxjs";
@@ -22,7 +23,7 @@ import { apiConfig } from "../../config/api";
 
 type AuthContextType = {
   loginValidation: LoginValidationType;
-  login: <T>() => Observable<T>;
+  login: () => Observable<LoginResponse>;
   authState: AuthState;
   updateUsername: (username: string) => void;
   updatePassword: (password: string) => void;
@@ -51,6 +52,16 @@ type LoginValidationType = {
   usernameValid: boolean;
   passwordValid: boolean;
   formValid: boolean;
+};
+
+type LoginResponse = {
+  code: number;           // SaResult 状态码
+  msg: string;            // 返回消息
+  token: string;          // JWT token
+  userId: string;         // 用户ID (必需)
+  username: string;       // 用户名 (必需)
+  role: string;           // 用户角色 (新增)
+  sessionInfo?: any;      // 会话信息 (可选)
 };
 
 export const AuthProvider = (props: AuthProviderProps) => {
@@ -89,27 +100,22 @@ export const AuthProvider = (props: AuthProviderProps) => {
     })
   );
 
-  const formValid$ = combineLatest([usernameValid$, passwordValid$]).pipe(
-    map(([a, b]) => a && b)
-  );
-
   useEffect(() => {
     const subscription = combineLatest([
       usernameValid$,
       passwordValid$,
-      formValid$,
     ]).subscribe({
-      next([a, b, c]) {
+      next: ([a, b]) => {
         setLoginValidation({
           usernameValid: a,
           passwordValid: b,
-          formValid: c,
+          formValid: a && b,
         });
       },
     });
 
     return () => subscription.unsubscribe();
-  }, [username$, password$, formValid$]);
+  }, [username$, password$]);
 
   const http = useHttp();
   const [authState, setAuthState] = useState<AuthState>({
@@ -118,9 +124,13 @@ export const AuthProvider = (props: AuthProviderProps) => {
     isAuthed: false,
   });
 
-  const login = <T,>(): Observable<T> => {
+  const login = (): Observable<LoginResponse> => {
     if (!loginValidation.formValid) {
-      return new Observable<T>();
+      return throwError(() => "登录验证未通过");
+    }
+
+    if (!http) {
+      return throwError(() => "HTTP client is not available");
     }
 
     const handleLoginError = (error: string): AuthError => {
@@ -132,6 +142,7 @@ export const AuthProvider = (props: AuthProviderProps) => {
 
     const url = apiConfig.getChatManageUrl("/user/login");
     return combineLatest([username$, password$]).pipe(
+      take(1), // Only take current values, prevent continuous subscription
       tap(() =>
         setAuthState((pre) => ({ ...pre, loading: true, error: null }))
       ),
@@ -140,18 +151,23 @@ export const AuthProvider = (props: AuthProviderProps) => {
           username: username.trim(),
           password: password,
         };
-        return http!.post(url, postBody);
+        return http.post<LoginResponse>(url, postBody);
       }),
       tap((response) => {
-        localStorage.setItem("token", response.token);
-        setAuthState((pre) => ({
-          ...pre,
-          loading: false,
-          isAuthed: true,
-        }));
+        // 检查响应状态码
+        if (response.code === 200) {
+          localStorage.setItem("token", response.token);
+          setAuthState((pre) => ({
+            ...pre,
+            loading: false,
+            isAuthed: true,
+          }));
+        } else {
+          throw new Error(response.msg || "登录失败");
+        }
       }),
       catchError((error) => {
-        const loginError = handleLoginError(error);
+        const loginError = handleLoginError(error.message || error);
         setAuthState((pre) => ({
           ...pre,
           loading: false,
@@ -161,6 +177,8 @@ export const AuthProvider = (props: AuthProviderProps) => {
       })
     );
   };
+
+  const register = () => {};
 
   const contextValue = {
     loginValidation,
