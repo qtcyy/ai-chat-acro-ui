@@ -18,7 +18,7 @@ import {
   tap,
   throwError,
 } from "rxjs";
-import { useHttp } from "utils";
+import { HttpLoading, useHttp } from "utils";
 import { apiConfig } from "../../config/api";
 
 type AuthContextType = {
@@ -42,6 +42,8 @@ type AuthState = {
   loading: boolean;
   error: AuthError | null;
   isAuthed: boolean;
+  username: string | null;
+  role: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,13 +57,22 @@ type LoginValidationType = {
 };
 
 type LoginResponse = {
-  code: number;           // SaResult 状态码
-  msg: string;            // 返回消息
-  token: string;          // JWT token
-  userId: string;         // 用户ID (必需)
-  username: string;       // 用户名 (必需)
-  role: string;           // 用户角色 (新增)
-  sessionInfo?: any;      // 会话信息 (可选)
+  code: number; // SaResult 状态码
+  msg: string; // 返回消息
+  token: string; // JWT token
+  userId: string; // 用户ID (必需)
+  username: string; // 用户名 (必需)
+  role: string; // 用户角色 (新增)
+  sessionInfo?: any; // 会话信息 (可选)
+};
+
+type CheckLoginResponse = {
+  code: number;
+  msg: string;
+  token: string;
+  userId: string;
+  username: string;
+  role: string;
 };
 
 export const AuthProvider = (props: AuthProviderProps) => {
@@ -118,17 +129,47 @@ export const AuthProvider = (props: AuthProviderProps) => {
   }, [username$, password$]);
 
   const http = useHttp();
+  const { loadingOperator } = HttpLoading();
   const [authState, setAuthState] = useState<AuthState>({
     loading: false,
     error: null,
     isAuthed: false,
+    username: null,
+    role: null,
   });
 
-  const login = (): Observable<LoginResponse> => {
-    if (!loginValidation.formValid) {
-      return throwError(() => "登录验证未通过");
+  const checkLogin = (): Observable<CheckLoginResponse> => {
+    if (!http) {
+      return throwError(() => "Http not init");
     }
+    const url = apiConfig.getChatManageUrl("/user/checkLogin");
+    return http.get<CheckLoginResponse>(url).pipe(loadingOperator);
+  };
 
+  useEffect(() => {
+    const subscription = checkLogin().subscribe({
+      next: (value) => {
+        console.log(value);
+        if (value.code === 200 && value.msg === "success") {
+          setAuthState((pre) => ({
+            ...pre,
+            isAuthed: true,
+            role: value.role,
+            username: value.username,
+          }));
+        } else {
+          setAuthState((pre) => ({
+            ...pre,
+            isAuthed: false,
+          }));
+        }
+      },
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = (): Observable<LoginResponse> => {
     if (!http) {
       return throwError(() => "HTTP client is not available");
     }
@@ -161,6 +202,8 @@ export const AuthProvider = (props: AuthProviderProps) => {
             ...pre,
             loading: false,
             isAuthed: true,
+            username: response.username,
+            role: response.role,
           }));
         } else {
           throw new Error(response.msg || "登录失败");

@@ -25,7 +25,6 @@ const LoginPage = () => {
   }
 
   const { 
-    loginValidation, 
     authState, 
     updateUsername, 
     updatePassword,
@@ -34,6 +33,13 @@ const LoginPage = () => {
 
   const [rememberMe, setRememberMe] = useState(false);
   const [form] = Form.useForm();
+  const [formFields, setFormFields] = useState({
+    username: '',
+    password: ''
+  });
+
+  // Derived state for button enable/disable
+  const hasNonEmptyFields = formFields.username.trim() !== '' && formFields.password.trim() !== '';
 
   const from = location.state?.from?.pathname || "/chat/home";
 
@@ -44,30 +50,28 @@ const LoginPage = () => {
   }, [authState.isAuthed, from, navigate]);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateUsername(e.target.value);
+    const value = e.target.value;
+    updateUsername(value);
+    setFormFields(prev => ({ ...prev, username: value }));
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updatePassword(e.target.value);
+    const value = e.target.value;
+    updatePassword(value);
+    setFormFields(prev => ({ ...prev, password: value }));
   };
 
-  const handleSubmit = async () => {
-    try {
-      await form.validateFields();
-      
-      login().subscribe({
-        next: (response: any) => {
-          message.success("登录成功！");
-          console.log("Login successful:", response);
-        },
-        error: (error: any) => {
-          console.error("Login failed:", error);
-          message.error(error.message || "登录失败，请重试");
-        }
-      });
-    } catch (error) {
-      console.error("Form validation failed:", error);
-    }
+  const handleSubmit = () => {
+    login().subscribe({
+      next: (response: any) => {
+        message.success("登录成功！");
+        console.log("Login successful:", response);
+      },
+      error: (error: any) => {
+        console.error("Login failed:", error);
+        message.error(error.message || "登录失败，请重试");
+      }
+    });
   };
 
   const handleForgotPassword = () => {
@@ -101,20 +105,6 @@ const LoginPage = () => {
             >
               <StyledFormItem
                 name="username"
-                rules={[
-                  { required: true, message: "请输入用户名" },
-                  { min: 6, message: "用户名至少6个字符" }
-                ]}
-                validateStatus={
-                  !loginValidation.usernameValid && form.getFieldValue("username") 
-                    ? "error" 
-                    : ""
-                }
-                help={
-                  !loginValidation.usernameValid && form.getFieldValue("username")
-                    ? "用户名至少需要6个字符"
-                    : ""
-                }
               >
                 <StyledInput
                   prefix={<UserOutlined />}
@@ -126,20 +116,6 @@ const LoginPage = () => {
 
               <StyledFormItem
                 name="password"
-                rules={[
-                  { required: true, message: "请输入密码" },
-                  { min: 8, message: "密码至少8个字符" }
-                ]}
-                validateStatus={
-                  !loginValidation.passwordValid && form.getFieldValue("password")
-                    ? "error"
-                    : ""
-                }
-                help={
-                  !loginValidation.passwordValid && form.getFieldValue("password")
-                    ? "密码至少需要8个字符"
-                    : ""
-                }
               >
                 <StyledInput
                   prefix={<LockOutlined />}
@@ -180,7 +156,7 @@ const LoginPage = () => {
                   size="large"
                   block
                   loading={authState.loading}
-                  disabled={!loginValidation.formValid}
+                  disabled={!hasNonEmptyFields || authState.loading}
                   icon={<LoginOutlined />}
                 >
                   {authState.loading ? "登录中..." : "登录"}

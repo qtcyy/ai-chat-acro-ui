@@ -2,7 +2,7 @@ import { HttpEvent, HttpHandlerFn, HttpRequest } from "@ngify/http";
 import { Observable } from "rxjs";
 
 // 定义 Token 配置常量
-const TOKEN_STORAGE_KEY = "authToken";
+const TOKEN_STORAGE_KEY = "token";
 const TOKEN_PREFIX = "Bearer";
 const HEADER_AUTHORIZATION = "satoken";
 
