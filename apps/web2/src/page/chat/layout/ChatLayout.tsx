@@ -3,9 +3,13 @@ import SimpleBar from "simplebar-react";
 import { AiFillBook, AiFillHome } from "react-icons/ai";
 import { ReactNode } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Avatar, Dropdown } from "antd";
+import { Avatar, Dropdown, message } from "antd";
 import type { MenuProps } from "antd";
-import { UserOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
 import { useAuth } from "../../../hooks/auth/AuthProvider";
 
 type SiderItemType = {
@@ -38,7 +42,7 @@ const ChatLayout = () => {
       return null;
     }
 
-    const { authState } = authContext;
+    const { authState, logout } = authContext;
     const username = authState.username || "用户";
     const avatarText = username.charAt(0).toUpperCase();
 
@@ -55,27 +59,37 @@ const ChatLayout = () => {
     const handleLogout = () => {
       // TODO: 实现注销登录逻辑
       console.log("执行注销登录");
+      logout().subscribe({
+        next: (value) => {
+          console.log("注销成功：", value.msg);
+          moveTo("/login");
+        },
+        error: (err) => {
+          console.error("注销失败：", err);
+          message.error("注销失败：" + err);
+        },
+      });
     };
 
-    const menuItems: MenuProps['items'] = [
+    const menuItems: MenuProps["items"] = [
       {
-        key: 'personal',
-        label: '个人信息',
+        key: "personal",
+        label: "个人信息",
         icon: <UserOutlined />,
         onClick: handlePersonalInfo,
       },
       {
-        key: 'settings',
-        label: '设置',
+        key: "settings",
+        label: "设置",
         icon: <SettingOutlined />,
         onClick: handleSettings,
       },
       {
-        type: 'divider',
+        type: "divider",
       },
       {
-        key: 'logout',
-        label: '注销登录',
+        key: "logout",
+        label: "注销登录",
         icon: <LogoutOutlined />,
         onClick: handleLogout,
         danger: true,
@@ -84,24 +98,24 @@ const ChatLayout = () => {
 
     return (
       <UserCenterWrapper>
-        <Dropdown 
-          menu={{ items: menuItems }} 
-          trigger={['click']}
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={["click"]}
           placement="topRight"
-          overlayStyle={{ 
-            position: 'fixed',
-            zIndex: 9999 
+          overlayStyle={{
+            position: "fixed",
+            zIndex: 9999,
           }}
         >
           <UserAvatarButton>
             <Avatar
               size={36}
               style={{
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                color: '#3b82f6',
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                color: "#3b82f6",
                 fontWeight: 600,
-                border: '2px solid rgba(59, 130, 246, 0.2)',
-                backdropFilter: 'blur(8px)',
+                border: "2px solid rgba(59, 130, 246, 0.2)",
+                backdropFilter: "blur(8px)",
               }}
             >
               {avatarText}

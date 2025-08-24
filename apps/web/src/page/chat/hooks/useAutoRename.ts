@@ -43,10 +43,6 @@ export const useAutoRename = (props: Props) => {
     console.log(messages);
     const response = await fetch(ALIBABA_API, {
       method: "POST",
-<<<<<<< HEAD
-      url: CLOUD_API,
-=======
->>>>>>> ws(themed)
       headers: {
         ...props.headers,
         "Content-Type": "application/json",

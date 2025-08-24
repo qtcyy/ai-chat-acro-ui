@@ -24,9 +24,15 @@ import { apiConfig } from "../../config/api";
 type AuthContextType = {
   loginValidation: LoginValidationType;
   login: () => Observable<LoginResponse>;
+  logout: () => Observable<BaseResponseType>;
   authState: AuthState;
   updateUsername: (username: string) => void;
   updatePassword: (password: string) => void;
+};
+
+type BaseResponseType = {
+  msg: string;
+  code: number;
 };
 
 type AuthProviderProps = {
@@ -56,9 +62,7 @@ type LoginValidationType = {
   formValid: boolean;
 };
 
-type LoginResponse = {
-  code: number; // SaResult 状态码
-  msg: string; // 返回消息
+type LoginResponse = BaseResponseType & {
   token: string; // JWT token
   userId: string; // 用户ID (必需)
   username: string; // 用户名 (必需)
@@ -66,9 +70,7 @@ type LoginResponse = {
   sessionInfo?: any; // 会话信息 (可选)
 };
 
-type CheckLoginResponse = {
-  code: number;
-  msg: string;
+type CheckLoginResponse = BaseResponseType & {
   token: string;
   userId: string;
   username: string;
@@ -223,9 +225,45 @@ export const AuthProvider = (props: AuthProviderProps) => {
 
   const register = () => {};
 
+  const logout = (): Observable<BaseResponseType> => {
+    if (!http) {
+      return throwError(() => "Http not init");
+    }
+    const url = apiConfig.getChatManageUrl("/user/logout");
+    return http.post<BaseResponseType>(url).pipe(
+      tap(),
+      loadingOperator,
+      tap((response) => {
+        if (response.code === 200 && response.msg === "success") {
+          setAuthState((pre) => ({
+            ...pre,
+            isAuthed: false,
+            username: null,
+            role: null,
+          }));
+          localStorage.removeItem("token");
+        } else {
+          throw new Error(response.msg || "注销错误");
+        }
+      }),
+      catchError((err) => {
+        console.warn("注销失败，清除本地token: ", err);
+        localStorage.removeItem("token");
+        setAuthState((pre) => ({
+          ...pre,
+          isAuthed: false,
+          username: null,
+          role: null,
+        }));
+        return throwError(() => err);
+      })
+    );
+  };
+
   const contextValue = {
     loginValidation,
     login,
+    logout,
     authState,
     updateUsername,
     updatePassword,

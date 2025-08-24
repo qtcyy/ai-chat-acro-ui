@@ -125,39 +125,6 @@ const useChat = (props: Props) => {
       let oldThink = "";
       let oldAnswer = "";
 
-<<<<<<< HEAD
-    fetchEventSource(CLOUD_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ARK_API_KEY}`,
-        Accept: "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: sendMessages,
-        stream: true,
-      }),
-      onopen(response) {
-        console.log(response);
-        setMessages((old) => {
-          old.push({
-            role: ROLE.assistant,
-            key: String(old.length),
-            content: {
-              id: String(old.length),
-              answer: "",
-              query: question,
-              isEnd: false,
-            },
-          });
-          return [...old];
-        });
-        if (props.onOpen) {
-          props.onOpen();
-=======
       fetchEventSource(
         "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
         {
@@ -256,7 +223,6 @@ const useChat = (props: Props) => {
               setCloseSignal((c) => c + 1);
             }, 50);
           },
->>>>>>> ws(themed)
         }
       );
     },
