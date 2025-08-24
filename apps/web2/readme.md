@@ -504,6 +504,118 @@ http.get(apiConfig.getChatbotUrl('/chat/tools'))
   });
 ```
 
+### 👤 用户中心功能
+```typescript
+// 用户中心组件 - src/page/chat/layout/ChatLayout.tsx
+const UserCenter: React.FC = () => {
+  const authContext = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  if (!authContext) {
+    return null;
+  }
+
+  const { authState } = authContext;
+  const username = authState.username || "用户";
+  const avatarText = username.charAt(0).toUpperCase();
+
+  // 占位符函数，待业务逻辑实现
+  const handlePersonalInfo = () => {
+    // TODO: Navigate to personal info page
+    console.log('Navigate to personal info');
+  };
+
+  const handleSettings = () => {
+    // TODO: Navigate to settings page
+    console.log('Navigate to settings');
+  };
+
+  const handleLogout = () => {
+    // TODO: Implement logout functionality
+    console.log('Perform logout');
+  };
+
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'personal',
+      label: '个人信息',
+      icon: <UserOutlined />,
+      onClick: handlePersonalInfo,
+    },
+    {
+      key: 'settings', 
+      label: '设置',
+      icon: <SettingOutlined />,
+      onClick: handleSettings,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      label: '注销登录',
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
+  return (
+    <UserCenterWrapper>
+      <Dropdown
+        menu={{ items: menuItems }}
+        placement="topLeft"
+        open={dropdownOpen}
+        onOpenChange={setDropdownOpen}
+        trigger={['click']}
+      >
+        <UserAvatarButton onClick={() => setDropdownOpen(!dropdownOpen)}>
+          <Avatar size={36} style={{ backgroundColor: 'transparent', color: '#fff' }}>
+            {avatarText}
+          </Avatar>
+        </UserAvatarButton>
+      </Dropdown>
+    </UserCenterWrapper>
+  );
+};
+```
+
+**用户中心功能特性**:
+- **🎭 圆形头像**: 显示用户名首字母，采用glassmorphism效果
+- **📋 下拉菜单**: 三个核心功能入口 - 个人信息、设置、注销登录
+- **🔗 AuthProvider集成**: 与现有认证系统无缝集成，获取用户状态
+- **🎨 设计一致性**: 遵循现有sidebar的视觉设计语言
+- **📱 响应式设计**: 在不同屏幕尺寸下保持良好体验
+- **⚡ 交互反馈**: 悬停动画和点击状态反馈
+
+**样式设计**:
+```typescript
+const UserCenterWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  width: 100%;
+`;
+
+const UserAvatarButton = styled.button`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+`;
+```
+
 ### 🔍 RxJS响应式搜索系统
 ```typescript
 // 完全重构的搜索功能 - src/page/chat/hooks/useHistory.tsx
@@ -1022,6 +1134,7 @@ Web2实验验证 → 性能基准测试 → 逐步迁移到Web主应用
 - **🔐 Token认证拦截器**: 完整的HTTP请求认证系统，自动注入Bearer Token，支持localStorage存储管理
 - **🌍 环境变量配置系统**: 类型安全的环境配置管理，支持多环境后端URL配置，构建时变量注入
 - **🔍 RxJS响应式搜索系统**: 完全重构的搜索功能，支持本地过滤、远程搜索、防抖优化和智能回退机制
+- **👤 用户中心界面**: 侧边栏用户头像下拉菜单，支持个人信息、设置、注销功能入口，采用glassmorphism设计风格
 
 ### 🔧 技术改进
 - **状态管理优化**: 修复React状态闭包问题，使用函数式更新

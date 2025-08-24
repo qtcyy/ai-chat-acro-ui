@@ -3,6 +3,10 @@ import SimpleBar from "simplebar-react";
 import { AiFillBook, AiFillHome } from "react-icons/ai";
 import { ReactNode } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { Avatar, Dropdown } from "antd";
+import type { MenuProps } from "antd";
+import { UserOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
+import { useAuth } from "../../../hooks/auth/AuthProvider";
 
 type SiderItemType = {
   icon: ReactNode;
@@ -22,9 +26,90 @@ const SiderItem: SiderItemType[] = [
 
 const ChatLayout = () => {
   const route = useNavigate();
+  const authContext = useAuth();
 
   const moveTo = (path: string) => {
     route(path);
+  };
+
+  // UserCenter component
+  const UserCenter = () => {
+    if (!authContext) {
+      return null;
+    }
+
+    const { authState } = authContext;
+    const username = authState.username || "用户";
+    const avatarText = username.charAt(0).toUpperCase();
+
+    const handlePersonalInfo = () => {
+      // TODO: 实现个人信息页面跳转
+      console.log("跳转到个人信息页面");
+    };
+
+    const handleSettings = () => {
+      // TODO: 实现设置页面跳转
+      console.log("跳转到设置页面");
+    };
+
+    const handleLogout = () => {
+      // TODO: 实现注销登录逻辑
+      console.log("执行注销登录");
+    };
+
+    const menuItems: MenuProps['items'] = [
+      {
+        key: 'personal',
+        label: '个人信息',
+        icon: <UserOutlined />,
+        onClick: handlePersonalInfo,
+      },
+      {
+        key: 'settings',
+        label: '设置',
+        icon: <SettingOutlined />,
+        onClick: handleSettings,
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'logout',
+        label: '注销登录',
+        icon: <LogoutOutlined />,
+        onClick: handleLogout,
+        danger: true,
+      },
+    ];
+
+    return (
+      <UserCenterWrapper>
+        <Dropdown 
+          menu={{ items: menuItems }} 
+          trigger={['click']}
+          placement="topRight"
+          overlayStyle={{ 
+            position: 'fixed',
+            zIndex: 9999 
+          }}
+        >
+          <UserAvatarButton>
+            <Avatar
+              size={36}
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: '#3b82f6',
+                fontWeight: 600,
+                border: '2px solid rgba(59, 130, 246, 0.2)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              {avatarText}
+            </Avatar>
+          </UserAvatarButton>
+        </Dropdown>
+      </UserCenterWrapper>
+    );
   };
 
   return (
@@ -48,10 +133,8 @@ const ChatLayout = () => {
             ))}
           </NavSection>
 
-          {/* 底部装饰 */}
-          <BottomDecoration>
-            <DecorativeLine />
-          </BottomDecoration>
+          {/* 用户中心 */}
+          <UserCenter />
         </SiderWrapper>
 
         <ContentWrapper>
@@ -216,7 +299,7 @@ const Tooltip = styled.div`
   }
 `;
 
-const BottomDecoration = styled.div`
+const UserCenterWrapper = styled.div`
   height: 60px;
   display: flex;
   align-items: center;
@@ -224,23 +307,36 @@ const BottomDecoration = styled.div`
   margin-bottom: 16px;
 `;
 
-const DecorativeLine = styled.div`
-  width: 32px;
-  height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  border-radius: 1px;
-  animation: line-glow 2s ease-in-out infinite alternate;
+const UserAvatarButton = styled.button`
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 6px;
+  position: relative;
 
-  @keyframes line-glow {
-    0% {
-      opacity: 0.5;
-      transform: scaleX(0.8);
-    }
-    100% {
-      opacity: 1;
-      transform: scaleX(1);
-    }
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25),
+      0 4px 8px rgba(0, 0, 0, 0.1);
   }
+
+  &:active {
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  /* Ensure avatar displays above all other content */
+  z-index: 1002;
 `;
 
 const ContentWrapper = styled.div`
